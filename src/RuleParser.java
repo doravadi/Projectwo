@@ -3,40 +3,19 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
 
-/**
- * DSL Rule Parser - Recursive descent parser
- *
- * DSL string'lerini AST'ye çevirir. Grammar:
- *
- * expression := condition ["then" action]
- * condition := or_condition
- * or_condition := and_condition ("or" and_condition)*
- * and_condition := not_condition ("and" not_condition)*
- * not_condition := ["not"] comparison
- * comparison := operand (operator operand)?
- * operand := field | literal | "(" condition ")"
- * operator := "==" | "!=" | ">" | "<" | ">=" | "<=" | "in" | "not_in" | "between"
- * field := identifier
- * literal := number | string | enum | list
- * list := "[" (literal ("," literal)*)? "]"
- *
- * Örnekler:
- * - "MCC in [GROCERY, FUEL] and amount > 500"
- * - "hour between 22 and 06 or day in {SAT, SUN}"
- * - "not (country == 'TR' and amount < 100)"
- */
+
 public final class RuleParser {
 
     private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
 
-    // Reserved keywords
+    
     private static final Set<String> KEYWORDS = Set.of(
             "and", "or", "not", "in", "not_in", "between", "then",
             "true", "false", "null"
     );
 
-    // Field names validation
+    
     private static final Set<String> VALID_FIELDS = Set.of(
             "amount", "currency", "mcc", "country", "city", "hour", "day",
             "customer_age", "customer_segment", "account_balance",
@@ -47,16 +26,10 @@ public final class RuleParser {
     private String originalExpression;
 
     public RuleParser() {
-        // Stateless parser
+        
     }
 
-    /**
-     * DSL string'ini parse eder ve AST döner
-     *
-     * @param expression DSL ifadesi
-     * @return AST root node
-     * @throws RuleSyntaxException Parse hatası
-     */
+    
     public ASTNode parse(String expression) throws RuleSyntaxException {
         Objects.requireNonNull(expression, "Expression cannot be null");
 
@@ -70,7 +43,7 @@ public final class RuleParser {
         try {
             ASTNode ast = parseExpression();
 
-            // Tüm token'lar tüketilmiş olmalı
+            
             if (!tokenizer.isAtEnd()) {
                 Token unexpected = tokenizer.peek();
                 throw RuleSyntaxException.unexpectedToken(originalExpression,
@@ -84,34 +57,30 @@ public final class RuleParser {
         }
     }
 
-    /**
-     * expression := condition ["then" action]
-     */
+    
     private ASTNode parseExpression() throws RuleSyntaxException {
         ASTNode condition = parseOrCondition();
 
-        // "then" clause şimdilik ignore edilir (action parsing gelecek versiyonlarda)
+        
         if (tokenizer.peek().getType() == TokenType.KEYWORD &&
                 "then".equals(tokenizer.peek().getValue())) {
-            tokenizer.consume(); // "then" token'ını tüket
-            // Action parsing burada olacak ama şimdilik skip
+            tokenizer.consume(); 
+            
             while (!tokenizer.isAtEnd()) {
-                tokenizer.consume(); // Rest of tokens
+                tokenizer.consume(); 
             }
         }
 
         return condition;
     }
 
-    /**
-     * or_condition := and_condition ("or" and_condition)*
-     */
+    
     private ASTNode parseOrCondition() throws RuleSyntaxException {
         ASTNode left = parseAndCondition();
 
         while (tokenizer.peek().getType() == TokenType.KEYWORD &&
                 "or".equals(tokenizer.peek().getValue())) {
-            tokenizer.consume(); // "or" token
+            tokenizer.consume(); 
             ASTNode right = parseAndCondition();
             left = new ASTNode.OrNode(left, right);
         }
@@ -119,15 +88,13 @@ public final class RuleParser {
         return left;
     }
 
-    /**
-     * and_condition := not_condition ("and" not_condition)*
-     */
+    
     private ASTNode parseAndCondition() throws RuleSyntaxException {
         ASTNode left = parseNotCondition();
 
         while (tokenizer.peek().getType() == TokenType.KEYWORD &&
                 "and".equals(tokenizer.peek().getValue())) {
-            tokenizer.consume(); // "and" token
+            tokenizer.consume(); 
             ASTNode right = parseNotCondition();
             left = new ASTNode.AndNode(left, right);
         }
@@ -135,13 +102,11 @@ public final class RuleParser {
         return left;
     }
 
-    /**
-     * not_condition := ["not"] comparison
-     */
+    
     private ASTNode parseNotCondition() throws RuleSyntaxException {
         if (tokenizer.peek().getType() == TokenType.KEYWORD &&
                 "not".equals(tokenizer.peek().getValue())) {
-            tokenizer.consume(); // "not" token
+            tokenizer.consume(); 
             ASTNode operand = parseComparison();
             return new ASTNode.NotNode(operand);
         }
@@ -149,15 +114,13 @@ public final class RuleParser {
         return parseComparison();
     }
 
-    /**
-     * comparison := operand (operator operand)?
-     */
+    
     private ASTNode parseComparison() throws RuleSyntaxException {
         ASTNode left = parseOperand();
 
         Token operator = tokenizer.peek();
 
-        // Comparison operators
+        
         switch (operator.getType()) {
             case OPERATOR:
                 String op = operator.getValue();
@@ -172,7 +135,7 @@ public final class RuleParser {
                     case ">":
                         return new ASTNode.GreaterThanNode(left, right);
                     case "<":
-                        return new ASTNode.GreaterThanNode(right, left); // Reverse for <
+                        return new ASTNode.GreaterThanNode(right, left); 
                     case ">=":
                         return new ASTNode.OrNode(
                                 new ASTNode.GreaterThanNode(left, right),
@@ -190,19 +153,17 @@ public final class RuleParser {
 
             case KEYWORD:
                 if ("in".equals(operator.getValue())) {
-                    tokenizer.consume(); // "in"
+                    tokenizer.consume(); 
                     ASTNode rightOperand = parseOperand();
                     return new ASTNode.InNode(left, rightOperand);
                 }
                 break;
         }
 
-        return left; // No operator found, return operand as-is
+        return left; 
     }
 
-    /**
-     * operand := field | literal | "(" condition ")"
-     */
+    
     private ASTNode parseOperand() throws RuleSyntaxException {
         Token token = tokenizer.peek();
 
@@ -216,7 +177,7 @@ public final class RuleParser {
 
             case STRING:
                 tokenizer.consume();
-                // Remove quotes
+                
                 String stringValue = token.getValue();
                 if (stringValue.startsWith("'") && stringValue.endsWith("'")) {
                     stringValue = stringValue.substring(1, stringValue.length() - 1);
@@ -226,21 +187,21 @@ public final class RuleParser {
             case KEYWORD:
                 if ("true".equals(token.getValue()) || "false".equals(token.getValue())) {
                     tokenizer.consume();
-                    return new ASTNode.StringNode(token.getValue()); // Boolean as string for now
+                    return new ASTNode.StringNode(token.getValue()); 
                 }
-                // Treat as enum
+                
                 tokenizer.consume();
                 return new ASTNode.EnumNode(token.getValue());
 
             case LPAREN:
-                tokenizer.consume(); // "("
+                tokenizer.consume(); 
                 ASTNode expression = parseOrCondition();
                 Token rparen = tokenizer.peek();
                 if (rparen.getType() != TokenType.RPAREN) {
                     throw RuleSyntaxException.expectedToken(originalExpression,
                             rparen.getPosition(), ")", rparen.getValue());
                 }
-                tokenizer.consume(); // ")"
+                tokenizer.consume(); 
                 return expression;
 
             case LBRACKET:
@@ -252,9 +213,7 @@ public final class RuleParser {
         }
     }
 
-    /**
-     * field := identifier
-     */
+    
     private ASTNode parseField() throws RuleSyntaxException {
         Token token = tokenizer.peek();
         if (token.getType() != TokenType.IDENTIFIER) {
@@ -265,7 +224,7 @@ public final class RuleParser {
         tokenizer.consume();
         String fieldName = token.getValue();
 
-        // Validate field name
+        
         if (!VALID_FIELDS.contains(fieldName.toLowerCase())) {
             throw RuleSyntaxException.invalidFieldName(originalExpression,
                     token.getPosition(), fieldName);
@@ -274,31 +233,29 @@ public final class RuleParser {
         return new ASTNode.FieldNode(fieldName);
     }
 
-    /**
-     * list := "[" (literal ("," literal)*)? "]"
-     */
+    
     private ASTNode parseList() throws RuleSyntaxException {
         Token lbracket = tokenizer.peek();
         if (lbracket.getType() != TokenType.LBRACKET) {
             throw RuleSyntaxException.expectedToken(originalExpression,
                     lbracket.getPosition(), "[", lbracket.getValue());
         }
-        tokenizer.consume(); // "["
+        tokenizer.consume(); 
 
         List<ASTNode> elements = new ArrayList<>();
 
-        // Empty list case
+        
         if (tokenizer.peek().getType() == TokenType.RBRACKET) {
-            tokenizer.consume(); // "]"
+            tokenizer.consume(); 
             return new ASTNode.ListNode(elements);
         }
 
-        // Parse first element
+        
         elements.add(parseListElement());
 
-        // Parse remaining elements
+        
         while (tokenizer.peek().getType() == TokenType.COMMA) {
-            tokenizer.consume(); // ","
+            tokenizer.consume(); 
             elements.add(parseListElement());
         }
 
@@ -307,14 +264,12 @@ public final class RuleParser {
             throw RuleSyntaxException.expectedToken(originalExpression,
                     rbracket.getPosition(), "]", rbracket.getValue());
         }
-        tokenizer.consume(); // "]"
+        tokenizer.consume(); 
 
         return new ASTNode.ListNode(elements);
     }
 
-    /**
-     * List element parser (number, string, enum)
-     */
+    
     private ASTNode parseListElement() throws RuleSyntaxException {
         Token token = tokenizer.peek();
 
@@ -342,7 +297,7 @@ public final class RuleParser {
         }
     }
 
-    // Tokenizer inner class
+    
     private static final class Tokenizer {
         private final String input;
         private final List<Token> tokens;
@@ -361,17 +316,17 @@ public final class RuleParser {
             while (pos < input.length()) {
                 char c = input.charAt(pos);
 
-                // Skip whitespace
+                
                 if (Character.isWhitespace(c)) {
                     pos++;
                     continue;
                 }
 
-                // Numbers
+                
                 if (Character.isDigit(c) || (c == '-' && pos + 1 < input.length() &&
                         Character.isDigit(input.charAt(pos + 1)))) {
                     int start = pos;
-                    if (c == '-') pos++; // Skip negative sign
+                    if (c == '-') pos++; 
                     while (pos < input.length() && (Character.isDigit(input.charAt(pos)) ||
                             input.charAt(pos) == '.')) {
                         pos++;
@@ -380,22 +335,22 @@ public final class RuleParser {
                     continue;
                 }
 
-                // Strings
+                
                 if (c == '\'' || c == '"') {
                     int start = pos;
-                    pos++; // Skip opening quote
+                    pos++; 
                     while (pos < input.length() && input.charAt(pos) != c) {
                         pos++;
                     }
                     if (pos >= input.length()) {
                         throw new RuntimeException("Unterminated string at position " + start);
                     }
-                    pos++; // Skip closing quote
+                    pos++; 
                     result.add(new Token(TokenType.STRING, input.substring(start, pos), start));
                     continue;
                 }
 
-                // Identifiers and keywords
+                
                 if (Character.isLetter(c) || c == '_') {
                     int start = pos;
                     while (pos < input.length() && (Character.isLetterOrDigit(input.charAt(pos)) ||
@@ -408,7 +363,7 @@ public final class RuleParser {
                     continue;
                 }
 
-                // Operators
+                
                 String twoChar = pos + 1 < input.length() ? input.substring(pos, pos + 2) : "";
                 if (twoChar.equals("==") || twoChar.equals("!=") || twoChar.equals(">=") ||
                         twoChar.equals("<=")) {
@@ -423,7 +378,7 @@ public final class RuleParser {
                     continue;
                 }
 
-                // Special characters
+                
                 switch (c) {
                     case '(':
                         result.add(new Token(TokenType.LPAREN, "(", pos));
@@ -455,7 +410,7 @@ public final class RuleParser {
 
         public Token peek() {
             if (position >= tokens.size()) {
-                return tokens.get(tokens.size() - 1); // EOF token
+                return tokens.get(tokens.size() - 1); 
             }
             return tokens.get(position);
         }
@@ -473,7 +428,7 @@ public final class RuleParser {
         }
     }
 
-    // Token class
+    
     private static final class Token {
         private final TokenType type;
         private final String value;
@@ -495,23 +450,23 @@ public final class RuleParser {
         }
     }
 
-    // Token types
+    
     private enum TokenType {
-        // Literals
+        
         NUMBER, STRING, IDENTIFIER,
 
-        // Keywords
-        KEYWORD, // and, or, not, in, then, true, false, null
+        
+        KEYWORD, 
 
-        // Operators
-        OPERATOR, // ==, !=, >, <, >=, <=
+        
+        OPERATOR, 
 
-        // Punctuation
-        LPAREN, RPAREN,    // ( )
-        LBRACKET, RBRACKET, // [ ]
-        COMMA, SEMICOLON,   // , ;
+        
+        LPAREN, RPAREN,    
+        LBRACKET, RBRACKET, 
+        COMMA, SEMICOLON,   
 
-        // End of file
+        
         EOF
     }
 }

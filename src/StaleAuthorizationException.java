@@ -1,14 +1,11 @@
-// StaleAuthorizationException.java - Exception for expired authorization matching attempts
+
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 
-/**
- * Checked exception thrown when attempting to match with an expired/stale authorization
- * Extends DomainException as this represents a business rule violation
- */
+
 public class StaleAuthorizationException extends DomainException {
 
     private final Auth staleAuth;
@@ -17,9 +14,7 @@ public class StaleAuthorizationException extends DomainException {
     private final Duration expiredDuration;
     private final List<String> businessImpacts;
 
-    /**
-     * Create exception with stale auth and attempted presentment
-     */
+    
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment) {
         super(buildErrorMessage(staleAuth, attemptedPresentment));
 
@@ -30,9 +25,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    /**
-     * Create exception with additional context
-     */
+    
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment, String additionalContext) {
         super(buildErrorMessage(staleAuth, attemptedPresentment) + ". Additional context: " + additionalContext);
 
@@ -43,9 +36,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    /**
-     * Create exception for batch processing with cause
-     */
+    
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment, Throwable cause) {
         super(buildErrorMessage(staleAuth, attemptedPresentment), cause);
 
@@ -56,7 +47,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    // Getters for exception context
+    
     public Auth getStaleAuth() {
         return staleAuth;
     }
@@ -77,17 +68,17 @@ public class StaleAuthorizationException extends DomainException {
         return new ArrayList<>(businessImpacts);
     }
 
-    // Business logic methods
+    
     public boolean isRecentlyExpired() {
-        return expiredDuration.toHours() <= 24; // Within 24 hours
+        return expiredDuration.toHours() <= 24; 
     }
 
     public boolean isLongExpired() {
-        return expiredDuration.toDays() > 7; // More than a week
+        return expiredDuration.toDays() > 7; 
     }
 
     public boolean isCriticallyExpired() {
-        return expiredDuration.toDays() > 30; // More than a month
+        return expiredDuration.toDays() > 30; 
     }
 
     public String getExpirationSeverity() {
@@ -102,9 +93,7 @@ public class StaleAuthorizationException extends DomainException {
         }
     }
 
-    /**
-     * Get recommended actions based on expiration severity
-     */
+    
     public List<String> getRecommendedActions() {
         List<String> actions = new ArrayList<>();
 
@@ -126,22 +115,18 @@ public class StaleAuthorizationException extends DomainException {
         return actions;
     }
 
-    /**
-     * Calculate financial impact of stale authorization
-     */
+    
     public Money getFinancialImpact() {
-        // The potential lost settlement amount
+        
         return attemptedPresentment.getAmount();
     }
 
-    /**
-     * Get risk assessment for this stale auth scenario
-     */
+    
     public StaleAuthRisk getRiskAssessment() {
         RiskLevel riskLevel;
         List<String> riskFactors = new ArrayList<>();
 
-        // Time-based risk assessment
+        
         if (isCriticallyExpired()) {
             riskLevel = RiskLevel.CRITICAL;
             riskFactors.add("Authorization expired over 30 days ago");
@@ -159,13 +144,13 @@ public class StaleAuthorizationException extends DomainException {
             riskFactors.add("Authorization just expired");
         }
 
-        // Amount-based risk assessment
+        
         Money amount = attemptedPresentment.getAmount();
         if (amount.getAmount().compareTo(new java.math.BigDecimal("10000")) > 0) {
             riskFactors.add("High-value transaction increases settlement risk");
         }
 
-        // Status-based risk assessment
+        
         if (staleAuth.getStatus() != AuthStatus.APPROVED) {
             riskFactors.add("Authorization status is not approved: " + staleAuth.getStatus());
         }
@@ -173,18 +158,14 @@ public class StaleAuthorizationException extends DomainException {
         return new StaleAuthRisk(riskLevel, riskFactors, getFinancialImpact());
     }
 
-    /**
-     * Check if exception handling should be automatic or manual
-     */
+    
     public boolean requiresManualIntervention() {
         return isLongExpired() ||
                 isCriticallyExpired() ||
                 getFinancialImpact().getAmount().compareTo(new java.math.BigDecimal("1000")) > 0;
     }
 
-    /**
-     * Generate detailed exception report
-     */
+    
     public StaleAuthExceptionReport generateReport() {
         return StaleAuthExceptionReport.builder()
                 .authId(staleAuth.getAuthId())
@@ -202,7 +183,7 @@ public class StaleAuthorizationException extends DomainException {
                 .build();
     }
 
-    // Private helper methods
+    
     private static String buildErrorMessage(Auth staleAuth, Presentment attemptedPresentment) {
         Duration expiredDuration = Duration.between(staleAuth.getExpiryTime(), LocalDateTime.now());
 
@@ -256,7 +237,7 @@ public class StaleAuthorizationException extends DomainException {
         return impacts;
     }
 
-    // Inner classes for structured data
+    
     public static class StaleAuthRisk {
         private final RiskLevel level;
         private final List<String> factors;
@@ -310,7 +291,7 @@ public class StaleAuthorizationException extends DomainException {
 
         public static Builder builder() { return new Builder(); }
 
-        // Getters
+        
         public String getAuthId() { return authId; }
         public String getPresentmentId() { return presentmentId; }
         public LocalDateTime getAuthExpiredAt() { return authExpiredAt; }

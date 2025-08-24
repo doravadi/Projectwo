@@ -1,4 +1,4 @@
-// CardNumber.java - Kart numarası value object'i
+
 import java.util.Objects;
 import java.io.Serializable;
 
@@ -23,21 +23,21 @@ public final class CardNumber implements Serializable {
             throw new IllegalArgumentException("Card number cannot be null or empty");
         }
 
-        // Boşluk ve tire karakterlerini temizle
+        
         String cleaned = number.replaceAll("[\\s-]", "");
 
-        // Sadece rakam kontrolü
+        
         if (!cleaned.matches("\\d+")) {
             throw new IllegalArgumentException("Card number must contain only digits");
         }
 
-        // Uzunluk kontrolü (13-19 hane)
+        
         if (cleaned.length() < 13 || cleaned.length() > 19) {
             throw new IllegalArgumentException(
                     String.format("Card number must be 13-19 digits, got %d", cleaned.length()));
         }
 
-        // Luhn algoritması kontrolü
+        
         if (!isValidLuhn(cleaned)) {
             throw new IllegalArgumentException("Invalid card number (Luhn check failed)");
         }
@@ -46,19 +46,19 @@ public final class CardNumber implements Serializable {
     }
 
     private long extractBin(String cardNumber) {
-        // İlk 6-8 haneyi BIN olarak al (kart numarası uzunluğuna göre)
-        int binLength = Math.min(8, cardNumber.length() - 4); // Son 4 hane PAN
-        binLength = Math.max(6, binLength); // En az 6 hane
+        
+        int binLength = Math.min(8, cardNumber.length() - 4); 
+        binLength = Math.max(6, binLength); 
 
         return Long.parseLong(cardNumber.substring(0, binLength));
     }
 
-    // Luhn algoritması ile kart numarası doğrulama
+    
     private boolean isValidLuhn(String number) {
         int sum = 0;
         boolean isEven = false;
 
-        // Sağdan sola işle
+        
         for (int i = number.length() - 1; i >= 0; i--) {
             int digit = Character.getNumericValue(number.charAt(i));
 
@@ -86,7 +86,7 @@ public final class CardNumber implements Serializable {
 
     public String getMaskedNumber() {
         if (number.length() < 10) {
-            return number; // Çok kısa numaralar için maskeleme yapma
+            return number; 
         }
 
         return number.substring(0, 6) +

@@ -1,15 +1,7 @@
 import java.util.BitSet;
 import java.util.Objects;
 
-/**
- * Custom Bloom Filter implementation - probabilistic data structure.
- *
- * Fraud detection için duplicate transaction detection:
- * - Memory efficient: BitSet instead of HashSet
- * - Fast lookups: O(k) where k=hash function count
- * - False positives possible, false negatives impossible
- * - 3 hash functions: MurmurHash variants
- */
+
 public final class BloomFilter {
 
     private final BitSet bitSet;
@@ -17,11 +9,11 @@ public final class BloomFilter {
     private final int hashFunctionCount;
     private int elementCount;
 
-    // Hash function seeds for diversity
+    
     private static final int[] HASH_SEEDS = {0x7ed55d16, 0xc761c23c, 0x165667b1};
 
-    // Default parameters for fraud detection
-    private static final int DEFAULT_BIT_SIZE = 1000000;  // 1M bits ≈ 125KB
+    
+    private static final int DEFAULT_BIT_SIZE = 1000000;  
     private static final int DEFAULT_HASH_COUNT = 3;
 
     public BloomFilter(int expectedElements, double falsePositiveRate) {
@@ -32,11 +24,11 @@ public final class BloomFilter {
             throw new IllegalArgumentException("False positive rate must be between 0 and 1");
         }
 
-        // Optimal bit array size: m = -n*ln(p) / (ln(2)^2)
+        
         this.bitArraySize = (int) Math.ceil(-expectedElements * Math.log(falsePositiveRate) /
                 (Math.log(2) * Math.log(2)));
 
-        // Optimal hash function count: k = (m/n) * ln(2)
+        
         this.hashFunctionCount = Math.max(1, (int) Math.round(
                 (double) bitArraySize / expectedElements * Math.log(2)));
 
@@ -58,20 +50,18 @@ public final class BloomFilter {
         this.elementCount = 0;
     }
 
-    // Default constructor for fraud detection
+    
     public static BloomFilter createForFraudDetection() {
-        // Optimized for ~100K transactions with ~0.1% false positive rate
+        
         return new BloomFilter(100000, 0.001);
     }
 
-    // Compact version for memory-constrained environments
+    
     public static BloomFilter createCompact() {
         return new BloomFilter(DEFAULT_BIT_SIZE, DEFAULT_HASH_COUNT);
     }
 
-    /**
-     * Element ekler - transaction ID, card+merchant combo vs.
-     */
+    
     public void add(String element) {
         Objects.requireNonNull(element, "Element cannot be null");
 
@@ -84,10 +74,7 @@ public final class BloomFilter {
         elementCount++;
     }
 
-    /**
-     * Element var mı kontrol eder
-     * False positive mümkün, false negative impossible
-     */
+    
     public boolean mightContain(String element) {
         Objects.requireNonNull(element, "Element cannot be null");
 
@@ -95,16 +82,14 @@ public final class BloomFilter {
         for (int hash : hashes) {
             int index = Math.abs(hash) % bitArraySize;
             if (!bitSet.get(index)) {
-                return false; // Definitely not present
+                return false; 
             }
         }
 
-        return true; // Might be present (could be false positive)
+        return true; 
     }
 
-    /**
-     * Birden fazla element ekler (batch operation)
-     */
+    
     public void addAll(Iterable<String> elements) {
         Objects.requireNonNull(elements, "Elements cannot be null");
         for (String element : elements) {
@@ -112,9 +97,7 @@ public final class BloomFilter {
         }
     }
 
-    /**
-     * Birden fazla element kontrol eder
-     */
+    
     public boolean containsAny(Iterable<String> elements) {
         Objects.requireNonNull(elements, "Elements cannot be null");
         for (String element : elements) {
@@ -125,37 +108,29 @@ public final class BloomFilter {
         return false;
     }
 
-    /**
-     * False positive rate'i hesaplar (approximation)
-     */
+    
     public double getEstimatedFalsePositiveRate() {
         if (elementCount == 0) return 0.0;
 
-        // FPR ≈ (1 - e^(-kn/m))^k
-        // k = hash functions, n = elements, m = bit array size
+        
+        
         double exponent = -(double) hashFunctionCount * elementCount / bitArraySize;
         double base = 1.0 - Math.exp(exponent);
         return Math.pow(base, hashFunctionCount);
     }
 
-    /**
-     * Memory utilization (percentage of bits set)
-     */
+    
     public double getMemoryUtilization() {
         return (double) bitSet.cardinality() / bitArraySize * 100.0;
     }
 
-    /**
-     * Bloom filter'ı temizler
-     */
+    
     public void clear() {
         bitSet.clear();
         elementCount = 0;
     }
 
-    /**
-     * İki bloom filter'ı birleştirir (union operation)
-     */
+    
     public BloomFilter union(BloomFilter other) {
         if (this.bitArraySize != other.bitArraySize ||
                 this.hashFunctionCount != other.hashFunctionCount) {
@@ -165,14 +140,12 @@ public final class BloomFilter {
         BloomFilter result = new BloomFilter(bitArraySize, hashFunctionCount);
         result.bitSet.or(this.bitSet);
         result.bitSet.or(other.bitSet);
-        result.elementCount = this.elementCount + other.elementCount; // Approximation
+        result.elementCount = this.elementCount + other.elementCount; 
 
         return result;
     }
 
-    /**
-     * 3 hash fonksiyonu ile hash values üretir
-     */
+    
     private int[] getHashValues(String element) {
         int[] hashes = new int[Math.min(hashFunctionCount, HASH_SEEDS.length)];
 
@@ -183,9 +156,7 @@ public final class BloomFilter {
         return hashes;
     }
 
-    /**
-     * MurmurHash3 implementation - fast non-cryptographic hash
-     */
+    
     private int murmurHash3(String input, int seed) {
         byte[] data = input.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return murmurHash3(data, seed);
@@ -201,7 +172,7 @@ public final class BloomFilter {
 
         int hash = seed;
 
-        // Process 4-byte chunks
+        
         int length = data.length;
         int numChunks = length / 4;
 
@@ -220,7 +191,7 @@ public final class BloomFilter {
             hash = hash * m + n;
         }
 
-        // Process remaining bytes
+        
         int remaining = length % 4;
         if (remaining > 0) {
             int chunk = 0;
@@ -234,7 +205,7 @@ public final class BloomFilter {
             hash ^= chunk;
         }
 
-        // Finalization
+        
         hash ^= length;
         hash ^= (hash >>> 16);
         hash *= 0x85ebca6b;
@@ -245,9 +216,7 @@ public final class BloomFilter {
         return hash;
     }
 
-    /**
-     * Bloom filter statistics
-     */
+    
     public BloomFilterStatistics getStatistics() {
         return new BloomFilterStatistics(
                 bitArraySize,
@@ -259,15 +228,13 @@ public final class BloomFilter {
         );
     }
 
-    // Getters
+    
     public int getBitArraySize() { return bitArraySize; }
     public int getHashFunctionCount() { return hashFunctionCount; }
     public int getElementCount() { return elementCount; }
     public int getBitsSet() { return bitSet.cardinality(); }
 
-    /**
-     * Bloom filter statistics nested class
-     */
+    
     public static final class BloomFilterStatistics {
         private final int bitArraySize;
         private final int hashFunctionCount;
@@ -294,7 +261,7 @@ public final class BloomFilter {
         public double getEstimatedFPR() { return estimatedFPR; }
 
         public boolean isOptimal() {
-            // Optimal when memory utilization is around 50-70%
+            
             return memoryUtilization >= 45.0 && memoryUtilization <= 75.0 && estimatedFPR <= 0.05;
         }
 

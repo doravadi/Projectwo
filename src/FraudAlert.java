@@ -2,15 +2,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Fraud alert result value object.
- *
- * Fraud detection sonucunu temsil eder:
- * - Alert severity levels
- * - Recommended actions  
- * - Detailed reasoning
- * - Investigation priority
- */
+
 public final class FraudAlert implements Comparable<FraudAlert> {
 
     private final String alertId;
@@ -20,19 +12,19 @@ public final class FraudAlert implements Comparable<FraudAlert> {
     private final AlertSeverity severity;
     private final AlertStatus status;
 
-    // Alert details
+    
     private final BigDecimal transactionAmount;
     private final String merchantName;
     private final String location;
     private final Set<AlertReason> reasons;
     private final int compositeRiskScore;
 
-    // Recommended actions
+    
     private final Set<RecommendedAction> recommendedActions;
     private final String investigationNotes;
     private final Priority investigationPriority;
 
-    // Metadata
+    
     private final Map<String, Object> metadata;
 
     public enum AlertSeverity {
@@ -134,7 +126,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
         this.metadata = new HashMap<>(Objects.requireNonNull(metadata, "Metadata cannot be null"));
     }
 
-    // Factory methods
+    
     public static FraudAlert createLowRiskAlert(String transactionId, String cardNumber,
                                                 BigDecimal amount, String merchant, String location) {
         String alertId = "ALERT_" + System.currentTimeMillis() + "_" + Math.abs(transactionId.hashCode());
@@ -151,11 +143,11 @@ public final class FraudAlert implements Comparable<FraudAlert> {
         String alertId = "ALERT_" + System.currentTimeMillis() + "_" +
                 Math.abs(transactionRisk.getTransactionId().hashCode());
 
-        // Combine reasons from both analyses
+        
         Set<AlertReason> combinedReasons = new HashSet<>();
         Set<RecommendedAction> combinedActions = new HashSet<>();
 
-        // Map transaction risk factors to alert reasons
+        
         for (TransactionRisk.RiskFactor factor : transactionRisk.getRiskFactors()) {
             switch (factor) {
                 case VELOCITY_ANOMALY -> combinedReasons.add(AlertReason.VELOCITY_ANOMALY);
@@ -169,7 +161,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
             }
         }
 
-        // Map location anomalies to alert reasons
+        
         if (locationAnalysis != null) {
             for (LocationTracker.LocationAnomaly anomaly : locationAnalysis.getAnomalies()) {
                 switch (anomaly) {
@@ -181,21 +173,21 @@ public final class FraudAlert implements Comparable<FraudAlert> {
             }
         }
 
-        // Determine composite risk score
+        
         int transactionScore = transactionRisk.getRiskScore();
         int locationScore = locationAnalysis != null ? locationAnalysis.getRiskScore() : 0;
         int compositeScore = Math.min(100, (int)(transactionScore * 0.6 + locationScore * 0.4));
 
-        // Determine severity
+        
         AlertSeverity severity = determineSeverity(compositeScore, combinedReasons);
 
-        // Determine recommended actions
+        
         combinedActions.addAll(determineActions(severity, combinedReasons, transactionRisk));
 
-        // Create investigation notes
+        
         String notes = buildInvestigationNotes(transactionRisk, locationAnalysis, compositeScore);
 
-        // Metadata
+        
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("transactionRiskScore", transactionScore);
         metadata.put("locationRiskScore", locationScore);
@@ -212,7 +204,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
                 combinedActions, notes, metadata);
     }
 
-    // Getters
+    
     public String getAlertId() { return alertId; }
     public String getTransactionId() { return transactionId; }
     public String getCardNumber() { return cardNumber; }
@@ -229,7 +221,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
     public Priority getInvestigationPriority() { return investigationPriority; }
     public Map<String, Object> getMetadata() { return new HashMap<>(metadata); }
 
-    // Business logic methods
+    
     public boolean requiresImmediateAction() {
         return severity == AlertSeverity.CRITICAL ||
                 recommendedActions.contains(RecommendedAction.BLOCK_CARD);
@@ -257,7 +249,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
         return getAgeMinutes() > maxAgeMinutes;
     }
 
-    // Helper methods
+    
     private static AlertSeverity determineSeverity(int compositeScore, Set<AlertReason> reasons) {
         if (compositeScore >= 80) return AlertSeverity.CRITICAL;
         if (compositeScore >= 60) return AlertSeverity.HIGH;
@@ -290,7 +282,7 @@ public final class FraudAlert implements Comparable<FraudAlert> {
             }
         }
 
-        // Specific reason-based actions
+        
         if (reasons.contains(AlertReason.MERCHANT_RISK)) {
             actions.add(RecommendedAction.FLAG_MERCHANT);
         }
@@ -336,15 +328,15 @@ public final class FraudAlert implements Comparable<FraudAlert> {
 
     @Override
     public int compareTo(FraudAlert other) {
-        // Primary: Severity level (higher first)
+        
         int severityCompare = Integer.compare(other.severity.getLevel(), this.severity.getLevel());
         if (severityCompare != 0) return severityCompare;
 
-        // Secondary: Risk score (higher first)
+        
         int scoreCompare = Integer.compare(other.compositeRiskScore, this.compositeRiskScore);
         if (scoreCompare != 0) return scoreCompare;
 
-        // Tertiary: Alert time (newer first)
+        
         return other.alertTime.compareTo(this.alertTime);
     }
 

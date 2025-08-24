@@ -6,39 +6,36 @@ import java.util.Objects;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Belirli bir günün bakiye snapshot'ını tutan immutable value object.
- * 4 farklı bucket'ta (alışveriş, nakit avans, taksit, faiz) ayrı bakiyeler.
- */
+
 public final class DailyBalance implements Comparable<DailyBalance> {
     private final LocalDate date;
     private final EnumMap<BalanceBucket, BigDecimal> balances;
     private final BigDecimal totalBalance;
 
     public enum BalanceBucket {
-        PURCHASE,           // Alışveriş bakiyesi
-        CASH_ADVANCE,       // Nakit avans bakiyesi
-        INSTALLMENT,        // Taksit bakiyesi
-        FEES_INTEREST       // Faiz ve komisyon bakiyesi
+        PURCHASE,           
+        CASH_ADVANCE,       
+        INSTALLMENT,        
+        FEES_INTEREST       
     }
 
     public DailyBalance(LocalDate date, EnumMap<BalanceBucket, BigDecimal> balances) {
         this.date = Objects.requireNonNull(date, "Date cannot be null");
         Objects.requireNonNull(balances, "Balances cannot be null");
 
-        // Deep copy of balances
+        
         this.balances = new EnumMap<>(BalanceBucket.class);
         for (BalanceBucket bucket : BalanceBucket.values()) {
             BigDecimal balance = balances.getOrDefault(bucket, BigDecimal.ZERO);
             this.balances.put(bucket, Objects.requireNonNull(balance, "Balance cannot be null"));
         }
 
-        // Calculate total balance
+        
         this.totalBalance = this.balances.values().stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // Factory methods
+    
     public static DailyBalance of(LocalDate date, BigDecimal totalBalance) {
         EnumMap<BalanceBucket, BigDecimal> balances = new EnumMap<>(BalanceBucket.class);
         balances.put(BalanceBucket.PURCHASE, totalBalance);
@@ -58,7 +55,7 @@ public final class DailyBalance implements Comparable<DailyBalance> {
         return new DailyBalance(date, balances);
     }
 
-    // Getters
+    
     public LocalDate getDate() {
         return date;
     }
@@ -72,10 +69,10 @@ public final class DailyBalance implements Comparable<DailyBalance> {
     }
 
     public EnumMap<BalanceBucket, BigDecimal> getAllBalances() {
-        return new EnumMap<>(balances); // Defensive copy
+        return new EnumMap<>(balances); 
     }
 
-    // Operations (return new instances - immutable)
+    
     public DailyBalance addChange(BalanceChange change, BalanceBucket targetBucket) {
         if (!date.equals(change.getDate())) {
             throw new IllegalArgumentException("Change date must match balance date");
@@ -96,9 +93,9 @@ public final class DailyBalance implements Comparable<DailyBalance> {
         return new DailyBalance(date, newBalances);
     }
 
-    // Analysis methods
+    
     public BigDecimal getInterestBearingBalance() {
-        // Faiz sadece pozitif bakiyeler için hesaplanır
+        
         return balances.entrySet().stream()
                 .filter(entry -> entry.getValue().compareTo(BigDecimal.ZERO) > 0)
                 .map(Map.Entry::getValue)

@@ -2,12 +2,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
-/**
- * Payment Allocation Demo & Test Utility
- *
- * DP Payment Allocation modülünü test etmek ve showcase etmek için.
- * Farklı senaryoları simüle eder ve performance benchmark yapar.
- */
+
 public final class PaymentAllocationDemo {
 
     private final PaymentAllocationService service;
@@ -15,38 +10,36 @@ public final class PaymentAllocationDemo {
 
     public PaymentAllocationDemo() {
         this.service = new PaymentAllocationService();
-        this.random = new Random(12345); // Reproducible results
+        this.random = new Random(12345); 
     }
 
-    /**
-     * Ana demo method - tüm senaryoları çalıştırır
-     */
+    
     public void runAllDemos() {
         System.out.println("🎯 PAYMENT ALLOCATION DP MODULE DEMO");
         System.out.println("=====================================");
 
         try {
-            // Demo 1: Basic scenario
+            
             System.out.println("\n1️⃣ BASIC ALLOCATION DEMO");
             basicAllocationDemo();
 
-            // Demo 2: Strategy comparison
+            
             System.out.println("\n2️⃣ STRATEGY COMPARISON DEMO");
             strategyComparisonDemo();
 
-            // Demo 3: DP vs Bank Rule
+            
             System.out.println("\n3️⃣ DP vs BANK RULE COMPARISON");
             dpVsBankRuleDemo();
 
-            // Demo 4: Granularity impact
+            
             System.out.println("\n4️⃣ GRANULARITY IMPACT TEST");
             granularityImpactDemo();
 
-            // Demo 5: Edge cases
+            
             System.out.println("\n5️⃣ EDGE CASES & EXCEPTION HANDLING");
             edgeCasesDemo();
 
-            // Demo 6: Performance benchmark
+            
             System.out.println("\n6️⃣ PERFORMANCE BENCHMARK");
             performanceBenchmarkDemo();
 
@@ -58,13 +51,11 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    /**
-     * Demo 1: Temel tahsis senaryosu
-     */
+    
     private void basicAllocationDemo() {
         String accountId = "ACC_001";
 
-        // Örnek debt bucket'lar oluştur
+        
         List<DebtBucket> buckets = createSampleBuckets();
         service.setAccountBuckets(accountId, buckets);
 
@@ -74,7 +65,7 @@ public final class PaymentAllocationDemo {
         BigDecimal paymentAmount = new BigDecimal("1500.00");
         System.out.println("\n💰 Payment Amount: " + paymentAmount + " TL");
 
-        // DP Optimal allocation
+        
         PaymentAllocation allocation = service.allocatePayment(accountId, paymentAmount,
                 PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
 
@@ -93,9 +84,7 @@ public final class PaymentAllocationDemo {
         System.out.println("  Computation Time: " + allocation.getMetrics().getComputationTimeMs() + "ms");
     }
 
-    /**
-     * Demo 2: Tüm stratejileri karşılaştır
-     */
+    
     private void strategyComparisonDemo() {
         String accountId = "ACC_002";
         List<DebtBucket> buckets = createComplexBuckets();
@@ -127,9 +116,7 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    /**
-     * Demo 3: DP vs Bank Rule detaylı karşılaştırma
-     */
+    
     private void dpVsBankRuleDemo() {
         String accountId = "ACC_003";
         List<DebtBucket> buckets = createHighInterestBuckets();
@@ -152,9 +139,7 @@ public final class PaymentAllocationDemo {
         printAllocationDetails(comparison.getDpOptimalAllocation());
     }
 
-    /**
-     * Demo 4: Granularite seviyesinin etkisi
-     */
+    
     private void granularityImpactDemo() {
         String accountId = "ACC_004";
         List<DebtBucket> buckets = createSampleBuckets();
@@ -165,7 +150,7 @@ public final class PaymentAllocationDemo {
         System.out.println("🔬 Granularity Impact Analysis:");
         System.out.println("  Payment Amount: " + paymentAmount + " TL");
 
-        int[] granularities = {1, 10, 100, 1000}; // 1TL, 10kr, 1kr, 0.1kr
+        int[] granularities = {1, 10, 100, 1000}; 
 
         for (int granularity : granularities) {
             PaymentOptimizer optimizer = new PaymentOptimizer(granularity);
@@ -184,20 +169,18 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    /**
-     * Demo 5: Edge case'ler ve exception handling
-     */
+    
     private void edgeCasesDemo() {
         System.out.println("🧪 Edge Cases Testing:");
 
-        // Case 1: Empty buckets
+        
         testEdgeCase("Empty buckets", () -> {
             service.setAccountBuckets("EDGE_001", new ArrayList<>());
             return service.allocatePayment("EDGE_001", new BigDecimal("100"),
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         });
 
-        // Case 2: Zero payment
+        
         testEdgeCase("Zero payment", () -> {
             List<DebtBucket> buckets = createSampleBuckets();
             service.setAccountBuckets("EDGE_002", buckets);
@@ -205,7 +188,7 @@ public final class PaymentAllocationDemo {
                     PaymentAllocation.AllocationStrategy.BANK_RULE);
         });
 
-        // Case 3: Payment exceeds total debt
+        
         testEdgeCase("Payment exceeds total debt", () -> {
             List<DebtBucket> buckets = List.of(
                     DebtBucket.createPurchaseBucket("SMALL_1", new BigDecimal("50"), LocalDate.now().plusDays(30))
@@ -215,23 +198,21 @@ public final class PaymentAllocationDemo {
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         });
 
-        // Case 4: Minimum payment validation
+        
         testEdgeCase("Manual allocation overflow", () -> {
             List<DebtBucket> buckets = createSampleBuckets();
             service.setAccountBuckets("EDGE_004", buckets);
 
-            // Try to allocate more than bucket capacity
+            
             Map<String, BigDecimal> manualAllocations = new HashMap<>();
-            manualAllocations.put("PURCHASE_001", new BigDecimal("10000")); // Way too much
+            manualAllocations.put("PURCHASE_001", new BigDecimal("10000")); 
 
             AllocationStrategy manualStrategy = new AllocationStrategy.ManualStrategy(manualAllocations);
             return manualStrategy.allocate(buckets, new BigDecimal("500"), "MANUAL_001");
         });
     }
 
-    /**
-     * Demo 6: Performance benchmark - büyük ölçekli test
-     */
+    
     private void performanceBenchmarkDemo() {
         System.out.println("⚡ Performance Benchmark:");
 
@@ -243,13 +224,13 @@ public final class PaymentAllocationDemo {
             List<DebtBucket> buckets = createRandomBuckets(bucketCount);
             service.setAccountBuckets(accountId, buckets);
 
-            // Benchmark DP strategy
+            
             long startTime = System.nanoTime();
             PaymentAllocation dpResult = service.allocatePayment(accountId, basePayment,
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
             long dpTime = System.nanoTime() - startTime;
 
-            // Benchmark Bank Rule strategy  
+            
             startTime = System.nanoTime();
             PaymentAllocation bankResult = service.allocatePayment(accountId, basePayment,
                     PaymentAllocation.AllocationStrategy.BANK_RULE);
@@ -262,13 +243,13 @@ public final class PaymentAllocationDemo {
                     (double) dpTime / bankTime);
         }
 
-        // System statistics
+        
         System.out.println("\n📊 System Statistics:");
         Map<String, Object> stats = service.getSystemStatistics();
         stats.forEach((key, value) -> System.out.println("  " + key + ": " + value));
     }
 
-    // Helper methods
+    
     private List<DebtBucket> createSampleBuckets() {
         return List.of(
                 DebtBucket.createPurchaseBucket("PURCHASE_001", new BigDecimal("1200.50"), LocalDate.now().plusDays(30)),
@@ -309,8 +290,8 @@ public final class PaymentAllocationDemo {
 
         for (int i = 0; i < count; i++) {
             DebtBucket.BucketType type = types[random.nextInt(types.length)];
-            BigDecimal balance = new BigDecimal(100 + random.nextInt(4900)); // 100-5000 TL
-            LocalDate dueDate = LocalDate.now().plusDays(random.nextInt(60) - 10); // -10 to +50 days
+            BigDecimal balance = new BigDecimal(100 + random.nextInt(4900)); 
+            LocalDate dueDate = LocalDate.now().plusDays(random.nextInt(60) - 10); 
 
             String bucketId = type.name() + "_" + String.format("%03d", i);
 
@@ -319,8 +300,8 @@ public final class PaymentAllocationDemo {
                 case CASH_ADVANCE -> buckets.add(DebtBucket.createCashAdvanceBucket(bucketId, balance, dueDate));
                 case OVERDUE -> buckets.add(DebtBucket.createOverdueBucket(bucketId, balance, dueDate));
                 default -> {
-                    BigDecimal rate = new BigDecimal("0.10").add(new BigDecimal(random.nextDouble() * 0.30)); // 10-40%
-                    BigDecimal minPayment = balance.multiply(new BigDecimal("0.05")); // 5% minimum
+                    BigDecimal rate = new BigDecimal("0.10").add(new BigDecimal(random.nextDouble() * 0.30)); 
+                    BigDecimal minPayment = balance.multiply(new BigDecimal("0.05")); 
                     buckets.add(new DebtBucket(bucketId, type, balance, rate, minPayment, dueDate, type.getDefaultPriority()));
                 }
             }
@@ -351,9 +332,7 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    /**
-     * Main method - demo çalıştırıcı
-     */
+    
     public static void main(String[] args) {
         PaymentAllocationDemo demo = new PaymentAllocationDemo();
         demo.runAllDemos();

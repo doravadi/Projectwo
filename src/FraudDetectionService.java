@@ -4,32 +4,22 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Main Fraud Detection Service - koordinasyon merkezi.
- *
- * Tüm fraud detection component'lerini koordine eder:
- * - BloomFilter: Duplicate detection
- * - LocationTracker: Geographic anomalies  
- * - RiskWindow: Velocity/pattern analysis
- * - TransactionRisk: Risk scoring
- *
- * Thread-safe design ile concurrent transaction processing.
- */
+
 public final class FraudDetectionService {
 
-    // Core components
+    
     private final BloomFilter transactionBloomFilter;
     private final LocationTracker locationTracker;
-    private final Map<String, RiskWindow> cardRiskWindows; // cardNumber -> RiskWindow
+    private final Map<String, RiskWindow> cardRiskWindows; 
 
-    // Alert management
+    
     private final Map<String, FraudAlert> alertHistory;
     private final AtomicLong alertCounter;
 
-    // Configuration
+    
     private final FraudDetectionConfig config;
 
-    // Statistics
+    
     private final AtomicLong totalTransactionsProcessed;
     private final AtomicLong totalAlertsGenerated;
     private final Map<FraudAlert.AlertSeverity, AtomicLong> alertCountsBySeverity;
@@ -37,16 +27,16 @@ public final class FraudDetectionService {
     public FraudDetectionService(FraudDetectionConfig config) {
         this.config = Objects.requireNonNull(config, "Config cannot be null");
 
-        // Initialize components
+        
         this.transactionBloomFilter = BloomFilter.createForFraudDetection();
         this.locationTracker = LocationTracker.createDefault();
         this.cardRiskWindows = new ConcurrentHashMap<>();
 
-        // Alert management
+        
         this.alertHistory = new ConcurrentHashMap<>();
         this.alertCounter = new AtomicLong(1);
 
-        // Statistics
+        
         this.totalTransactionsProcessed = new AtomicLong(0);
         this.totalAlertsGenerated = new AtomicLong(0);
         this.alertCountsBySeverity = new ConcurrentHashMap<>();
@@ -64,9 +54,7 @@ public final class FraudDetectionService {
         return new FraudDetectionService(FraudDetectionConfig.createHighSecurity());
     }
 
-    /**
-     * Ana transaction analysis method
-     */
+    
     public FraudAnalysisResult analyzeTransaction(String transactionId, String cardNumber,
                                                   BigDecimal amount, String merchantName,
                                                   String merchantCity, String merchantCountry,
@@ -81,55 +69,53 @@ public final class FraudDetectionService {
         totalTransactionsProcessed.incrementAndGet();
 
         try {
-            // 1. Duplicate detection with Bloom Filter
+            
             String transactionKey = createTransactionKey(cardNumber, merchantName, amount, transactionTime);
             boolean possibleDuplicate = transactionBloomFilter.mightContain(transactionKey);
 
-            // 2. Location analysis
+            
             String location = merchantCity + ", " + merchantCountry;
             LocationTracker.LocationAnalysis locationAnalysis = locationTracker.recordLocation(
                     transactionId, cardNumber, latitude, longitude, merchantCity,
                     merchantCountry, transactionTime);
 
-            // 3. Risk Window analysis (velocity & patterns)
+            
             RiskWindow cardWindow = getOrCreateRiskWindow(cardNumber);
             RiskWindow.WindowAnalysis windowAnalysis = cardWindow.addTransaction(
                     transactionId, cardNumber, amount, merchantName, location, transactionTime);
 
-            // 4. Transaction risk assessment
+            
             TransactionRisk transactionRisk = assessTransactionRisk(
                     transactionId, cardNumber, amount, merchantName, location,
                     transactionTime, transactionType, possibleDuplicate,
                     locationAnalysis, windowAnalysis);
 
-            // 5. Generate fraud alert if necessary
+            
             FraudAlert fraudAlert = null;
             if (shouldGenerateAlert(transactionRisk, locationAnalysis, windowAnalysis, possibleDuplicate)) {
                 fraudAlert = generateFraudAlert(transactionRisk, locationAnalysis,
                         windowAnalysis, possibleDuplicate);
 
-                // Store alert
+                
                 alertHistory.put(fraudAlert.getAlertId(), fraudAlert);
                 totalAlertsGenerated.incrementAndGet();
                 alertCountsBySeverity.get(fraudAlert.getSeverity()).incrementAndGet();
             }
 
-            // 6. Update bloom filter (after analysis to avoid self-detection)
+            
             transactionBloomFilter.add(transactionKey);
 
             return new FraudAnalysisResult(transactionRisk, locationAnalysis, windowAnalysis,
                     fraudAlert, possibleDuplicate, getRecommendation(fraudAlert));
 
         } catch (Exception e) {
-            // Log error and return safe default
+            
             System.err.println("Error analyzing transaction " + transactionId + ": " + e.getMessage());
             return createErrorResult(transactionId, cardNumber, amount);
         }
     }
 
-    /**
-     * Batch transaction analysis
-     */
+    
     public List<FraudAnalysisResult> analyzeTransactionBatch(List<TransactionData> transactions) {
         Objects.requireNonNull(transactions, "Transactions cannot be null");
 
@@ -146,16 +132,14 @@ public final class FraudDetectionService {
             } catch (Exception e) {
                 System.err.println("Error in batch analysis for transaction " +
                         txn.getTransactionId() + ": " + e.getMessage());
-                // Continue with other transactions
+                
             }
         }
 
         return results;
     }
 
-    /**
-     * Alert history query
-     */
+    
     public List<FraudAlert> getRecentAlerts(int maxCount) {
         return alertHistory.values().stream()
                 .sorted(Comparator.comparing(FraudAlert::getAlertTime).reversed())
@@ -163,9 +147,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    /**
-     * Card-specific alert history
-     */
+    
     public List<FraudAlert> getCardAlerts(String cardNumber, int maxCount) {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
 
@@ -176,9 +158,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    /**
-     * High severity alerts
-     */
+    
     public List<FraudAlert> getHighSeverityAlerts() {
         return alertHistory.values().stream()
                 .filter(alert -> alert.getSeverity() == FraudAlert.AlertSeverity.HIGH ||
@@ -187,9 +167,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    /**
-     * Service statistics
-     */
+    
     public FraudDetectionStatistics getStatistics() {
         Map<FraudAlert.AlertSeverity, Long> alertCounts = new HashMap<>();
         for (Map.Entry<FraudAlert.AlertSeverity, AtomicLong> entry : alertCountsBySeverity.entrySet()) {
@@ -209,19 +187,15 @@ public final class FraudDetectionService {
         );
     }
 
-    /**
-     * Configuration update
-     */
+    
     public void updateConfig(FraudDetectionConfig newConfig) {
         Objects.requireNonNull(newConfig, "Config cannot be null");
-        // Thread-safe config update would require synchronization
-        // For simplicity, we'll log a warning
+        
+        
         System.err.println("Warning: Config update requires service restart for thread safety");
     }
 
-    /**
-     * Clear all data (cleanup method)
-     */
+    
     public void clearAllData() {
         transactionBloomFilter.clear();
         cardRiskWindows.clear();
@@ -234,11 +208,11 @@ public final class FraudDetectionService {
         }
     }
 
-    // Helper methods
+    
     private String createTransactionKey(String cardNumber, String merchantName,
                                         BigDecimal amount, LocalDateTime timestamp) {
-        // Create unique key for duplicate detection
-        String timeKey = timestamp.withSecond(0).withNano(0).toString(); // Minute precision
+        
+        String timeKey = timestamp.withSecond(0).withNano(0).toString(); 
         return String.format("%s_%s_%.2f_%s", cardNumber, merchantName, amount.doubleValue(), timeKey);
     }
 
@@ -253,15 +227,15 @@ public final class FraudDetectionService {
                                                   LocationTracker.LocationAnalysis locationAnalysis,
                                                   RiskWindow.WindowAnalysis windowAnalysis) {
 
-        // Build risk factors
+        
         EnumSet<TransactionRisk.RiskFactor> riskFactors = EnumSet.noneOf(TransactionRisk.RiskFactor.class);
 
-        // Duplicate detection
+        
         if (possibleDuplicate) {
             riskFactors.add(TransactionRisk.RiskFactor.DUPLICATE_TRANSACTION);
         }
 
-        // Location-based factors
+        
         if (locationAnalysis.hasSuspiciousActivity()) {
             if (locationAnalysis.getAnomalies().contains(LocationTracker.LocationAnomaly.IMPOSSIBLE_SPEED)) {
                 riskFactors.add(TransactionRisk.RiskFactor.LOCATION_JUMP);
@@ -274,7 +248,7 @@ public final class FraudDetectionService {
             }
         }
 
-        // Window-based factors
+        
         if (windowAnalysis.hasRiskPatterns()) {
             if (windowAnalysis.getRiskPattern().hasPattern(RiskWindow.RiskPattern.PatternType.HIGH_VELOCITY)) {
                 riskFactors.add(TransactionRisk.RiskFactor.HIGH_FREQUENCY);
@@ -284,12 +258,12 @@ public final class FraudDetectionService {
             }
         }
 
-        // Amount-based factors
+        
         if (amount.compareTo(config.getHighAmountThreshold()) > 0) {
             riskFactors.add(TransactionRisk.RiskFactor.AMOUNT_ANOMALY);
         }
 
-        // Time-based factors
+        
         if (transactionTime.getHour() < 6 || transactionTime.getHour() > 22) {
             riskFactors.add(TransactionRisk.RiskFactor.TIME_ANOMALY);
         }
@@ -298,7 +272,7 @@ public final class FraudDetectionService {
             riskFactors.add(TransactionRisk.RiskFactor.WEEKEND_ACTIVITY);
         }
 
-        // Build reason
+        
         String riskReason = buildRiskReason(riskFactors, locationAnalysis, windowAnalysis, possibleDuplicate);
 
         return TransactionRisk.suspicious(transactionId, cardNumber, amount, merchantName,
@@ -311,27 +285,27 @@ public final class FraudDetectionService {
                                         RiskWindow.WindowAnalysis windowAnalysis,
                                         boolean possibleDuplicate) {
 
-        // Always alert on critical risk
+        
         if (transactionRisk.getRiskScore() >= config.getCriticalRiskThreshold()) {
             return true;
         }
 
-        // Alert on high location risk
+        
         if (locationAnalysis.isHighRisk()) {
             return true;
         }
 
-        // Alert on high window pattern risk
+        
         if (windowAnalysis.isHighRisk()) {
             return true;
         }
 
-        // Alert on possible duplicate
+        
         if (possibleDuplicate && transactionRisk.getRiskScore() >= config.getDuplicateAlertThreshold()) {
             return true;
         }
 
-        // Alert on multiple moderate factors
+        
         if (transactionRisk.getRiskScore() >= config.getModerateRiskThreshold() &&
                 (locationAnalysis.hasSuspiciousActivity() || windowAnalysis.hasRiskPatterns())) {
             return true;
@@ -347,7 +321,7 @@ public final class FraudDetectionService {
 
         FraudAlert alert = FraudAlert.createFromRiskAnalysis(transactionRisk, locationAnalysis);
 
-        // Add window analysis metadata
+        
         Map<String, Object> metadata = new HashMap<>(alert.getMetadata());
         metadata.put("windowTransactionCount", windowAnalysis.getTransactionCount());
         metadata.put("windowTotalAmount", windowAnalysis.getTotalAmount());
@@ -402,7 +376,7 @@ public final class FraudDetectionService {
     }
 
     private FraudAnalysisResult createErrorResult(String transactionId, String cardNumber, BigDecimal amount) {
-        // Create minimal safe result on error
+        
         TransactionRisk errorRisk = TransactionRisk.lowRisk(transactionId, cardNumber, amount,
                 "UNKNOWN", "UNKNOWN", "UNKNOWN",
                 LocalDateTime.now(), TransactionRisk.TransactionType.PURCHASE);
@@ -410,7 +384,7 @@ public final class FraudDetectionService {
         return new FraudAnalysisResult(errorRisk, null, null, null, false, ProcessingRecommendation.REVIEW);
     }
 
-    // Enums and nested classes
+    
     public enum ProcessingRecommendation {
         ALLOW, MONITOR, REVIEW, BLOCK
     }
@@ -443,7 +417,7 @@ public final class FraudDetectionService {
             this.transactionType = transactionType;
         }
 
-        // Getters
+        
         public String getTransactionId() { return transactionId; }
         public String getCardNumber() { return cardNumber; }
         public BigDecimal getAmount() { return amount; }
@@ -477,7 +451,7 @@ public final class FraudDetectionService {
             this.recommendation = recommendation;
         }
 
-        // Getters
+        
         public TransactionRisk getTransactionRisk() { return transactionRisk; }
         public LocationTracker.LocationAnalysis getLocationAnalysis() { return locationAnalysis; }
         public RiskWindow.WindowAnalysis getWindowAnalysis() { return windowAnalysis; }
@@ -518,7 +492,7 @@ public final class FraudDetectionService {
             this.locationStats = locationStats;
         }
 
-        // Getters
+        
         public long getTotalTransactionsProcessed() { return totalTransactionsProcessed; }
         public long getTotalAlertsGenerated() { return totalAlertsGenerated; }
         public Map<FraudAlert.AlertSeverity, Long> getAlertCounts() { return new HashMap<>(alertCounts); }

@@ -1,12 +1,9 @@
-// Presentment.java - Settlement/Presentment value object
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.io.Serializable;
 
-/**
- * Immutable presentment (settlement) transaction value object
- * Represents a merchant's request for payment settlement
- */
+
 public final class Presentment implements Comparable<Presentment>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -18,12 +15,12 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
     private final String merchantId;
     private final String mccCode;
     private final PresentmentType type;
-    private final String originalAuthId; // Optional - may be null if not provided
+    private final String originalAuthId; 
     private final String batchId;
     private final String merchantReference;
     private final PresentmentStatus status;
 
-    // Private constructor - use builder
+    
     private Presentment(Builder builder) {
         this.presentmentId = Objects.requireNonNull(builder.presentmentId, "Presentment ID cannot be null");
         this.cardNumber = Objects.requireNonNull(builder.cardNumber, "Card number cannot be null");
@@ -33,11 +30,11 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
         this.mccCode = Objects.requireNonNull(builder.mccCode, "MCC code cannot be null");
         this.type = Objects.requireNonNull(builder.type, "Presentment type cannot be null");
         this.batchId = Objects.requireNonNull(builder.batchId, "Batch ID cannot be null");
-        this.merchantReference = builder.merchantReference; // Can be null
-        this.originalAuthId = builder.originalAuthId; // Can be null
+        this.merchantReference = builder.merchantReference; 
+        this.originalAuthId = builder.originalAuthId; 
         this.status = Objects.requireNonNull(builder.status, "Status cannot be null");
 
-        // Business validation
+        
         validatePresentment();
     }
 
@@ -45,7 +42,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
         return new Builder();
     }
 
-    // Factory methods for common scenarios
+    
     public static Presentment sale(String presentmentId, CardNumber cardNumber, Money amount,
                                    LocalDateTime timestamp, String merchantId, String mccCode,
                                    String batchId, String merchantReference) {
@@ -80,7 +77,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
                 .build();
     }
 
-    // Getters
+    
     public String getPresentmentId() { return presentmentId; }
     public CardNumber getCardNumber() { return cardNumber; }
     public Money getAmount() { return amount; }
@@ -93,7 +90,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
     public String getMerchantReference() { return merchantReference; }
     public PresentmentStatus getStatus() { return status; }
 
-    // Business logic methods
+    
     public boolean isPending() {
         return status == PresentmentStatus.PENDING;
     }
@@ -118,10 +115,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
         return type == PresentmentType.SALE;
     }
 
-    /**
-     * Calculate matching compatibility with an authorization
-     * Returns compatibility score 0-100
-     */
+    
     public double calculateCompatibilityScore(Auth auth) {
         if (!canBeMatched() || !auth.canBeMatched()) {
             return 0.0;
@@ -129,33 +123,31 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
 
         double score = 0.0;
 
-        // Card number must match exactly
+        
         if (!this.cardNumber.equals(auth.getCardNumber())) {
             return 0.0;
         }
 
-        // Amount compatibility
+        
         double amountScore = calculateAmountCompatibility(auth.getAmount());
-        score += amountScore * 0.4; // 40% weight
+        score += amountScore * 0.4; 
 
-        // Time compatibility (presentment should be after auth)
+        
         double timeScore = calculateTimeCompatibility(auth.getTimestamp());
-        score += timeScore * 0.3; // 30% weight
+        score += timeScore * 0.3; 
 
-        // Merchant matching
+        
         double merchantScore = this.merchantId.equals(auth.getMerchantId()) ? 100.0 : 0.0;
-        score += merchantScore * 0.2; // 20% weight
+        score += merchantScore * 0.2; 
 
-        // MCC matching
+        
         double mccScore = this.mccCode.equals(auth.getMccCode()) ? 100.0 : 0.0;
-        score += mccScore * 0.1; // 10% weight
+        score += mccScore * 0.1; 
 
         return Math.min(100.0, score);
     }
 
-    /**
-     * Create a copy with updated status
-     */
+    
     public Presentment withStatus(PresentmentStatus newStatus) {
         return builder()
                 .presentmentId(this.presentmentId)
@@ -172,7 +164,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
                 .build();
     }
 
-    // Builder pattern
+    
     public static class Builder {
         private String presentmentId;
         private CardNumber cardNumber;
@@ -184,7 +176,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
         private String originalAuthId;
         private String batchId;
         private String merchantReference;
-        private PresentmentStatus status = PresentmentStatus.PENDING; // Default
+        private PresentmentStatus status = PresentmentStatus.PENDING; 
 
         public Builder presentmentId(String presentmentId) { this.presentmentId = presentmentId; return this; }
         public Builder cardNumber(CardNumber cardNumber) { this.cardNumber = cardNumber; return this; }
@@ -203,7 +195,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
         }
     }
 
-    // Private helper methods
+    
     private void validatePresentment() {
         if (presentmentId.trim().isEmpty()) {
             throw new IllegalArgumentException("Presentment ID cannot be empty");
@@ -227,59 +219,59 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
     }
 
     private double calculateAmountCompatibility(Money authAmount) {
-        // For presentments, we expect amount <= auth amount (partial captures allowed)
+        
         Money absAmount = this.amount.isNegative() ?
                 Money.of(this.amount.getAmount().negate(), this.amount.getCurrency()) : this.amount;
 
         if (absAmount.equals(authAmount)) {
-            return 100.0; // Perfect match
+            return 100.0; 
         }
 
-        // Check if presentment amount is less than or equal to auth amount (partial capture)
+        
         if (absAmount.getAmount().compareTo(authAmount.getAmount()) <= 0) {
             double ratio = absAmount.getAmount().divide(authAmount.getAmount(), Money.MONEY_CONTEXT).doubleValue();
 
-            if (ratio >= 0.95) return 90.0;  // 95-100% of auth amount
-            if (ratio >= 0.80) return 75.0;  // 80-95% of auth amount
-            if (ratio >= 0.50) return 60.0;  // 50-80% of auth amount
-            if (ratio >= 0.20) return 40.0;  // 20-50% of auth amount
+            if (ratio >= 0.95) return 90.0;  
+            if (ratio >= 0.80) return 75.0;  
+            if (ratio >= 0.50) return 60.0;  
+            if (ratio >= 0.20) return 40.0;  
 
-            return 20.0; // Less than 20% but still valid partial
+            return 20.0; 
         }
 
-        // Presentment amount > auth amount (potentially problematic)
+        
         double excessRatio = absAmount.getAmount().divide(authAmount.getAmount(), Money.MONEY_CONTEXT).doubleValue();
 
-        if (excessRatio <= 1.05) return 70.0;  // Up to 5% over (tips, etc.)
-        if (excessRatio <= 1.15) return 40.0;  // Up to 15% over (questionable)
+        if (excessRatio <= 1.05) return 70.0;  
+        if (excessRatio <= 1.15) return 40.0;  
 
-        return 0.0; // Too much over auth amount
+        return 0.0; 
     }
 
     private double calculateTimeCompatibility(LocalDateTime authTimestamp) {
-        // Presentment should typically come after authorization
+        
         if (this.timestamp.isBefore(authTimestamp)) {
-            // Presentment before auth is unusual but possible (offline processing)
+            
             long hoursBefore = java.time.Duration.between(this.timestamp, authTimestamp).toHours();
 
-            if (hoursBefore <= 1) return 60.0;   // Within 1 hour before
-            if (hoursBefore <= 24) return 30.0;  // Within 24 hours before
+            if (hoursBefore <= 1) return 60.0;   
+            if (hoursBefore <= 24) return 30.0;  
 
-            return 10.0; // More than 24 hours before auth
+            return 10.0; 
         }
 
-        // Normal case: presentment after auth
+        
         long hoursAfter = java.time.Duration.between(authTimestamp, this.timestamp).toHours();
 
-        if (hoursAfter <= 2) return 100.0;     // Within 2 hours
-        if (hoursAfter <= 24) return 90.0;     // Same day
-        if (hoursAfter <= 72) return 80.0;     // Within 3 days
-        if (hoursAfter <= 168) return 60.0;    // Within 1 week
+        if (hoursAfter <= 2) return 100.0;     
+        if (hoursAfter <= 24) return 90.0;     
+        if (hoursAfter <= 72) return 80.0;     
+        if (hoursAfter <= 168) return 60.0;    
 
-        return 30.0; // Over 1 week (getting old but still valid)
+        return 30.0; 
     }
 
-    // Object contract methods
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -296,7 +288,7 @@ public final class Presentment implements Comparable<Presentment>, Serializable 
 
     @Override
     public int compareTo(Presentment other) {
-        // Sort by timestamp (newest first)
+        
         return other.timestamp.compareTo(this.timestamp);
     }
 

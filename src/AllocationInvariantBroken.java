@@ -2,15 +2,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Ödeme tahsis sonrası iş kuralı ihlallerinde fırlatılan runtime exception.
- *
- * Bu exception şu durumlarda fırlatılır:
- * - Tahsis sonrası negatif bucket bakiyesi oluşması
- * - Minimum ödeme gereksiniminin karşılanmaması  
- * - Toplam tahsis tutarının ödeme tutarını aşması
- * - DP optimizasyonu sonrası tutarsız state
- */
+
 public final class AllocationInvariantBroken extends RuntimeException {
 
     private final String bucketId;
@@ -65,7 +57,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         this.context = context != null ? Map.copyOf(context) : null;
     }
 
-    // Factory methods for common scenarios
+    
     public static AllocationInvariantBroken negativeBalance(String bucketId,
                                                             BigDecimal expectedBalance,
                                                             BigDecimal actualBalance,
@@ -120,7 +112,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
                 InvariantType.TOTAL_MISMATCH, context);
     }
 
-    // Getters
+    
     public String getBucketId() { return bucketId; }
     public BigDecimal getExpectedBalance() { return expectedBalance; }
     public BigDecimal getActualBalance() { return actualBalance; }
@@ -133,9 +125,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         return expectedBalance != null && actualBalance != null;
     }
 
-    /**
-     * Balance farkının mutlak değeri
-     */
+    
     public BigDecimal getBalanceDifference() {
         if (!hasBalanceComparison()) {
             return null;
@@ -143,25 +133,21 @@ public final class AllocationInvariantBroken extends RuntimeException {
         return actualBalance.subtract(expectedBalance).abs();
     }
 
-    /**
-     * İhlal türüne göre severity level
-     */
+    
     public int getSeverityLevel() {
         if (violationType == null) return 0;
 
         return switch (violationType) {
-            case NEGATIVE_BALANCE -> 5;           // Critical - data corruption
-            case MINIMUM_PAYMENT_VIOLATION -> 4; // High - business rule violation
-            case ALLOCATION_OVERFLOW -> 4;       // High - capacity violation
-            case DP_INCONSISTENCY -> 3;         // Medium - algorithm issue
-            case BUCKET_CAPACITY_EXCEEDED -> 3;  // Medium - limit exceeded
-            case TOTAL_MISMATCH -> 2;            // Low - calculation mismatch
+            case NEGATIVE_BALANCE -> 5;           
+            case MINIMUM_PAYMENT_VIOLATION -> 4; 
+            case ALLOCATION_OVERFLOW -> 4;       
+            case DP_INCONSISTENCY -> 3;         
+            case BUCKET_CAPACITY_EXCEEDED -> 3;  
+            case TOTAL_MISMATCH -> 2;            
         };
     }
 
-    /**
-     * Recovery önerisi
-     */
+    
     public String getRecoveryAdvice() {
         if (violationType == null) {
             return "Review allocation logic and validate inputs";
@@ -183,9 +169,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         };
     }
 
-    /**
-     * Context bilgisini string formatında döndürür
-     */
+    
     public String getContextSummary() {
         if (context == null || context.isEmpty()) {
             return "No context available";
@@ -197,7 +181,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         }
 
         if (sb.length() > 2) {
-            sb.setLength(sb.length() - 2); // Remove trailing comma
+            sb.setLength(sb.length() - 2); 
         }
 
         return sb.toString();

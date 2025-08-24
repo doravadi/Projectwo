@@ -4,12 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Payment Allocation Service - Ana API sınıfı
- *
- * Farklı tahsis stratejilerini yönetir, karşılaştırır ve optimize eder.
- * Thread-safe tasarım ile çoklu hesap desteği.
- */
+
 public final class PaymentAllocationService {
 
     private final Map<String, List<DebtBucket>> accountBuckets;
@@ -31,21 +26,17 @@ public final class PaymentAllocationService {
         this.allocationIdCounter = new AtomicLong(1);
     }
 
-    /**
-     * Hesap için debt bucket'ları ayarlar
-     */
+    
     public void setAccountBuckets(String accountId, List<DebtBucket> buckets) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(buckets, "Buckets cannot be null");
 
-        // Deep copy
+        
         List<DebtBucket> bucketCopy = new ArrayList<>(buckets);
         accountBuckets.put(accountId, bucketCopy);
     }
 
-    /**
-     * Hesaba yeni bucket ekler
-     */
+    
     public void addDebtBucket(String accountId, DebtBucket bucket) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(bucket, "Bucket cannot be null");
@@ -53,9 +44,7 @@ public final class PaymentAllocationService {
         accountBuckets.computeIfAbsent(accountId, k -> new ArrayList<>()).add(bucket);
     }
 
-    /**
-     * Belirli strateji ile ödeme tahsisi
-     */
+    
     public PaymentAllocation allocatePayment(String accountId, BigDecimal paymentAmount,
                                              PaymentAllocation.AllocationStrategy strategyType) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
@@ -74,21 +63,19 @@ public final class PaymentAllocationService {
 
         PaymentAllocation allocation = strategy.allocate(buckets, paymentAmount, allocationId);
 
-        // Post-allocation validation
+        
         validateAllocation(buckets, allocation);
 
-        // Update bucket states
+        
         updateBucketsAfterAllocation(accountId, allocation);
 
-        // Store in history
+        
         allocationHistory.put(allocationId, allocation);
 
         return allocation;
     }
 
-    /**
-     * Tüm stratejileri karşılaştır ve en iyi sonucu döndür
-     */
+    
     public StrategyComparison compareAllStrategies(String accountId, BigDecimal paymentAmount) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
@@ -113,18 +100,16 @@ public final class PaymentAllocationService {
         return new StrategyComparison(results, errors, findBestAllocation(results));
     }
 
-    /**
-     * DP vs Bank Rule karşılaştırması (ana business case)
-     */
+    
     public AllocationComparison compareDPvsBankRule(String accountId, BigDecimal paymentAmount) {
         List<DebtBucket> buckets = getAccountBuckets(accountId);
 
-        // Bank Rule allocation
+        
         AllocationStrategy bankRule = AllocationStrategy.createStrategy(PaymentAllocation.AllocationStrategy.BANK_RULE);
         PaymentAllocation bankRuleResult = bankRule.allocate(buckets, paymentAmount,
                 "BANK_" + generateAllocationId());
 
-        // DP Optimal allocation
+        
         AllocationStrategy dpOptimal = AllocationStrategy.createStrategy(PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         PaymentAllocation dpResult = dpOptimal.allocate(buckets, paymentAmount,
                 "DP_" + generateAllocationId());
@@ -132,9 +117,7 @@ public final class PaymentAllocationService {
         return new AllocationComparison(bankRuleResult, dpResult);
     }
 
-    /**
-     * Allocation'ı uygular ve bucket state'lerini günceller
-     */
+    
     public void applyAllocation(String accountId, String allocationId) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(allocationId, "Allocation ID cannot be null");
@@ -147,20 +130,16 @@ public final class PaymentAllocationService {
         updateBucketsAfterAllocation(accountId, allocation);
     }
 
-    /**
-     * Hesap bucket'larını döndürür
-     */
+    
     public List<DebtBucket> getAccountBuckets(String accountId) {
         List<DebtBucket> buckets = accountBuckets.get(accountId);
         if (buckets == null) {
             throw new IllegalArgumentException("Account not found: " + accountId);
         }
-        return new ArrayList<>(buckets); // Defensive copy
+        return new ArrayList<>(buckets); 
     }
 
-    /**
-     * Allocation geçmişini döndürür
-     */
+    
     public List<PaymentAllocation> getAllocationHistory(String accountId) {
         return allocationHistory.values().stream()
                 .filter(allocation -> allocation.getAllocationId().contains(accountId))
@@ -168,9 +147,7 @@ public final class PaymentAllocationService {
                 .toList();
     }
 
-    /**
-     * Sistem istatistikleri
-     */
+    
     public Map<String, Object> getSystemStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("activeAccounts", accountBuckets.size());
@@ -178,7 +155,7 @@ public final class PaymentAllocationService {
         stats.put("totalBuckets", accountBuckets.values().stream()
                 .mapToInt(List::size).sum());
 
-        // Strategy usage statistics
+        
         Map<PaymentAllocation.AllocationStrategy, Long> strategyUsage = new EnumMap<>(PaymentAllocation.AllocationStrategy.class);
         for (PaymentAllocation allocation : allocationHistory.values()) {
             strategyUsage.merge(allocation.getStrategy(), 1L, Long::sum);
@@ -188,16 +165,16 @@ public final class PaymentAllocationService {
         return stats;
     }
 
-    // Helper methods
+    
     private void validateAllocation(List<DebtBucket> buckets, PaymentAllocation allocation) {
-        // Total amount validation
+        
         BigDecimal totalAllocated = allocation.getTotalAllocatedAmount();
         if (totalAllocated.compareTo(allocation.getTotalPaymentAmount()) > 0) {
             throw AllocationInvariantBroken.totalMismatch(allocation.getTotalPaymentAmount(),
                     totalAllocated, allocation.getBucketAllocations());
         }
 
-        // Bucket capacity validation
+        
         for (Map.Entry<String, BigDecimal> entry : allocation.getBucketAllocations().entrySet()) {
             String bucketId = entry.getKey();
             BigDecimal allocatedAmount = entry.getValue();
@@ -208,21 +185,21 @@ public final class PaymentAllocationService {
                     .orElse(null);
 
             if (bucket == null) {
-                continue; // Skip validation for unknown buckets
+                continue; 
             }
 
-            // Capacity check
+            
             if (allocatedAmount.compareTo(bucket.getCurrentBalance()) > 0) {
                 throw AllocationInvariantBroken.allocationOverflow(bucketId,
                         bucket.getCurrentBalance(), allocatedAmount);
             }
 
-            // Minimum payment check (for non-zero allocations)
+            
             if (allocatedAmount.compareTo(BigDecimal.ZERO) > 0 &&
                     allocatedAmount.compareTo(bucket.getMinimumPayment()) < 0 &&
                     allocatedAmount.compareTo(bucket.getCurrentBalance()) < 0) {
 
-                // Allow full payment even if below minimum
+                
                 throw AllocationInvariantBroken.minimumPaymentViolation(bucketId,
                         bucket.getMinimumPayment(), allocatedAmount);
             }
@@ -241,7 +218,7 @@ public final class PaymentAllocationService {
             if (allocatedAmount.compareTo(BigDecimal.ZERO) > 0) {
                 DebtBucket updatedBucket = bucket.withPayment(allocatedAmount);
 
-                // Post-update validation
+                
                 if (updatedBucket.getCurrentBalance().compareTo(BigDecimal.ZERO) < 0) {
                     throw AllocationInvariantBroken.negativeBalance(bucket.getBucketId(),
                             BigDecimal.ZERO, updatedBucket.getCurrentBalance(), allocatedAmount);
@@ -270,7 +247,7 @@ public final class PaymentAllocationService {
                 System.currentTimeMillis();
     }
 
-    // Nested result classes
+    
     public static final class StrategyComparison {
         private final Map<PaymentAllocation.AllocationStrategy, PaymentAllocation> results;
         private final Map<PaymentAllocation.AllocationStrategy, Exception> errors;

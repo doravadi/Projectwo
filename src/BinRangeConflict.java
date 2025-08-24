@@ -1,4 +1,4 @@
-// BinRangeConflict.java - Conflict information
+
 import java.util.Objects;
 import java.io.Serializable;
 

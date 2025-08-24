@@ -3,12 +3,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Parse edilmiş ve cache'lenmiş DSL kuralını temsil eden class.
- *
- * RuleEngine tarafından kullanılır. Hem orijinal DSL string'ini
- * hem de parse edilmiş AST'yi içerir.
- */
+
 final class ParsedRule {
 
     private final String ruleId;
@@ -32,7 +27,7 @@ final class ParsedRule {
         this.creationTime = LocalDateTime.now();
     }
 
-    // Getters
+    
     public String getRuleId() { return ruleId; }
     public String getDslExpression() { return dslExpression; }
     public ASTNode getAst() { return ast; }
@@ -42,12 +37,12 @@ final class ParsedRule {
     public boolean isActive() { return active; }
     public LocalDateTime getCreationTime() { return creationTime; }
 
-    // Setter for active status (thread-safe)
+    
     public void setActive(boolean active) {
         this.active = active;
     }
 
-    // Convenience methods
+    
     public int getConditionCount() {
         return ast.getConditionCount();
     }
@@ -85,43 +80,38 @@ final class ParsedRule {
     }
 }
 
-/**
- * DSL Rule Engine performance ve usage istatistikleri.
- *
- * Thread-safe design ile concurrent access desteklenir.
- * Engine'in performance monitoring için kullanılır.
- */
+
 final class RuleEngineStatistics {
 
-    // Rule management counters
+    
     private final AtomicLong rulesAdded = new AtomicLong(0);
     private final AtomicLong rulesRemoved = new AtomicLong(0);
     private volatile int totalRules = 0;
     private volatile int activeRules = 0;
 
-    // Evaluation counters
+    
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong successfulEvaluations = new AtomicLong(0);
     private final AtomicLong failedEvaluations = new AtomicLong(0);
 
-    // Performance metrics (nanoseconds)
+    
     private volatile long averageParsingTime = 0;
     private volatile long averageEvaluationTime = 0;
     private volatile long maxEvaluationTime = 0;
     private volatile long minEvaluationTime = Long.MAX_VALUE;
 
-    // Cache metrics
+    
     private final AtomicLong cacheHits = new AtomicLong(0);
     private final AtomicLong cacheMisses = new AtomicLong(0);
 
-    // Error tracking
+    
     private final AtomicLong parseErrors = new AtomicLong(0);
     private final AtomicLong evaluationErrors = new AtomicLong(0);
 
-    // Creation time
+    
     private final LocalDateTime startTime = LocalDateTime.now();
 
-    // Increment methods
+    
     public void incrementRulesAdded() {
         rulesAdded.incrementAndGet();
     }
@@ -154,9 +144,9 @@ final class RuleEngineStatistics {
         evaluationErrors.incrementAndGet();
     }
 
-    // Performance tracking
+    
     public void recordEvaluationTime(long nanoTime) {
-        // Update min/max
+        
         long current;
         do {
             current = minEvaluationTime;
@@ -168,7 +158,7 @@ final class RuleEngineStatistics {
     }
 
     private boolean compareAndSetMinEvaluationTime(long expected, long update) {
-        // Simple volatile write - not atomic but good enough for statistics
+        
         if (minEvaluationTime == expected) {
             minEvaluationTime = update;
             return true;
@@ -184,7 +174,7 @@ final class RuleEngineStatistics {
         return false;
     }
 
-    // Setters (called by RuleEngine)
+    
     public void setTotalRules(int totalRules) {
         this.totalRules = totalRules;
     }
@@ -205,7 +195,7 @@ final class RuleEngineStatistics {
         this.averageEvaluationTime = averageEvaluationTime;
     }
 
-    // Getters
+    
     public long getRulesAdded() { return rulesAdded.get(); }
     public long getRulesRemoved() { return rulesRemoved.get(); }
     public int getTotalRules() { return totalRules; }
@@ -228,7 +218,7 @@ final class RuleEngineStatistics {
 
     public LocalDateTime getStartTime() { return startTime; }
 
-    // Calculated metrics
+    
     public double getSuccessRate() {
         long total = getTotalEvaluations();
         return total == 0 ? 0.0 : (double) getSuccessfulEvaluations() / total * 100.0;
@@ -259,7 +249,7 @@ final class RuleEngineStatistics {
         return java.time.Duration.between(startTime, LocalDateTime.now()).toMinutes();
     }
 
-    // Reset statistics
+    
     public void reset() {
         rulesAdded.set(0);
         rulesRemoved.set(0);
@@ -282,7 +272,7 @@ final class RuleEngineStatistics {
         evaluationErrors.set(0);
     }
 
-    // Summary report
+    
     public String generateSummaryReport() {
         StringBuilder sb = new StringBuilder();
         sb.append("=== DSL Rule Engine Statistics ===\n");

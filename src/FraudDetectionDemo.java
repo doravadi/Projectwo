@@ -2,22 +2,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Fraud Detection Demo & Showcase Utility
- *
- * Comprehensive testing and demonstration of fraud detection capabilities:
- * - Normal vs suspicious transaction patterns
- * - Location jumping and impossible speed detection
- * - Velocity attacks and pattern analysis
- * - Bloom filter duplicate detection
- * - Performance benchmarks
- */
+
 public final class FraudDetectionDemo {
 
     private final FraudDetectionService fraudService;
     private final Random random;
 
-    // Demo data
+    
     private static final String[] CARD_NUMBERS = {
             "1234567890123456", "2345678901234567", "3456789012345678",
             "4567890123456789", "5678901234567890"
@@ -40,46 +31,44 @@ public final class FraudDetectionDemo {
 
     public FraudDetectionDemo() {
         this.fraudService = FraudDetectionService.createDefault();
-        this.random = new Random(42); // Reproducible results
+        this.random = new Random(42); 
     }
 
-    /**
-     * Ana demo runner - tüm scenarios
-     */
+    
     public void runAllDemos() {
         System.out.println("🕵️ FRAUD DETECTION MODULE DEMO");
         System.out.println("================================");
 
         try {
-            // Demo 1: Normal transactions
+            
             System.out.println("\n1️⃣ NORMAL TRANSACTION PATTERNS");
             demonstrateNormalTransactions();
 
-            // Demo 2: Duplicate detection
+            
             System.out.println("\n2️⃣ DUPLICATE TRANSACTION DETECTION");
             demonstrateDuplicateDetection();
 
-            // Demo 3: Location jumping
+            
             System.out.println("\n3️⃣ IMPOSSIBLE LOCATION JUMPS");
             demonstrateLocationJumping();
 
-            // Demo 4: Velocity attacks
+            
             System.out.println("\n4️⃣ HIGH VELOCITY ATTACKS");
             demonstrateVelocityAttacks();
 
-            // Demo 5: Pattern-based fraud
+            
             System.out.println("\n5️⃣ PATTERN-BASED FRAUD");
             demonstratePatternFraud();
 
-            // Demo 6: Mixed scenario attacks
+            
             System.out.println("\n6️⃣ MIXED ATTACK SCENARIOS");
             demonstrateMixedAttacks();
 
-            // Demo 7: Performance benchmarks
+            
             System.out.println("\n7️⃣ PERFORMANCE BENCHMARKS");
             demonstratePerformance();
 
-            // Demo 8: Statistical analysis
+            
             System.out.println("\n8️⃣ FRAUD DETECTION STATISTICS");
             showStatistics();
 
@@ -91,21 +80,19 @@ public final class FraudDetectionDemo {
         }
     }
 
-    /**
-     * Demo 1: Normal transaction patterns
-     */
+    
     private void demonstrateNormalTransactions() {
         System.out.println("📊 Testing normal spending patterns...");
 
         String cardNumber = CARD_NUMBERS[0];
         LocalDateTime startTime = LocalDateTime.now().minusHours(24);
 
-        // Simulate 20 normal transactions over 24 hours
+        
         for (int i = 0; i < 20; i++) {
             LocalDateTime txnTime = startTime.plusMinutes(i * 60 + random.nextInt(30));
-            LocationData location = LOCATIONS[random.nextInt(3)]; // Türkiye içi
+            LocationData location = LOCATIONS[random.nextInt(3)]; 
             String merchant = MERCHANTS[random.nextInt(MERCHANTS.length)];
-            BigDecimal amount = new BigDecimal(50 + random.nextInt(200)); // 50-250 TL
+            BigDecimal amount = new BigDecimal(50 + random.nextInt(200)); 
 
             String txnId = "NORMAL_" + String.format("%03d", i);
 
@@ -123,9 +110,7 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Normal pattern test completed");
     }
 
-    /**
-     * Demo 2: Duplicate transaction detection  
-     */
+    
     private void demonstrateDuplicateDetection() {
         System.out.println("🔄 Testing duplicate transaction detection...");
 
@@ -135,7 +120,7 @@ public final class FraudDetectionDemo {
         BigDecimal amount = new BigDecimal("45.50");
         LocalDateTime baseTime = LocalDateTime.now();
 
-        // Original transaction
+        
         FraudDetectionService.FraudAnalysisResult originalResult = fraudService.analyzeTransaction(
                 "DUP_001", cardNumber, amount, merchant, location.city, location.country,
                 location.latitude, location.longitude, baseTime,
@@ -144,7 +129,7 @@ public final class FraudDetectionDemo {
         System.out.printf("  Original transaction: Alert=%s\n",
                 originalResult.hasAlert() ? "YES" : "NO");
 
-        // Duplicate attempt after 2 minutes
+        
         FraudDetectionService.FraudAnalysisResult duplicateResult = fraudService.analyzeTransaction(
                 "DUP_002", cardNumber, amount, merchant, location.city, location.country,
                 location.latitude, location.longitude, baseTime.plusMinutes(2),
@@ -163,16 +148,14 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Duplicate detection test completed");
     }
 
-    /**
-     * Demo 3: Impossible location jumps
-     */
+    
     private void demonstrateLocationJumping() {
         System.out.println("🌍 Testing impossible location jumps...");
 
         String cardNumber = CARD_NUMBERS[2];
         LocalDateTime startTime = LocalDateTime.now();
 
-        // Transaction 1: Istanbul
+        
         LocationData istanbul = LOCATIONS[0];
         FraudDetectionService.FraudAnalysisResult result1 = fraudService.analyzeTransaction(
                 "LOC_001", cardNumber, new BigDecimal("100"), "RESTAURANT",
@@ -181,7 +164,7 @@ public final class FraudDetectionDemo {
 
         System.out.printf("  Istanbul transaction: Alert=%s\n", result1.hasAlert() ? "YES" : "NO");
 
-        // Transaction 2: London after 5 minutes (impossible!)
+        
         LocationData london = LOCATIONS[2];
         FraudDetectionService.FraudAnalysisResult result2 = fraudService.analyzeTransaction(
                 "LOC_002", cardNumber, new BigDecimal("75"), "PUB",
@@ -205,9 +188,7 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Location jumping test completed");
     }
 
-    /**
-     * Demo 4: High velocity attacks
-     */
+    
     private void demonstrateVelocityAttacks() {
         System.out.println("⚡ Testing high velocity attacks...");
 
@@ -216,11 +197,11 @@ public final class FraudDetectionDemo {
         LocalDateTime startTime = LocalDateTime.now();
         int alertCount = 0;
 
-        // Simulate 20 transactions in 5 minutes
+        
         for (int i = 0; i < 20; i++) {
-            LocalDateTime txnTime = startTime.plusSeconds(i * 15); // Every 15 seconds
+            LocalDateTime txnTime = startTime.plusSeconds(i * 15); 
             String merchant = MERCHANTS[random.nextInt(MERCHANTS.length)];
-            BigDecimal amount = new BigDecimal(20 + random.nextInt(50)); // Small amounts
+            BigDecimal amount = new BigDecimal(20 + random.nextInt(50)); 
 
             String txnId = "VEL_" + String.format("%03d", i);
 
@@ -231,7 +212,7 @@ public final class FraudDetectionDemo {
 
             if (result.hasAlert()) {
                 alertCount++;
-                if (alertCount <= 3) { // Show first 3 alerts
+                if (alertCount <= 3) { 
                     System.out.printf("  🚨 Alert #%d on %s: %s (Score: %d)\n",
                             alertCount, txnId, result.getFraudAlert().getSeverity(),
                             result.getFraudAlert().getCompositeRiskScore());
@@ -249,20 +230,18 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Velocity attack test completed");
     }
 
-    /**
-     * Demo 5: Pattern-based fraud detection
-     */
+    
     private void demonstratePatternFraud() {
         System.out.println("🎭 Testing pattern-based fraud...");
 
         String cardNumber = CARD_NUMBERS[4];
         LocationData location = LOCATIONS[0];
-        LocalDateTime startTime = LocalDateTime.now().withHour(2); // Night time
+        LocalDateTime startTime = LocalDateTime.now().withHour(2); 
 
-        // Pattern 1: Sequential amounts (testing pattern)
+        
         System.out.println("  Testing sequential amount pattern...");
         for (int i = 1; i <= 10; i++) {
-            BigDecimal amount = new BigDecimal(i * 10); // 10, 20, 30, ..., 100
+            BigDecimal amount = new BigDecimal(i * 10); 
             String txnId = "PAT_SEQ_" + String.format("%02d", i);
 
             FraudDetectionService.FraudAnalysisResult result = fraudService.analyzeTransaction(
@@ -278,7 +257,7 @@ public final class FraudDetectionDemo {
             }
         }
 
-        // Pattern 2: Round amounts
+        
         System.out.println("  Testing round amount pattern...");
         BigDecimal[] roundAmounts = {
                 new BigDecimal("100"), new BigDecimal("200"), new BigDecimal("50"),
@@ -307,32 +286,30 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Pattern-based fraud test completed");
     }
 
-    /**
-     * Demo 6: Mixed attack scenarios
-     */
+    
     private void demonstrateMixedAttacks() {
         System.out.println("🎯 Testing mixed attack scenarios...");
 
-        String cardNumber = "9999888877776666"; // New card for mixed test
+        String cardNumber = "9999888877776666"; 
 
-        // Scenario 1: Location jump + duplicate + velocity
+        
         System.out.println("  Scenario: Location jump + Duplicate + High velocity");
 
         LocalDateTime startTime = LocalDateTime.now();
 
-        // Istanbul transaction
+        
         FraudDetectionService.FraudAnalysisResult result1 = fraudService.analyzeTransaction(
                 "MIX_001", cardNumber, new BigDecimal("500"), "LUXURY_STORE",
                 "Istanbul", "TR", 41.0082, 28.9784, startTime,
                 TransactionRisk.TransactionType.PURCHASE);
 
-        // Paris transaction 3 minutes later (impossible)
+        
         FraudDetectionService.FraudAnalysisResult result2 = fraudService.analyzeTransaction(
                 "MIX_002", cardNumber, new BigDecimal("500"), "LUXURY_STORE",
                 "Paris", "FR", 48.8566, 2.3522, startTime.plusMinutes(3),
                 TransactionRisk.TransactionType.PURCHASE);
 
-        // Duplicate attempt
+        
         FraudDetectionService.FraudAnalysisResult result3 = fraudService.analyzeTransaction(
                 "MIX_003", cardNumber, new BigDecimal("500"), "LUXURY_STORE",
                 "Paris", "FR", 48.8566, 2.3522, startTime.plusMinutes(4),
@@ -355,9 +332,7 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Mixed attack scenarios completed");
     }
 
-    /**
-     * Demo 7: Performance benchmarks
-     */
+    
     private void demonstratePerformance() {
         System.out.println("🚀 Testing performance benchmarks...");
 
@@ -366,7 +341,7 @@ public final class FraudDetectionDemo {
         for (int count : transactionCounts) {
             long startTime = System.nanoTime();
 
-            // Generate random transactions
+            
             for (int i = 0; i < count; i++) {
                 String cardNumber = CARD_NUMBERS[random.nextInt(CARD_NUMBERS.length)];
                 LocationData location = LOCATIONS[random.nextInt(LOCATIONS.length)];
@@ -393,9 +368,7 @@ public final class FraudDetectionDemo {
         System.out.println("  ✅ Performance benchmark completed");
     }
 
-    /**
-     * Demo 8: Show comprehensive statistics
-     */
+    
     private void showStatistics() {
         System.out.println("📈 Comprehensive Fraud Detection Statistics:");
 
@@ -442,9 +415,7 @@ public final class FraudDetectionDemo {
         }
     }
 
-    /**
-     * Location data helper class
-     */
+    
     private static final class LocationData {
         final String city;
         final String country;
@@ -459,9 +430,7 @@ public final class FraudDetectionDemo {
         }
     }
 
-    /**
-     * Interactive demo runner
-     */
+    
     public void runInteractiveDemo() {
         Scanner scanner = new Scanner(System.in);
 
@@ -483,7 +452,7 @@ public final class FraudDetectionDemo {
                 System.out.print("Location (city,country): ");
                 String[] locationParts = scanner.nextLine().trim().split(",");
 
-                LocationData selectedLocation = LOCATIONS[0]; // Default to Istanbul
+                LocationData selectedLocation = LOCATIONS[0]; 
                 for (LocationData loc : LOCATIONS) {
                     if (loc.city.equalsIgnoreCase(locationParts[0].trim())) {
                         selectedLocation = loc;
@@ -519,9 +488,7 @@ public final class FraudDetectionDemo {
         System.out.println("👋 Interactive demo ended");
     }
 
-    /**
-     * Main demo runner
-     */
+    
     public static void main(String[] args) {
         FraudDetectionDemo demo = new FraudDetectionDemo();
 

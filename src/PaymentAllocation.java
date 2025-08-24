@@ -2,19 +2,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Ödeme tahsis sonucunu temsil eden immutable value object.
- *
- * DP algoritması sonrasında hangi bucket'a ne kadar ödeme yapıldığını,
- * toplam faiz tasarrufunu ve tahsis stratejisini içerir.
- */
+
 public final class PaymentAllocation {
 
     private final String allocationId;
     private final BigDecimal totalPaymentAmount;
     private final LocalDateTime allocationTime;
     private final AllocationStrategy strategy;
-    private final Map<String, BigDecimal> bucketAllocations;  // bucketId -> amount
+    private final Map<String, BigDecimal> bucketAllocations;  
     private final BigDecimal totalInterestSaved;
     private final BigDecimal remainingPayment;
     private final AllocationMetrics metrics;
@@ -50,7 +45,7 @@ public final class PaymentAllocation {
         validateAllocation();
     }
 
-    // Factory methods
+    
     public static PaymentAllocation createOptimalAllocation(String allocationId,
                                                             BigDecimal paymentAmount,
                                                             Map<String, BigDecimal> bucketAllocations,
@@ -71,7 +66,7 @@ public final class PaymentAllocation {
                 bucketAllocations, BigDecimal.ZERO, remainingPayment, defaultMetrics);
     }
 
-    // Getters
+    
     public String getAllocationId() { return allocationId; }
     public BigDecimal getTotalPaymentAmount() { return totalPaymentAmount; }
     public LocalDateTime getAllocationTime() { return allocationTime; }
@@ -83,7 +78,7 @@ public final class PaymentAllocation {
     public BigDecimal getRemainingPayment() { return remainingPayment; }
     public AllocationMetrics getMetrics() { return metrics; }
 
-    // Query methods
+    
     public BigDecimal getAllocatedAmount(String bucketId) {
         return bucketAllocations.getOrDefault(bucketId, BigDecimal.ZERO);
     }
@@ -113,7 +108,7 @@ public final class PaymentAllocation {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    // Comparison methods
+    
     public BigDecimal getInterestSavingsVs(PaymentAllocation other) {
         return this.totalInterestSaved.subtract(other.totalInterestSaved);
     }
@@ -126,7 +121,7 @@ public final class PaymentAllocation {
         return this.totalInterestSaved.compareTo(other.totalInterestSaved) > 0;
     }
 
-    // Analysis methods
+    
     public Map<String, Double> getBucketAllocationPercentages() {
         if (totalPaymentAmount.compareTo(BigDecimal.ZERO) == 0) {
             return new HashMap<>();
@@ -168,7 +163,7 @@ public final class PaymentAllocation {
             throw new IllegalArgumentException("Total allocated amount exceeds payment amount");
         }
 
-        // Negative allocations check
+        
         for (Map.Entry<String, BigDecimal> entry : bucketAllocations.entrySet()) {
             if (entry.getValue().compareTo(BigDecimal.ZERO) < 0) {
                 throw new IllegalArgumentException("Allocation cannot be negative for bucket: " + entry.getKey());
@@ -201,9 +196,7 @@ public final class PaymentAllocation {
                 getAllocatedBucketCount(), totalInterestSaved);
     }
 
-    /**
-     * Allocation metrics için nested class
-     */
+    
     public static final class AllocationMetrics {
         private final int iterationCount;
         private final BigDecimal interestSaved;

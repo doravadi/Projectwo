@@ -1,4 +1,4 @@
-// ValidationError.java - Validation error information
+
 import java.util.Objects;
 import java.io.Serializable;
 

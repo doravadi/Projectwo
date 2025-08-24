@@ -4,30 +4,23 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Borç kovası - farklı faiz oranlarında borçları temsil eden immutable value object.
- *
- * Knapsack optimizasyonunda "item" rolü oynar:
- * - Weight: Mevcut borç miktarı
- * - Value: Faiz oranı (yüksek oran = yüksek öncelik)
- * - Constraint: Minimum ödeme tutarı
- */
+
 public final class DebtBucket implements Comparable<DebtBucket> {
 
     private final String bucketId;
     private final BucketType type;
     private final BigDecimal currentBalance;
-    private final BigDecimal interestRate;        // Yıllık faiz oranı (0.18 = %18)
-    private final BigDecimal minimumPayment;      // Asgari ödeme tutarı
-    private final LocalDate dueDate;              // Vade tarihi
-    private final int priority;                   // Tahsis önceliği (1=en yüksek)
+    private final BigDecimal interestRate;        
+    private final BigDecimal minimumPayment;      
+    private final LocalDate dueDate;              
+    private final int priority;                   
 
     public enum BucketType {
         PURCHASE(1, "Alışveriş"),
         CASH_ADVANCE(2, "Nakit Avans"),
         INSTALLMENT(3, "Taksit"),
         FEES_INTEREST(4, "Faiz ve Komisyon"),
-        OVERDUE(0, "Vadesi Geçmiş");  // En yüksek öncelik
+        OVERDUE(0, "Vadesi Geçmiş");  
 
         private final int defaultPriority;
         private final String description;
@@ -55,7 +48,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
         validateBucket();
     }
 
-    // Factory methods for common bucket types
+    
     public static DebtBucket createPurchaseBucket(String bucketId, BigDecimal balance, LocalDate dueDate) {
         return new DebtBucket(bucketId, BucketType.PURCHASE, balance,
                 new BigDecimal("0.18"), balance.multiply(new BigDecimal("0.05")),
@@ -70,11 +63,11 @@ public final class DebtBucket implements Comparable<DebtBucket> {
 
     public static DebtBucket createOverdueBucket(String bucketId, BigDecimal balance, LocalDate dueDate) {
         return new DebtBucket(bucketId, BucketType.OVERDUE, balance,
-                new BigDecimal("0.40"), balance, // Tümü asgari ödeme
+                new BigDecimal("0.40"), balance, 
                 dueDate, BucketType.OVERDUE.getDefaultPriority());
     }
 
-    // Getters
+    
     public String getBucketId() { return bucketId; }
     public BucketType getType() { return type; }
     public BigDecimal getCurrentBalance() { return currentBalance; }
@@ -83,7 +76,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
     public LocalDate getDueDate() { return dueDate; }
     public int getPriority() { return priority; }
 
-    // Business logic methods
+    
     public boolean hasDebt() {
         return currentBalance.compareTo(BigDecimal.ZERO) > 0;
     }
@@ -95,20 +88,17 @@ public final class DebtBucket implements Comparable<DebtBucket> {
     public BigDecimal calculateDailyInterest() {
         if (!hasDebt()) return BigDecimal.ZERO;
 
-        // Günlük faiz = (borç × yıllık_oran) / 365
+        
         return currentBalance.multiply(interestRate)
                 .divide(new BigDecimal("365"), 6, BigDecimal.ROUND_HALF_UP);
     }
 
     public BigDecimal getAvailablePaymentCapacity() {
-        // Asgari ödemenin üstünde ne kadar ödeme alabilir
+        
         return currentBalance.subtract(minimumPayment);
     }
 
-    /**
-     * Knapsack için "value density" hesaplama
-     * Yüksek faiz oranı = yüksek değer
-     */
+    
     public BigDecimal getValueDensity() {
         if (currentBalance.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
@@ -116,7 +106,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
         return interestRate.divide(currentBalance, 8, BigDecimal.ROUND_HALF_UP);
     }
 
-    // Immutable operations
+    
     public DebtBucket withPayment(BigDecimal paymentAmount) {
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
         if (paymentAmount.compareTo(BigDecimal.ZERO) < 0) {
@@ -128,7 +118,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
             newBalance = BigDecimal.ZERO;
         }
 
-        // Minimum ödeme de proportional olarak azalır
+        
         BigDecimal newMinimum = newBalance.compareTo(BigDecimal.ZERO) == 0 ?
                 BigDecimal.ZERO :
                 minimumPayment.multiply(newBalance).divide(currentBalance, 2, BigDecimal.ROUND_HALF_UP);
@@ -173,19 +163,19 @@ public final class DebtBucket implements Comparable<DebtBucket> {
 
     @Override
     public int compareTo(DebtBucket other) {
-        // Önce priority'ye göre sırala (0 = en yüksek)
+        
         int priorityCompare = Integer.compare(priority, other.priority);
         if (priorityCompare != 0) {
             return priorityCompare;
         }
 
-        // Sonra faiz oranına göre (yüksek oran önce)
+        
         int rateCompare = other.interestRate.compareTo(interestRate);
         if (rateCompare != 0) {
             return rateCompare;
         }
 
-        // Son olarak bucket ID'ye göre
+        
         return bucketId.compareTo(other.bucketId);
     }
 

@@ -1,15 +1,7 @@
 import java.math.BigDecimal;
 import java.util.*;
 
-/**
- * Payment allocation strategy interface - Strategy Pattern.
- *
- * Farklı tahsis stratejilerini implement etmek için:
- * - BankRuleStrategy: Geleneksel banka kuralları
- * - OptimalStrategy: DP ile minimum faiz
- * - GreedyStrategy: En yüksek faiz oranından başla
- * - ManualStrategy: Kullanıcı tanımlı tahsis
- */
+
 public abstract class AllocationStrategy {
 
     protected final String strategyName;
@@ -20,21 +12,15 @@ public abstract class AllocationStrategy {
         this.description = Objects.requireNonNull(description, "Description cannot be null");
     }
 
-    /**
-     * Ana tahsis method'u - her strategy implement etmeli
-     */
+    
     public abstract PaymentAllocation allocate(List<DebtBucket> debtBuckets,
                                                BigDecimal paymentAmount,
                                                String allocationId);
 
-    /**
-     * Strategy'nin uygun olup olmadığını kontrol eder
-     */
+    
     public abstract boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount);
 
-    /**
-     * Tahsis öncesi validasyon
-     */
+    
     public void validateInputs(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
         Objects.requireNonNull(debtBuckets, "Debt buckets cannot be null");
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
@@ -47,7 +33,7 @@ public abstract class AllocationStrategy {
             throw new IllegalArgumentException("Debt buckets cannot be empty");
         }
 
-        // Bucket validation
+        
         for (DebtBucket bucket : debtBuckets) {
             if (bucket == null) {
                 throw new IllegalArgumentException("Debt bucket cannot be null");
@@ -55,7 +41,7 @@ public abstract class AllocationStrategy {
         }
     }
 
-    // Getters
+    
     public String getStrategyName() { return strategyName; }
     public String getDescription() { return description; }
 
@@ -64,13 +50,11 @@ public abstract class AllocationStrategy {
         return String.format("%s: %s", strategyName, description);
     }
 
-    // ================================
-    // CONCRETE STRATEGY IMPLEMENTATIONS
-    // ================================
+    
+    
+    
 
-    /**
-     * Banka Kuralı Stratejisi - Sabit öncelik sırası
-     */
+    
     public static final class BankRuleStrategy extends AllocationStrategy {
 
         private final List<DebtBucket.BucketType> priorityOrder;
@@ -94,7 +78,7 @@ public abstract class AllocationStrategy {
             Map<String, BigDecimal> allocations = new HashMap<>();
             BigDecimal remainingPayment = paymentAmount;
 
-            // Priority sırasına göre tahsis et
+            
             for (DebtBucket.BucketType type : priorityOrder) {
                 if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) break;
 
@@ -106,11 +90,11 @@ public abstract class AllocationStrategy {
                 for (DebtBucket bucket : bucketsOfType) {
                     if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) break;
 
-                    // Önce minimum payment
+                    
                     BigDecimal minPayment = bucket.getMinimumPayment();
                     BigDecimal allocation = minPayment.min(remainingPayment);
 
-                    // Sonra kalan balance'a kadar
+                    
                     BigDecimal remaining = remainingPayment.subtract(allocation);
                     BigDecimal maxAdditional = bucket.getCurrentBalance().subtract(minPayment);
                     BigDecimal additional = maxAdditional.min(remaining);
@@ -128,13 +112,11 @@ public abstract class AllocationStrategy {
 
         @Override
         public boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
-            return true; // Bank rule her zaman uygulanabilir
+            return true; 
         }
     }
 
-    /**
-     * Optimal DP Stratejisi - Minimum faiz hedefli
-     */
+    
     public static final class OptimalStrategy extends AllocationStrategy {
 
         private final PaymentOptimizer optimizer;
@@ -157,19 +139,17 @@ public abstract class AllocationStrategy {
 
         @Override
         public boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
-            // DP için minimum koşullar
+            
             int activeBucketCount = (int) debtBuckets.stream()
                     .filter(DebtBucket::hasDebt)
                     .count();
 
             return activeBucketCount >= 2 &&
-                    paymentAmount.compareTo(new BigDecimal("10")) > 0; // Min 10 TL
+                    paymentAmount.compareTo(new BigDecimal("10")) > 0; 
         }
     }
 
-    /**
-     * Greedy Stratejisi - En yüksek faiz oranından başla
-     */
+    
     public static final class GreedyStrategy extends AllocationStrategy {
 
         private final PaymentOptimizer optimizer;
@@ -196,9 +176,7 @@ public abstract class AllocationStrategy {
         }
     }
 
-    /**
-     * Manuel Stratejisi - Kullanıcı tanımlı tahsis
-     */
+    
     public static final class ManualStrategy extends AllocationStrategy {
 
         private final Map<String, BigDecimal> predefinedAllocations;
@@ -215,7 +193,7 @@ public abstract class AllocationStrategy {
                                           BigDecimal paymentAmount, String allocationId) {
             validateInputs(debtBuckets, paymentAmount);
 
-            // Predefined allocation'ları validate et
+            
             BigDecimal totalPredefined = predefinedAllocations.values().stream()
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -223,7 +201,7 @@ public abstract class AllocationStrategy {
                 throw new IllegalArgumentException("Total predefined allocations exceed payment amount");
             }
 
-            // Bucket existence check
+            
             Set<String> existingBucketIds = debtBuckets.stream()
                     .map(DebtBucket::getBucketId)
                     .collect(java.util.stream.Collectors.toSet());
@@ -251,13 +229,11 @@ public abstract class AllocationStrategy {
         }
     }
 
-    // ================================
-    // STRATEGY FACTORY
-    // ================================
+    
+    
+    
 
-    /**
-     * Strategy factory method
-     */
+    
     public static AllocationStrategy createStrategy(PaymentAllocation.AllocationStrategy strategyType,
                                                     Object... parameters) {
         return switch (strategyType) {

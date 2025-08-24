@@ -1,14 +1,6 @@
 import java.util.*;
 
-/**
- * Currency graph bağlantı kopukluklarında fırlatılan checked exception.
- *
- * Bu exception şu durumlarda fırlatılır:
- * - Graph'ta disconnected component'ler var
- * - Belirli currency'ler arasında path yok  
- * - Arbitraj detection için insufficient connectivity
- * - Currency pair eksiklikleri nedeniyle isolated currencies
- */
+
 public final class DisconnectedCurrencyGraph extends Exception {
 
     private final Set<Currency> disconnectedCurrencies;
@@ -50,7 +42,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         this.analysis = analysis;
     }
 
-    // Factory methods for common scenarios
+    
     public static DisconnectedCurrencyGraph missingCurrencyPairs(Set<Currency> isolatedCurrencies,
                                                                  Set<Currency> connectedCurrencies) {
         String message = "Currency graph has isolated currencies - missing exchange rate pairs";
@@ -70,7 +62,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
                 sourceCurrency, unreachableCurrencies.size());
         Set<Currency> connected = new HashSet<>(java.util.Arrays.asList(Currency.values()));
         connected.removeAll(unreachableCurrencies);
-        connected.remove(sourceCurrency); // Don't count source in disconnected
+        connected.remove(sourceCurrency); 
 
         GraphConnectivityAnalysis analysis = new GraphConnectivityAnalysis(
                 Currency.values().length,
@@ -94,7 +86,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return new DisconnectedCurrencyGraph(message, new HashSet<>(), new HashSet<>(), analysis);
     }
 
-    // Getters
+    
     public Set<Currency> getDisconnectedCurrencies() {
         return disconnectedCurrencies != null ?
                 new HashSet<>(disconnectedCurrencies) : new HashSet<>();
@@ -115,17 +107,13 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return analysis != null;
     }
 
-    /**
-     * Connectivity percentage (0-100)
-     */
+    
     public double getConnectivityPercentage() {
         if (totalVertices == 0) return 0.0;
         return (double) connectedVertices / totalVertices * 100.0;
     }
 
-    /**
-     * Recovery suggestions
-     */
+    
     public List<String> getRecoverySuggestions() {
         List<String> suggestions = new ArrayList<>();
 
@@ -154,9 +142,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return suggestions;
     }
 
-    /**
-     * Critical missing pairs for minimum connectivity
-     */
+    
     public Set<String> getCriticalMissingPairs() {
         if (analysis == null || disconnectedCurrencies == null) {
             return new HashSet<>();
@@ -164,7 +150,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
 
         Set<String> critical = new HashSet<>();
 
-        // For each disconnected currency, suggest connection to USD (most liquid)
+        
         for (Currency disconnected : disconnectedCurrencies) {
             if (!disconnected.equals(Currency.USD)) {
                 critical.add(disconnected + "/USD");
@@ -175,7 +161,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return critical;
     }
 
-    // Helper methods
+    
     private static String buildDetailedMessage(String message,
                                                Set<Currency> disconnectedCurrencies,
                                                Set<Currency> connectedCurrencies,
@@ -199,12 +185,12 @@ public final class DisconnectedCurrencyGraph extends Exception {
 
     private static int calculateMissingPairCount(Set<Currency> disconnected, Set<Currency> connected) {
         int totalCurrencies = disconnected.size() + connected.size();
-        int maxPossiblePairs = totalCurrencies * (totalCurrencies - 1); // Directed pairs
+        int maxPossiblePairs = totalCurrencies * (totalCurrencies - 1); 
 
-        // Rough estimate: assume connected currencies have most pairs among themselves
+        
         int connectedPairs = connected.size() * (connected.size() - 1);
-        int disconnectedPairs = 0; // Disconnected have no pairs by definition
-        int crossPairs = 0; // No connections between connected and disconnected
+        int disconnectedPairs = 0; 
+        int crossPairs = 0; 
 
         int actualPairs = connectedPairs + disconnectedPairs + crossPairs;
         return maxPossiblePairs - actualPairs;
@@ -213,7 +199,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
     private static Set<String> identifyMissingPairs(Set<Currency> disconnected, Set<Currency> connected) {
         Set<String> missing = new HashSet<>();
 
-        // Missing pairs: disconnected ↔ connected
+        
         for (Currency disc : disconnected) {
             for (Currency conn : connected) {
                 missing.add(disc + "/" + conn);
@@ -221,7 +207,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
             }
         }
 
-        // Missing pairs: disconnected ↔ disconnected
+        
         Currency[] discArray = disconnected.toArray(new Currency[0]);
         for (int i = 0; i < discArray.length; i++) {
             for (int j = i + 1; j < discArray.length; j++) {
@@ -233,9 +219,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return missing;
     }
 
-    /**
-     * Graph connectivity analysis nested class
-     */
+    
     public static final class GraphConnectivityAnalysis {
         private final int totalVertices;
         private final int connectedVertices;

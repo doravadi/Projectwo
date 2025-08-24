@@ -1,11 +1,9 @@
-// BinService.java - Business logic for BIN management
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * Business service for BIN range management and routing
- */
+
 public class BinService {
 
     private final BinRangeRepository repository;
@@ -19,9 +17,7 @@ public class BinService {
         this.countryCache = new ConcurrentHashMap<>();
     }
 
-    /**
-     * Route payment to appropriate bank based on BIN
-     */
+    
     public PaymentRouting routePayment(CardNumber cardNumber) throws DomainException {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
 
@@ -48,9 +44,7 @@ public class BinService {
         }
     }
 
-    /**
-     * Bulk routing for batch processing
-     */
+    
     public Map<CardNumber, PaymentRouting> routePayments(List<CardNumber> cardNumbers) throws DomainException {
         Objects.requireNonNull(cardNumbers, "Card numbers cannot be null");
 
@@ -59,16 +53,16 @@ public class BinService {
         }
 
         try {
-            // Extract BINs
+            
             List<Long> bins = cardNumbers.stream()
                     .map(CardNumber::getBin)
                     .distinct()
                     .collect(Collectors.toList());
 
-            // Bulk lookup
+            
             Map<Long, BinRange> binRanges = repository.findRangesForBins(bins);
 
-            // Map results
+            
             Map<CardNumber, PaymentRouting> results = new HashMap<>();
 
             for (CardNumber cardNumber : cardNumbers) {
@@ -86,7 +80,7 @@ public class BinService {
 
                     results.put(cardNumber, routing);
                 } else {
-                    // Log missing BIN but continue processing
+                    
                     logMissingBin(bin);
                 }
             }
@@ -98,9 +92,7 @@ public class BinService {
         }
     }
 
-    /**
-     * Add new BIN range with validation
-     */
+    
     public void addBinRange(BinRange range) throws DomainException {
         Objects.requireNonNull(range, "BIN range cannot be null");
 
@@ -119,9 +111,7 @@ public class BinService {
         }
     }
 
-    /**
-     * Find ranges by bank with caching
-     */
+    
     public List<BinRange> findRangesByBank(String bankName) throws DomainException {
         Objects.requireNonNull(bankName, "Bank name cannot be null");
 
@@ -138,9 +128,7 @@ public class BinService {
         }
     }
 
-    /**
-     * Find ranges by country with caching
-     */
+    
     public List<BinRange> findRangesByCountry(String country) throws DomainException {
         Objects.requireNonNull(country, "Country cannot be null");
 
@@ -157,14 +145,12 @@ public class BinService {
         }
     }
 
-    /**
-     * Clear all caches
-     */
+    
     public void clearCache() {
         invalidateCache();
     }
 
-    // Private helper methods
+    
     private void validateBinRange(BinRange range) throws DomainException {
         if (range.getStartBin() < 100000L) {
             throw new InvalidBinRangeException("BIN start too small: " + range.getStartBin());
@@ -184,12 +170,12 @@ public class BinService {
     }
 
     private boolean isDomesticTransaction(BinRange range) {
-        // Configurable domestic country - defaulting to Turkey
+        
         return "TR".equals(range.getCountry());
     }
 
     private RiskLevel calculateRiskLevel(BinRange range) {
-        // Simplified risk calculation - can be made more sophisticated
+        
         if ("US".equals(range.getCountry()) || "EU".equals(range.getCountry())) {
             return RiskLevel.LOW;
         } else if ("TR".equals(range.getCountry())) {
@@ -206,19 +192,19 @@ public class BinService {
     }
 
     private synchronized void refreshCache() throws InfrastructureException {
-        if (cacheValid) return; // Double-check locking
+        if (cacheValid) return; 
 
         List<BinRange> allRanges = repository.findAll();
 
-        // Group by bank
+        
         Map<String, List<BinRange>> newBankCache = allRanges.stream()
                 .collect(Collectors.groupingBy(BinRange::getBankName));
 
-        // Group by country
+        
         Map<String, List<BinRange>> newCountryCache = allRanges.stream()
                 .collect(Collectors.groupingBy(BinRange::getCountry));
 
-        // Update caches atomically
+        
         bankCache.clear();
         bankCache.putAll(newBankCache);
         countryCache.clear();
@@ -243,7 +229,7 @@ public class BinService {
     }
 
     private void addRangeMergeConflicts(BinRange range, List<BinRange> successful, List<BinRangeConflict> conflicts) {
-        // Simplified merge logic - in production this would be more sophisticated
+        
         try {
             repository.addRange(range);
             successful.add(range);
@@ -253,23 +239,23 @@ public class BinService {
     }
 
     private void logMissingBin(long bin) {
-        // In production: use proper logging framework
+        
         System.err.println("Warning: No BIN range found for BIN: " + bin);
     }
 
     private void validateRangeConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        // Check for gaps, inconsistencies, etc.
-        // Implementation depends on business rules
+        
+        
     }
 
     private void validateBankConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        // Check for bank name inconsistencies, etc.
-        // Implementation depends on business rules
+        
+        
     }
 
     private void validateCountryConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        // Check for country code inconsistencies, etc.
-        // Implementation depends on business rules
+        
+        
     }
 
     private BinRange findLargestRange(List<BinRange> ranges) {

@@ -3,27 +3,14 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
 
-/**
- * Arbitrage Detector - Bellman-Ford algoritması ile negatif çevrim tespiti.
- *
- * Algorithm: Bellman-Ford shortest path with negative cycle detection
- * Time Complexity: O(V * E) where V=currencies, E=currency pairs
- *
- * Arbitrage Logic:
- * - Edge weights = -log(exchange_rate)
- * - Negative cycle = -log(r1) + (-log(r2)) + (-log(r3)) < 0
- * - Which means: log(r1 * r2 * r3) > 0 → r1 * r2 * r3 > 1
- * - Profit opportunity exists!
- */
+
 public final class ArbitrageDetector {
 
-    private static final double EPSILON = 1e-8;  // Floating point tolerance
-    private static final int MAX_ITERATIONS = 1000; // Prevent infinite loops
+    private static final double EPSILON = 1e-8;  
+    private static final int MAX_ITERATIONS = 1000; 
     private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP);
 
-    /**
-     * Ana arbitraj tespit methodu
-     */
+    
     public List<ArbitrageOpportunity> detectArbitrage(CurrencyGraph graph) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
 
@@ -35,7 +22,7 @@ public final class ArbitrageDetector {
         List<ArbitrageOpportunity> opportunities = new ArrayList<>();
         Currency[] currencies = graph.getSupportedCurrencies();
 
-        // Her currency'yi source olarak Bellman-Ford çalıştır
+        
         for (Currency sourceCurrency : currencies) {
             BellmanFordResult result = runBellmanFord(graph, sourceCurrency);
 
@@ -49,15 +36,13 @@ public final class ArbitrageDetector {
             }
         }
 
-        // Profitability'e göre sırala (en karlı önce)
+        
         opportunities.sort(Comparator.comparing(ArbitrageOpportunity::getProfitPercentage).reversed());
 
         return opportunities;
     }
 
-    /**
-     * Specific currency'den başlayarak arbitraj arar
-     */
+    
     public Optional<ArbitrageOpportunity> detectArbitrageFrom(CurrencyGraph graph, Currency startCurrency) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
         Objects.requireNonNull(startCurrency, "Start currency cannot be null");
@@ -78,9 +63,7 @@ public final class ArbitrageDetector {
         return Optional.empty();
     }
 
-    /**
-     * Bellman-Ford algoritması implementasyonu
-     */
+    
     private BellmanFordResult runBellmanFord(CurrencyGraph graph, Currency source) {
         int vertexCount = graph.getVertexCount();
         Integer sourceIndex = graph.getCurrencyIndex(source);
@@ -89,7 +72,7 @@ public final class ArbitrageDetector {
             throw new IllegalArgumentException("Source currency not found in graph: " + source);
         }
 
-        // Initialize distances
+        
         double[] distances = new double[vertexCount];
         int[] predecessors = new int[vertexCount];
         Arrays.fill(distances, Double.POSITIVE_INFINITY);
@@ -98,7 +81,7 @@ public final class ArbitrageDetector {
 
         List<CurrencyGraph.Edge> edges = graph.getAllEdges();
 
-        // Relax edges V-1 times
+        
         for (int iteration = 0; iteration < vertexCount - 1; iteration++) {
             boolean hasUpdate = false;
 
@@ -117,11 +100,11 @@ public final class ArbitrageDetector {
             }
 
             if (!hasUpdate) {
-                break; // Early termination - no more updates
+                break; 
             }
         }
 
-        // Detect negative cycles
+        
         List<Integer> negativeCycleNodes = new ArrayList<>();
         for (CurrencyGraph.Edge edge : edges) {
             int from = edge.getFromIndex();
@@ -138,9 +121,7 @@ public final class ArbitrageDetector {
         return new BellmanFordResult(distances, predecessors, negativeCycleNodes);
     }
 
-    /**
-     * Negative cycle'dan ArbitrageOpportunity reconstruct eder
-     */
+    
     private ArbitrageOpportunity reconstructArbitrageOpportunity(CurrencyGraph graph,
                                                                  BellmanFordResult result,
                                                                  Currency source) {
@@ -148,7 +129,7 @@ public final class ArbitrageDetector {
             return null;
         }
 
-        // Negative cycle'daki bir node'dan başlayarak cycle'ı reconstruct et
+        
         int startNode = result.getNegativeCycleNodes().get(0);
         List<Integer> cycle = findNegativeCycle(result.getPredecessors(), startNode);
 
@@ -156,7 +137,7 @@ public final class ArbitrageDetector {
             return null;
         }
 
-        // Currency path'ini oluştur
+        
         List<Currency> currencyPath = new ArrayList<>();
         List<CurrencyPair> pairPath = new ArrayList<>();
         BigDecimal totalRate = BigDecimal.ONE;
@@ -170,7 +151,7 @@ public final class ArbitrageDetector {
 
             currencyPath.add(fromCurrency);
 
-            // Bu edge'e karşılık gelen CurrencyPair'i bul
+            
             Optional<CurrencyPair> pairOpt = graph.getBestRate(fromCurrency, toCurrency);
             if (pairOpt.isPresent()) {
                 CurrencyPair pair = pairOpt.get();
@@ -179,7 +160,7 @@ public final class ArbitrageDetector {
             }
         }
 
-        // Profit hesaplama
+        
         BigDecimal profitRatio = totalRate.subtract(BigDecimal.ONE);
         BigDecimal profitPercentage = profitRatio.multiply(new BigDecimal("100"), MATH_CONTEXT);
 
@@ -187,16 +168,14 @@ public final class ArbitrageDetector {
                 profitPercentage, source);
     }
 
-    /**
-     * Predecessor array'inden negative cycle path'ini bulur
-     */
+    
     private List<Integer> findNegativeCycle(int[] predecessors, int startNode) {
         Set<Integer> visited = new HashSet<>();
         List<Integer> path = new ArrayList<>();
 
         int current = startNode;
 
-        // Cycle'a girene kadar takip et
+        
         while (!visited.contains(current) && current != -1) {
             visited.add(current);
             path.add(current);
@@ -204,31 +183,27 @@ public final class ArbitrageDetector {
         }
 
         if (current == -1) {
-            return new ArrayList<>(); // No cycle found
+            return new ArrayList<>(); 
         }
 
-        // Cycle'ın başlangıç noktasını bul
+        
         int cycleStart = path.indexOf(current);
         if (cycleStart == -1) {
             return new ArrayList<>();
         }
 
-        // Cycle kısmını döndür
+        
         return path.subList(cycleStart, path.size());
     }
 
-    /**
-     * Duplicate opportunity kontrolü
-     */
+    
     private boolean isDuplicate(List<ArbitrageOpportunity> opportunities,
                                 ArbitrageOpportunity newOpportunity) {
         return opportunities.stream()
                 .anyMatch(existing -> existing.hasSamePath(newOpportunity));
     }
 
-    /**
-     * Bellman-Ford sonucu için nested class
-     */
+    
     private static final class BellmanFordResult {
         private final double[] distances;
         private final int[] predecessors;
@@ -250,9 +225,7 @@ public final class ArbitrageDetector {
         public List<Integer> getNegativeCycleNodes() { return new ArrayList<>(negativeCycleNodes); }
     }
 
-    /**
-     * Detection statistics
-     */
+    
     public DetectionStatistics getDetectionStatistics(CurrencyGraph graph) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
 
@@ -281,9 +254,7 @@ public final class ArbitrageDetector {
                 detectionTime, pathLengthDistribution);
     }
 
-    /**
-     * Detection statistics nested class
-     */
+    
     public static final class DetectionStatistics {
         private final int totalOpportunities;
         private final double maxProfit;

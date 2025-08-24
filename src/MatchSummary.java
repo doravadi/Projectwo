@@ -1,4 +1,4 @@
-// MatchSummary.java - Match summary for reporting
+
 import java.util.List;
 import java.io.Serializable;
 
@@ -36,7 +36,7 @@ public final class MatchSummary implements Serializable {
         return new Builder();
     }
 
-    // Getters
+    
     public String getAuthId() { return authId; }
     public String getPresentmentId() { return presentmentId; }
     public CardId getCardId() { return cardId; }

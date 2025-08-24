@@ -171,7 +171,7 @@ public class IntervalTree {
         if (node == null) {
             return;
         }
-        // Mevcut node ile overlap var mı?
+        
         if (node.range.overlaps(queryRange)) {
             result.add(node.range);
         }
@@ -197,17 +197,17 @@ public class IntervalTree {
 
 
         if (balance > 1) {
-            // Left-Right case
+            
             if (node.left.getBalance() < 0) {
                 node.left = rotateLeft(node.left);
             }
-            // Left-Left case
+            
             return rotateRight(node);
         }
 
 
         if (balance < -1) {
-            // Right-Left case
+            
             if (node.right.getBalance() > 0) {
                 node.right = rotateRight(node.right);
             }
@@ -226,7 +226,7 @@ public class IntervalTree {
         x.right = y;
         y.left = T2;
 
-        // Update heights and max values
+        
         y.updateHeight();
         y.updateMax();
         x.updateHeight();

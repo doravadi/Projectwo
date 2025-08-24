@@ -1,4 +1,4 @@
-// MatchingReport.java - Detailed matching report
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.io.Serializable;
@@ -23,7 +23,7 @@ public final class MatchingReport implements Serializable {
         return new Builder();
     }
 
-    // Getters
+    
     public MatchingResult getResult() { return result; }
     public LocalDateTime getTimestamp() { return timestamp; }
     public String getSummary() { return summary; }

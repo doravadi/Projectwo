@@ -1,14 +1,12 @@
 import java.math.BigDecimal;
 
-/**
- * Fraud Detection Service Configuration
- */
+
 public final class FraudDetectionConfig {
 
-    private final int criticalRiskThreshold;      // 80+ critical
-    private final int moderateRiskThreshold;     // 40+ moderate  
-    private final int duplicateAlertThreshold;   // 30+ duplicate
-    private final BigDecimal highAmountThreshold; // High amount threshold
+    private final int criticalRiskThreshold;      
+    private final int moderateRiskThreshold;     
+    private final int duplicateAlertThreshold;   
+    private final BigDecimal highAmountThreshold; 
 
     public FraudDetectionConfig(int criticalRiskThreshold, int moderateRiskThreshold,
                                 int duplicateAlertThreshold, BigDecimal highAmountThreshold) {

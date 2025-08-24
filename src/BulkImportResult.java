@@ -1,4 +1,4 @@
-// BulkImportResult.java - Bulk operation result
+
 import java.util.*;
 import java.io.Serializable;
 

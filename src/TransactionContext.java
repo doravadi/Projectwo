@@ -8,12 +8,7 @@ import java.time.LocalTime;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Transaction context - kuralların çalışacağı işlem bağlamı.
- *
- * Immutable value object. Tüm transaction ve müşteri bilgilerini içerir.
- * DSL kuralları bu context'i okuyarak karar verir.
- */
+
 public final class TransactionContext {
 
     private final String transactionId;
@@ -28,15 +23,15 @@ public final class TransactionContext {
     private final String merchantCountry;
     private final LocalDateTime transactionDateTime;
     private final TransactionType transactionType;
-    private final String channel; // ATM, POS, ONLINE, MOBILE
+    private final String channel; 
 
-    // Customer profile context (kurallar için ek bilgi)
+    
     private final Integer customerAge;
-    private final String customerSegment; // PREMIUM, STANDARD, STUDENT
+    private final String customerSegment; 
     private final String customerCity;
     private final String customerCountry;
     private final BigDecimal accountBalance;
-    private final BigDecimal monthlySpending; // Bu ayki toplam
+    private final BigDecimal monthlySpending; 
 
     private TransactionContext(Builder builder) {
         this.transactionId = Objects.requireNonNull(builder.transactionId, "Transaction ID cannot be null");
@@ -71,7 +66,7 @@ public final class TransactionContext {
         }
     }
 
-    // Getters
+    
     public String getTransactionId() { return transactionId; }
     public String getCardNumber() { return cardNumber; }
     public String getCustomerId() { return customerId; }
@@ -92,7 +87,7 @@ public final class TransactionContext {
     public Optional<BigDecimal> getAccountBalance() { return Optional.ofNullable(accountBalance); }
     public Optional<BigDecimal> getMonthlySpending() { return Optional.ofNullable(monthlySpending); }
 
-    // Convenience methods for DSL rules
+    
     public LocalDate getTransactionDate() {
         return transactionDateTime.toLocalDate();
     }
@@ -125,7 +120,7 @@ public final class TransactionContext {
                 !merchantCountry.equals(customerCountry);
     }
 
-    // Builder pattern
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -251,7 +246,7 @@ public final class TransactionContext {
         }
     }
 
-    // Transaction types
+    
     public enum TransactionType {
         PURCHASE,
         CASH_ADVANCE,
@@ -262,7 +257,7 @@ public final class TransactionContext {
         WITHDRAWAL
     }
 
-    // MCC categories (basitleştirilmiş)
+    
     public enum MccCategory {
         GROCERY,
         FUEL,

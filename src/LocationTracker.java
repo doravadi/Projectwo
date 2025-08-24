@@ -2,25 +2,17 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-/**
- * Location tracker with Haversine distance calculation.
- *
- * Fraud detection için coğrafi anomali tespiti:
- * - Haversine formula ile mesafe hesabı
- * - Hız analizi (impossible travel speed)  
- * - Location jump detection (10dk/3şehir, 30dk/500km)
- * - Geographic pattern analysis
- */
+
 public final class LocationTracker {
 
-    // Earth radius in kilometers
+    
     private static final double EARTH_RADIUS_KM = 6371.0;
 
-    // Suspicious travel thresholds
-    private static final double MAX_REASONABLE_SPEED_KMH = 1000.0; // Jet hızı
-    private static final double CITY_CHANGE_THRESHOLD_KM = 50.0;   // Şehir değişimi için minimum mesafe
-    private static final int SUSPICIOUS_WINDOW_MINUTES = 10;       // 10 dakika pencere
-    private static final double LONG_DISTANCE_THRESHOLD_KM = 500.0; // Uzun mesafe eşiği
+    
+    private static final double MAX_REASONABLE_SPEED_KMH = 1000.0; 
+    private static final double CITY_CHANGE_THRESHOLD_KM = 50.0;   
+    private static final int SUSPICIOUS_WINDOW_MINUTES = 10;       
+    private static final double LONG_DISTANCE_THRESHOLD_KM = 500.0; 
 
     private final Deque<LocationEntry> locationHistory;
     private final int maxHistorySize;
@@ -34,12 +26,10 @@ public final class LocationTracker {
     }
 
     public static LocationTracker createDefault() {
-        return new LocationTracker(1000); // Son 1000 işlem
+        return new LocationTracker(1000); 
     }
 
-    /**
-     * Yeni location kaydeder ve anomali analizi yapar
-     */
+    
     public LocationAnalysis recordLocation(String transactionId, String cardNumber,
                                            double latitude, double longitude,
                                            String cityName, String countryCode,
@@ -56,13 +46,13 @@ public final class LocationTracker {
         LocationEntry newEntry = new LocationEntry(transactionId, cardNumber, latitude, longitude,
                 cityName, countryCode, timestamp);
 
-        // Anomali analizi yap
+        
         LocationAnalysis analysis = analyzeLocation(newEntry, cardNumber);
 
-        // History'ye ekle
+        
         locationHistory.addLast(newEntry);
 
-        // History size kontrolü
+        
         while (locationHistory.size() > maxHistorySize) {
             locationHistory.removeFirst();
         }
@@ -70,17 +60,15 @@ public final class LocationTracker {
         return analysis;
     }
 
-    /**
-     * Haversine distance calculation
-     */
+    
     public static double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        // Convert latitude and longitude from degrees to radians
+        
         double lat1Rad = Math.toRadians(lat1);
         double lon1Rad = Math.toRadians(lon1);
         double lat2Rad = Math.toRadians(lat2);
         double lon2Rad = Math.toRadians(lon2);
 
-        // Haversine formula
+        
         double deltaLat = lat2Rad - lat1Rad;
         double deltaLon = lon2Rad - lon1Rad;
 
@@ -93,9 +81,7 @@ public final class LocationTracker {
         return EARTH_RADIUS_KM * c;
     }
 
-    /**
-     * İki konum arasındaki hız hesaplama (km/h)
-     */
+    
     public static double calculateSpeed(LocationEntry from, LocationEntry to) {
         if (from.getTimestamp().isAfter(to.getTimestamp())) {
             throw new IllegalArgumentException("From timestamp must be before to timestamp");
@@ -106,16 +92,14 @@ public final class LocationTracker {
 
         long minutes = ChronoUnit.MINUTES.between(from.getTimestamp(), to.getTimestamp());
         if (minutes == 0) {
-            return Double.MAX_VALUE; // Aynı dakika - impossible speed
+            return Double.MAX_VALUE; 
         }
 
         double hours = minutes / 60.0;
         return distance / hours;
     }
 
-    /**
-     * Card için location history döndürür
-     */
+    
     public List<LocationEntry> getLocationHistory(String cardNumber, int maxEntries) {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
 
@@ -126,9 +110,7 @@ public final class LocationTracker {
                 .toList();
     }
 
-    /**
-     * Belirli zaman penceresinde şehir sayısı
-     */
+    
     public int getCityCountInWindow(String cardNumber, LocalDateTime windowStart, LocalDateTime windowEnd) {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
         Objects.requireNonNull(windowStart, "Window start cannot be null");
@@ -145,9 +127,7 @@ public final class LocationTracker {
         return cities.size();
     }
 
-    /**
-     * Location analysis - ana anomali tespit logic'i
-     */
+    
     private LocationAnalysis analyzeLocation(LocationEntry newEntry, String cardNumber) {
         List<LocationEntry> recentLocations = getLocationHistory(cardNumber, 10);
 
@@ -157,7 +137,7 @@ public final class LocationTracker {
 
         LocationEntry previousEntry = recentLocations.get(0);
 
-        // Distance and speed calculation
+        
         double distance = calculateDistance(previousEntry.getLatitude(), previousEntry.getLongitude(),
                 newEntry.getLatitude(), newEntry.getLongitude());
 
@@ -166,22 +146,22 @@ public final class LocationTracker {
 
         double speed = minutesBetween > 0 ? (distance / (minutesBetween / 60.0)) : Double.MAX_VALUE;
 
-        // Anomaly detection
+        
         Set<LocationAnomaly> anomalies = new HashSet<>();
 
-        // 1. Impossible speed check
+        
         if (speed > MAX_REASONABLE_SPEED_KMH) {
             anomalies.add(LocationAnomaly.IMPOSSIBLE_SPEED);
         }
 
-        // 2. Rapid city changes (10 minutes window)
+        
         LocalDateTime tenMinutesAgo = newEntry.getTimestamp().minusMinutes(SUSPICIOUS_WINDOW_MINUTES);
         int cityCount = getCityCountInWindow(cardNumber, tenMinutesAgo, newEntry.getTimestamp());
         if (cityCount >= 3) {
             anomalies.add(LocationAnomaly.RAPID_CITY_CHANGES);
         }
 
-        // 3. Long distance in short time (30 minutes, 500km)
+        
         LocalDateTime thirtyMinutesAgo = newEntry.getTimestamp().minusMinutes(30);
         double maxDistanceIn30Min = calculateMaxDistanceInWindow(cardNumber, thirtyMinutesAgo,
                 newEntry.getTimestamp());
@@ -189,12 +169,12 @@ public final class LocationTracker {
             anomalies.add(LocationAnomaly.LONG_DISTANCE_SHORT_TIME);
         }
 
-        // 4. International travel
+        
         if (!previousEntry.getCountryCode().equals(newEntry.getCountryCode())) {
             anomalies.add(LocationAnomaly.INTERNATIONAL_TRAVEL);
         }
 
-        // 5. Same location multiple times (potential card testing)
+        
         long sameLocationCount = recentLocations.stream()
                 .filter(entry -> isSameLocation(entry, newEntry))
                 .count();
@@ -234,7 +214,7 @@ public final class LocationTracker {
     private boolean isSameLocation(LocationEntry entry1, LocationEntry entry2) {
         double distance = calculateDistance(entry1.getLatitude(), entry1.getLongitude(),
                 entry2.getLatitude(), entry2.getLongitude());
-        return distance < 1.0; // 1km içinde aynı lokasyon
+        return distance < 1.0; 
     }
 
     private void validateCoordinates(double latitude, double longitude) {
@@ -246,9 +226,7 @@ public final class LocationTracker {
         }
     }
 
-    /**
-     * Tracker statistics
-     */
+    
     public TrackerStatistics getStatistics() {
         Map<String, Integer> cardLocationCounts = new HashMap<>();
         Map<String, Integer> countryCounts = new HashMap<>();
@@ -264,11 +242,11 @@ public final class LocationTracker {
                 uniqueCities.size(), countryCounts);
     }
 
-    // Getters
+    
     public int getHistorySize() { return locationHistory.size(); }
     public int getMaxHistorySize() { return maxHistorySize; }
 
-    // Nested classes
+    
     public enum LocationAnomaly {
         IMPOSSIBLE_SPEED("İmkansız seyahat hızı"),
         RAPID_CITY_CHANGES("Hızlı şehir değişimleri"),
@@ -305,7 +283,7 @@ public final class LocationTracker {
             this.timestamp = timestamp;
         }
 
-        // Getters
+        
         public String getTransactionId() { return transactionId; }
         public String getCardNumber() { return cardNumber; }
         public double getLatitude() { return latitude; }
@@ -348,7 +326,7 @@ public final class LocationTracker {
             return new LocationAnalysis(location, null, 0.0, 0.0, 0L, EnumSet.noneOf(LocationAnomaly.class));
         }
 
-        // Getters
+        
         public LocationEntry getCurrentLocation() { return currentLocation; }
         public LocationEntry getPreviousLocation() { return previousLocation; }
         public double getDistanceKm() { return distanceKm; }

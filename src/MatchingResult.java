@@ -1,12 +1,9 @@
-// MatchingResult.java - Result of auth-presentment matching algorithm
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.io.Serializable;
 
-/**
- * Immutable result of auth-presentment matching algorithm
- * Contains matched pairs, unmatched items, and performance statistics
- */
+
 public final class MatchingResult implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,7 +18,7 @@ public final class MatchingResult implements Serializable {
     private final long executionTimeNanos;
     private final MatchingStatistics statistics;
 
-    // Private constructor - use builder
+    
     private MatchingResult(Builder builder) {
         this.matches = Collections.unmodifiableList(new ArrayList<>(builder.matches));
         this.unmatchedAuths = Collections.unmodifiableList(new ArrayList<>(builder.unmatchedAuths));
@@ -38,7 +35,7 @@ public final class MatchingResult implements Serializable {
         return new Builder();
     }
 
-    // Factory method for empty result
+    
     public static MatchingResult empty() {
         return builder()
                 .matches(Collections.emptyList())
@@ -49,7 +46,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    // Getters
+    
     public List<AuthPresentmentMatch> getMatches() { return matches; }
     public List<Auth> getUnmatchedAuths() { return unmatchedAuths; }
     public List<Presentment> getUnmatchedPresentments() { return unmatchedPresentments; }
@@ -60,7 +57,7 @@ public final class MatchingResult implements Serializable {
     public long getExecutionTimeNanos() { return executionTimeNanos; }
     public MatchingStatistics getStatistics() { return statistics; }
 
-    // Business logic methods
+    
     public int getMatchCount() {
         return matches.size();
     }
@@ -103,51 +100,41 @@ public final class MatchingResult implements Serializable {
         return executionTimeNanos / 1_000_000.0;
     }
 
-    /**
-     * Find match for specific auth
-     */
+    
     public Optional<AuthPresentmentMatch> findMatchForAuth(Auth auth) {
         return matches.stream()
                 .filter(match -> match.getAuth().equals(auth))
                 .findFirst();
     }
 
-    /**
-     * Find match for specific presentment
-     */
+    
     public Optional<AuthPresentmentMatch> findMatchForPresentment(Presentment presentment) {
         return matches.stream()
                 .filter(match -> match.getPresentment().equals(presentment))
                 .findFirst();
     }
 
-    /**
-     * Get matches sorted by score (highest first)
-     */
+    
     public List<AuthPresentmentMatch> getMatchesSortedByScore() {
         return matches.stream()
                 .sorted((m1, m2) -> Double.compare(m2.getScore(), m1.getScore()))
                 .toList();
     }
 
-    /**
-     * Get matches below quality threshold
-     */
+    
     public List<AuthPresentmentMatch> getLowQualityMatches(double threshold) {
         return matches.stream()
                 .filter(match -> match.getScore() < threshold)
                 .toList();
     }
 
-    /**
-     * Get total amount matched
-     */
+    
     public Money getTotalAmountMatched() {
         if (matches.isEmpty()) {
-            return Money.zero(Currency.USD); // Default currency
+            return Money.zero(Currency.USD); 
         }
 
-        // Use first match currency as reference
+        
         Currency currency = matches.get(0).getAuth().getAmount().getCurrency();
         Money total = Money.zero(currency);
 
@@ -158,9 +145,7 @@ public final class MatchingResult implements Serializable {
         return total;
     }
 
-    /**
-     * Get total unmatched auth amount
-     */
+    
     public Money getTotalUnmatchedAuthAmount() {
         if (unmatchedAuths.isEmpty()) {
             return Money.zero(Currency.USD);
@@ -176,9 +161,7 @@ public final class MatchingResult implements Serializable {
         return total;
     }
 
-    /**
-     * Create copy with updated execution time
-     */
+    
     public MatchingResult withExecutionTime(long executionTimeNanos) {
         return builder()
                 .matches(this.matches)
@@ -191,9 +174,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    /**
-     * Compare with another matching result
-     */
+    
     public MatchingComparison compareTo(MatchingResult other) {
         Objects.requireNonNull(other, "Other result cannot be null");
 
@@ -207,9 +188,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    /**
-     * Generate detailed report
-     */
+    
     public MatchingReport generateReport() {
         return MatchingReport.builder()
                 .result(this)
@@ -219,7 +198,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    // Private helper methods
+    
     private MatchingStatistics calculateStatistics() {
         if (matches.isEmpty()) {
             return MatchingStatistics.empty();
@@ -236,7 +215,7 @@ public final class MatchingResult implements Serializable {
         double median = calculateMedian(scores);
         double stdDev = calculateStandardDeviation(scores, averageScore);
 
-        // Score distribution
+        
         int excellent = 0, good = 0, fair = 0, poor = 0;
         for (double score : scores) {
             if (score >= 90) excellent++;
@@ -322,7 +301,7 @@ public final class MatchingResult implements Serializable {
         return recommendations;
     }
 
-    // Builder pattern
+    
     public static class Builder {
         private List<AuthPresentmentMatch> matches = new ArrayList<>();
         private List<Auth> unmatchedAuths = new ArrayList<>();

@@ -3,26 +3,18 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-/**
- * Sliding window utility for fraud detection.
- *
- * Time-based sliding window implementation:
- * - Automatic cleanup of expired entries
- * - Transaction count and amount aggregation
- * - Velocity and pattern analysis
- * - Memory efficient Deque-based storage
- */
+
 public final class RiskWindow {
 
     private final Deque<WindowEntry> entries;
     private final int windowSizeMinutes;
     private final int maxEntries;
 
-    // Aggregated values (for efficiency)
+    
     private BigDecimal totalAmount;
     private int transactionCount;
 
-    // Window statistics
+    
     private LocalDateTime lastCleanupTime;
     private final Map<String, Integer> merchantCounts;
     private final Map<String, Integer> locationCounts;
@@ -45,22 +37,20 @@ public final class RiskWindow {
         this.locationCounts = new HashMap<>();
     }
 
-    // Common window configurations
+    
     public static RiskWindow createVelocityWindow() {
-        return new RiskWindow(10, 100); // 10 dakika, max 100 işlem
+        return new RiskWindow(10, 100); 
     }
 
     public static RiskWindow createAmountWindow() {
-        return new RiskWindow(60, 200); // 1 saat, max 200 işlem
+        return new RiskWindow(60, 200); 
     }
 
     public static RiskWindow createPatternWindow() {
-        return new RiskWindow(1440, 1000); // 24 saat, max 1000 işlem
+        return new RiskWindow(1440, 1000); 
     }
 
-    /**
-     * Window'a yeni transaction ekler
-     */
+    
     public synchronized WindowAnalysis addTransaction(String transactionId, String cardNumber,
                                                       BigDecimal amount, String merchantName,
                                                       String location, LocalDateTime timestamp) {
@@ -72,32 +62,30 @@ public final class RiskWindow {
         Objects.requireNonNull(location, "Location cannot be null");
         Objects.requireNonNull(timestamp, "Timestamp cannot be null");
 
-        // Expired entries'leri temizle
+        
         cleanupExpiredEntries(timestamp);
 
-        // Yeni entry ekle
+        
         WindowEntry newEntry = new WindowEntry(transactionId, cardNumber, amount,
                 merchantName, location, timestamp);
         entries.addLast(newEntry);
 
-        // Aggregated values update
+        
         totalAmount = totalAmount.add(amount);
         transactionCount++;
         merchantCounts.merge(merchantName, 1, Integer::sum);
         locationCounts.merge(location, 1, Integer::sum);
 
-        // Max entries kontrolü
+        
         while (entries.size() > maxEntries) {
             removeOldestEntry();
         }
 
-        // Analysis yap ve döndür
+        
         return analyzeWindow(newEntry, cardNumber, timestamp);
     }
 
-    /**
-     * Belirli kart için window analizi
-     */
+    
     public synchronized WindowAnalysis analyzeCard(String cardNumber, LocalDateTime currentTime) {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
         Objects.requireNonNull(currentTime, "Current time cannot be null");
@@ -107,9 +95,7 @@ public final class RiskWindow {
         return analyzeWindow(null, cardNumber, currentTime);
     }
 
-    /**
-     * Window'daki expired entries'leri temizler
-     */
+    
     private void cleanupExpiredEntries(LocalDateTime currentTime) {
         LocalDateTime cutoffTime = currentTime.minusMinutes(windowSizeMinutes);
 
@@ -120,32 +106,28 @@ public final class RiskWindow {
         lastCleanupTime = currentTime;
     }
 
-    /**
-     * En eski entry'yi kaldırır ve aggregates'i günceller
-     */
+    
     private void removeOldestEntry() {
         WindowEntry oldest = entries.removeFirst();
         if (oldest != null) {
             totalAmount = totalAmount.subtract(oldest.getAmount());
             transactionCount--;
 
-            // Merchant count update
+            
             String merchant = oldest.getMerchantName();
             merchantCounts.computeIfPresent(merchant, (k, v) -> v > 1 ? v - 1 : null);
 
-            // Location count update
+            
             String location = oldest.getLocation();
             locationCounts.computeIfPresent(location, (k, v) -> v > 1 ? v - 1 : null);
         }
     }
 
-    /**
-     * Window analizi yapar
-     */
+    
     private WindowAnalysis analyzeWindow(WindowEntry newEntry, String cardNumber,
                                          LocalDateTime currentTime) {
 
-        // Card-specific filtering
+        
         List<WindowEntry> cardEntries = entries.stream()
                 .filter(entry -> entry.getCardNumber().equals(cardNumber))
                 .sorted(Comparator.comparing(WindowEntry::getTimestamp))
@@ -155,14 +137,14 @@ public final class RiskWindow {
             return WindowAnalysis.empty(cardNumber, currentTime);
         }
 
-        // Card-specific aggregations
+        
         BigDecimal cardTotalAmount = cardEntries.stream()
                 .map(WindowEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int cardTransactionCount = cardEntries.size();
 
-        // Unique merchants and locations for this card
+        
         Set<String> uniqueMerchants = new HashSet<>();
         Set<String> uniqueLocations = new HashSet<>();
         Map<String, Integer> cardMerchantCounts = new HashMap<>();
@@ -175,7 +157,7 @@ public final class RiskWindow {
             cardLocationCounts.merge(entry.getLocation(), 1, Integer::sum);
         }
 
-        // Velocity analysis
+        
         double transactionsPerMinute = 0.0;
         if (!cardEntries.isEmpty() && cardEntries.size() > 1) {
             LocalDateTime firstTransaction = cardEntries.get(0).getTimestamp();
@@ -186,7 +168,7 @@ public final class RiskWindow {
             }
         }
 
-        // Pattern analysis
+        
         RiskPattern riskPattern = analyzeRiskPatterns(cardEntries, cardMerchantCounts,
                 cardLocationCounts, transactionsPerMinute);
 
@@ -196,9 +178,7 @@ public final class RiskWindow {
                 cardMerchantCounts, cardLocationCounts);
     }
 
-    /**
-     * Risk pattern analysis
-     */
+    
     private RiskPattern analyzeRiskPatterns(List<WindowEntry> entries,
                                             Map<String, Integer> merchantCounts,
                                             Map<String, Integer> locationCounts,
@@ -207,28 +187,28 @@ public final class RiskWindow {
         Set<RiskPattern.PatternType> detectedPatterns = new HashSet<>();
         int riskScore = 0;
 
-        // High velocity pattern
-        if (transactionsPerMinute > 2.0) { // >2 işlem/dakika
+        
+        if (transactionsPerMinute > 2.0) { 
             detectedPatterns.add(RiskPattern.PatternType.HIGH_VELOCITY);
             riskScore += 30;
         }
 
-        // High frequency at same merchant
+        
         for (int count : merchantCounts.values()) {
-            if (count >= 10) { // Aynı merchant'ta 10+ işlem
+            if (count >= 10) { 
                 detectedPatterns.add(RiskPattern.PatternType.MERCHANT_HAMMERING);
                 riskScore += 25;
                 break;
             }
         }
 
-        // Multiple locations rapidly
+        
         if (locationCounts.size() >= 5 && entries.size() >= 10) {
             detectedPatterns.add(RiskPattern.PatternType.LOCATION_HOPPING);
             riskScore += 20;
         }
 
-        // Round amount pattern (possible testing)
+        
         long roundAmounts = entries.stream()
                 .mapToLong(entry -> {
                     BigDecimal amount = entry.getAmount();
@@ -236,18 +216,18 @@ public final class RiskWindow {
                 })
                 .sum();
 
-        if (roundAmounts >= entries.size() * 0.8) { // %80'i round amount
+        if (roundAmounts >= entries.size() * 0.8) { 
             detectedPatterns.add(RiskPattern.PatternType.ROUND_AMOUNTS);
             riskScore += 15;
         }
 
-        // Ascending/descending amount pattern
+        
         if (hasSequentialAmountPattern(entries)) {
             detectedPatterns.add(RiskPattern.PatternType.SEQUENTIAL_AMOUNTS);
             riskScore += 20;
         }
 
-        // Night activity pattern
+        
         long nightTransactions = entries.stream()
                 .mapToLong(entry -> {
                     int hour = entry.getTimestamp().getHour();
@@ -255,7 +235,7 @@ public final class RiskWindow {
                 })
                 .sum();
 
-        if (nightTransactions >= entries.size() * 0.7) { // %70'i gece
+        if (nightTransactions >= entries.size() * 0.7) { 
             detectedPatterns.add(RiskPattern.PatternType.NIGHT_ACTIVITY);
             riskScore += 10;
         }
@@ -263,13 +243,11 @@ public final class RiskWindow {
         return new RiskPattern(detectedPatterns, Math.min(100, riskScore));
     }
 
-    /**
-     * Sequential amount pattern detection
-     */
+    
     private boolean hasSequentialAmountPattern(List<WindowEntry> entries) {
         if (entries.size() < 3) return false;
 
-        // Check for ascending pattern
+        
         boolean ascending = true;
         boolean descending = true;
 
@@ -284,9 +262,7 @@ public final class RiskWindow {
         return ascending || descending;
     }
 
-    /**
-     * Window'u temizler
-     */
+    
     public synchronized void clear() {
         entries.clear();
         totalAmount = BigDecimal.ZERO;
@@ -296,23 +272,21 @@ public final class RiskWindow {
         lastCleanupTime = LocalDateTime.now();
     }
 
-    /**
-     * Window statistics
-     */
+    
     public synchronized WindowStatistics getStatistics() {
         return new WindowStatistics(entries.size(), transactionCount, totalAmount,
                 merchantCounts.size(), locationCounts.size(),
                 windowSizeMinutes, maxEntries, lastCleanupTime);
     }
 
-    // Getters
+    
     public int getWindowSizeMinutes() { return windowSizeMinutes; }
     public int getMaxEntries() { return maxEntries; }
     public int getCurrentSize() { return entries.size(); }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public int getTransactionCount() { return transactionCount; }
 
-    // Nested classes
+    
     public static final class WindowEntry {
         private final String transactionId;
         private final String cardNumber;
@@ -331,7 +305,7 @@ public final class RiskWindow {
             this.timestamp = timestamp;
         }
 
-        // Getters
+        
         public String getTransactionId() { return transactionId; }
         public String getCardNumber() { return cardNumber; }
         public BigDecimal getAmount() { return amount; }
@@ -381,7 +355,7 @@ public final class RiskWindow {
                     new RiskPattern(new HashSet<>(), 0), new HashMap<>(), new HashMap<>());
         }
 
-        // Getters
+        
         public String getCardNumber() { return cardNumber; }
         public LocalDateTime getAnalysisTime() { return analysisTime; }
         public int getWindowSizeMinutes() { return windowSizeMinutes; }
@@ -462,7 +436,7 @@ public final class RiskWindow {
             this.lastCleanupTime = lastCleanupTime;
         }
 
-        // Getters
+        
         public int getCurrentEntries() { return currentEntries; }
         public int getTotalTransactions() { return totalTransactions; }
         public BigDecimal getTotalAmount() { return totalAmount; }

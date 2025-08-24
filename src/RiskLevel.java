@@ -1,4 +1,4 @@
-// RiskLevel.java - Risk level enum (updated version)
+
 public enum RiskLevel {
     LOW(1, "Low Risk", "Minimal risk, proceed normally"),
     MEDIUM(2, "Medium Risk", "Moderate risk, additional review recommended"),

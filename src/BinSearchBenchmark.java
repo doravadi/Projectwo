@@ -174,7 +174,7 @@ public class BinSearchBenchmark {
         System.out.printf("💾 Memory: IntervalTree uses %.2fx %s memory\n",
                 memoryRatio, memoryRatio > 1 ? "more" : "less");
 
-        // Recommendation
+        
         if (speedupRatio > 1.2 && memoryRatio < 2.0) {
             System.out.println("✅ Recommendation: Use IntervalTree");
         } else if (speedupRatio < 0.8) {
@@ -355,7 +355,7 @@ public class BinSearchBenchmark {
 
         List<BinRange> sparseRanges = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            long start = i * 100000L + 400000L; // Large gaps between ranges
+            long start = i * 100000L + 400000L; 
             sparseRanges.add(BinRange.of(start, start + 100, "Bank" + i, "Visa", "TR"));
         }
 
@@ -391,7 +391,7 @@ public class BinSearchBenchmark {
 
         List<BinRange> ranges = generateTestData(1000);
 
-        // Sequential access
+        
         List<Long> sequentialQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             sequentialQueries.add(400000L + i * 100);
@@ -445,12 +445,12 @@ public class BinSearchBenchmark {
         for (int i = 0; i < count; i++) {
             long start;
             do {
-                start = 400000L + random.nextLong(500000); // BIN range 400000-900000
+                start = 400000L + random.nextLong(500000); 
             } while (usedStarts.contains(start));
 
             usedStarts.add(start);
 
-            long end = start + random.nextLong(1, 1000); // Range size 1-1000
+            long end = start + random.nextLong(1, 1000); 
             String bank = "Bank" + (i % 20);
             String cardType = (i % 2 == 0) ? "Visa" : "Mastercard";
             String country = (i % 10 == 0) ? "US" : "TR";

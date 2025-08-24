@@ -1,4 +1,4 @@
-// ValidationReport.java - Database validation result
+
 import java.util.*;
 import java.io.Serializable;
 

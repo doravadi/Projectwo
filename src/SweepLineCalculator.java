@@ -4,14 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
-/**
- * Sweep line algoritması ile günlük bakiye hesaplama.
- * O(K log K) kompleksitesi - K: bakiye değişim noktası sayısı.
- * Gün sayısından bağımsız çalışır.
- */
+
 public final class SweepLineCalculator {
 
-    // TreeMap: otomatik sıralama + O(log K) erişim
+    
     private final NavigableMap<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> deltaMap;
     private final EnumMap<DailyBalance.BalanceBucket, BigDecimal> initialBalances;
 
@@ -25,27 +21,23 @@ public final class SweepLineCalculator {
         this.initialBalances = new EnumMap<>(initialBalances);
     }
 
-    /**
-     * Bakiye değişimini sweep line'a ekler - O(log K)
-     */
+    
     public void addBalanceChange(BalanceChange change, DailyBalance.BalanceBucket targetBucket) {
         Objects.requireNonNull(change, "BalanceChange cannot be null");
         Objects.requireNonNull(targetBucket, "Target bucket cannot be null");
 
         LocalDate date = change.getDate();
 
-        // Delta map'te bu tarih yoksa oluştur
+        
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> deltas =
                 deltaMap.computeIfAbsent(date, k -> createZeroBuckets());
 
-        // Mevcut delta'ya ekle
+        
         BigDecimal currentDelta = deltas.get(targetBucket);
         deltas.put(targetBucket, currentDelta.add(change.getAmount()));
     }
 
-    /**
-     * Birden fazla değişimi toplu olarak ekler
-     */
+    
     public void addBalanceChanges(List<BalanceChange> changes,
                                   Map<BalanceChange, DailyBalance.BalanceBucket> bucketMapping) {
         for (BalanceChange change : changes) {
@@ -56,10 +48,7 @@ public final class SweepLineCalculator {
         }
     }
 
-    /**
-     * Belirli bir tarih aralığındaki günlük bakiyeleri hesaplar.
-     * Prefix sum yaklaşımı ile O(K + N) kompleksitesi.
-     */
+    
     public List<DailyBalance> calculateDailyBalances(DateRange period) {
         Objects.requireNonNull(period, "Period cannot be null");
 
@@ -69,15 +58,15 @@ public final class SweepLineCalculator {
 
         LocalDate currentDate = period.getStartDate();
 
-        // Period başından önce gelen tüm değişimleri uygula
+        
         for (Map.Entry<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> entry :
                 deltaMap.headMap(currentDate, false).entrySet()) {
             applyDeltas(runningBalances, entry.getValue());
         }
 
-        // Period boyunca gün gün hesapla
+        
         while (!currentDate.isAfter(period.getEndDate())) {
-            // Bu günün değişimlerini uygula
+            
             EnumMap<DailyBalance.BalanceBucket, BigDecimal> dailyDeltas =
                     deltaMap.get(currentDate);
 
@@ -85,7 +74,7 @@ public final class SweepLineCalculator {
                 applyDeltas(runningBalances, dailyDeltas);
             }
 
-            // Bu günün bakiyesini kaydet
+            
             DailyBalance dailyBalance = new DailyBalance(currentDate,
                     new EnumMap<>(runningBalances));
             result.add(dailyBalance);
@@ -96,16 +85,14 @@ public final class SweepLineCalculator {
         return result;
     }
 
-    /**
-     * Belirli bir tarihteki bakiyeyi hesaplar (tek nokta sorgusu) - O(K)
-     */
+    
     public DailyBalance getBalanceAt(LocalDate date) {
         Objects.requireNonNull(date, "Date cannot be null");
 
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> runningBalances =
                 new EnumMap<>(initialBalances);
 
-        // Bu tarihe kadar olan tüm değişimleri uygula
+        
         for (Map.Entry<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> entry :
                 deltaMap.headMap(date, true).entrySet()) {
             applyDeltas(runningBalances, entry.getValue());
@@ -114,9 +101,7 @@ public final class SweepLineCalculator {
         return new DailyBalance(date, runningBalances);
     }
 
-    /**
-     * Ortalama günlük bakiyeyi hesaplar (faiz hesabı için kritik!)
-     */
+    
     public EnumMap<DailyBalance.BalanceBucket, BigDecimal> calculateAverageBalances(DateRange period) {
         List<DailyBalance> dailyBalances = calculateDailyBalances(period);
         int dayCount = dailyBalances.size();
@@ -127,7 +112,7 @@ public final class SweepLineCalculator {
 
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> sums = createZeroBuckets();
 
-        // Her bucket için günlük bakiyeleri topla
+        
         for (DailyBalance daily : dailyBalances) {
             for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
                 BigDecimal currentSum = sums.get(bucket);
@@ -136,7 +121,7 @@ public final class SweepLineCalculator {
             }
         }
 
-        // Ortalama hesapla
+        
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> averages = createZeroBuckets();
         BigDecimal dayCountDecimal = new BigDecimal(dayCount);
 
@@ -149,9 +134,7 @@ public final class SweepLineCalculator {
         return averages;
     }
 
-    /**
-     * Belirli bucket'taki toplam delta'yı hesaplar
-     */
+    
     public BigDecimal getTotalDelta(DailyBalance.BalanceBucket bucket, DateRange period) {
         return deltaMap.entrySet().stream()
                 .filter(entry -> period.contains(entry.getKey()))
@@ -160,16 +143,12 @@ public final class SweepLineCalculator {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Delta noktalarını döndürür (debug/monitoring için)
-     */
+    
     public Set<LocalDate> getChangePoints() {
         return new TreeSet<>(deltaMap.keySet());
     }
 
-    /**
-     * Sweep line'ı temizler
-     */
+    
     public void clear() {
         deltaMap.clear();
         for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
@@ -177,16 +156,14 @@ public final class SweepLineCalculator {
         }
     }
 
-    /**
-     * Sistem istatistikleri
-     */
+    
     public Map<String, Object> getStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("changePointCount", deltaMap.size());
         stats.put("dateRange", deltaMap.isEmpty() ? "empty" :
                 deltaMap.firstKey() + " to " + deltaMap.lastKey());
 
-        // Bucket değişim sayıları
+        
         EnumMap<DailyBalance.BalanceBucket, Integer> bucketChangeCounts =
                 new EnumMap<>(DailyBalance.BalanceBucket.class);
 
@@ -201,7 +178,7 @@ public final class SweepLineCalculator {
         return stats;
     }
 
-    // Helper methods
+    
     private void applyDeltas(EnumMap<DailyBalance.BalanceBucket, BigDecimal> balances,
                              EnumMap<DailyBalance.BalanceBucket, BigDecimal> deltas) {
         for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {

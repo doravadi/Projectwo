@@ -5,17 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-/**
- * Ana DSL Rule Engine - Banking kurallarını parse eder ve çalıştırır.
- *
- * Thread-safe design, rule caching ve performance monitoring içerir.
- *
- * Desteklenen DSL syntax örnekleri:
- * - "MCC in [GROCERY, FUEL] and amount > 500 then points = amount * 0.02"
- * - "hour between 22 and 06 then risk_score = 50"
- * - "country != 'TR' and amount > 1000 then alert = 'HIGH_FOREIGN_AMOUNT'"
- * - "day in {SAT, SUN} and MCC == ENTERTAINMENT then multiplier = 2.0"
- */
+
 public final class RuleEngine {
 
     private final RuleParser parser;
@@ -23,7 +13,7 @@ public final class RuleEngine {
     private final Map<Rule.RuleType, List<ParsedRule>> rulesByType;
     private final RuleEngineStatistics statistics;
 
-    // Performance counters
+    
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong totalParsingTime = new AtomicLong(0);
     private final AtomicLong totalEvaluationTime = new AtomicLong(0);
@@ -34,22 +24,13 @@ public final class RuleEngine {
         this.rulesByType = new EnumMap<>(Rule.RuleType.class);
         this.statistics = new RuleEngineStatistics();
 
-        // Initialize rule type lists
+        
         for (Rule.RuleType type : Rule.RuleType.values()) {
             rulesByType.put(type, new ArrayList<>());
         }
     }
 
-    /**
-     * DSL kuralını parse eder ve engine'e ekler
-     *
-     * @param ruleId Kural ID'si
-     * @param dslExpression DSL ifadesi
-     * @param ruleType Kural türü
-     * @param priority Öncelik (yüksek sayı = önce çalışır)
-     * @param description Açıklama
-     * @throws RuleSyntaxException Parse hatası
-     */
+    
     public void addRule(String ruleId, String dslExpression, Rule.RuleType ruleType,
                         int priority, String description) throws RuleSyntaxException {
         Objects.requireNonNull(ruleId, "Rule ID cannot be null");
@@ -69,7 +50,7 @@ public final class RuleEngine {
             ruleCache.put(ruleId, parsedRule);
             rulesByType.get(ruleType).add(parsedRule);
 
-            // Sort by priority (descending)
+            
             rulesByType.get(ruleType).sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
 
             statistics.incrementRulesAdded();
@@ -79,9 +60,7 @@ public final class RuleEngine {
         }
     }
 
-    /**
-     * Belirli bir kural türündeki tüm kuralları çalıştırır
-     */
+    
     public List<RuleResult> evaluateRules(Rule.RuleType ruleType, TransactionContext context) {
         Objects.requireNonNull(ruleType, "Rule type cannot be null");
         Objects.requireNonNull(context, "Transaction context cannot be null");
@@ -119,24 +98,22 @@ public final class RuleEngine {
         }
     }
 
-    /**
-     * Tüm kural türlerini çalıştırır (öncelik sırasına göre)
-     */
+    
     public Map<Rule.RuleType, List<RuleResult>> evaluateAllRules(TransactionContext context) {
         Objects.requireNonNull(context, "Transaction context cannot be null");
 
         Map<Rule.RuleType, List<RuleResult>> allResults = new EnumMap<>(Rule.RuleType.class);
 
-        // Rule türlerini öncelik sırasına göre işle
+        
         Rule.RuleType[] priorityOrder = {
-                Rule.RuleType.LIMIT_CHECK,    // Önce limitler
-                Rule.RuleType.FRAUD_CHECK,    // Sonra fraud
-                Rule.RuleType.GEOGRAPHIC,     // Coğrafi kurallar
-                Rule.RuleType.TIME_BASED,     // Zaman bazlı
-                Rule.RuleType.MCC_ROUTING,    // MCC routing
-                Rule.RuleType.REWARD,         // Ödüller
-                Rule.RuleType.DISCOUNT,       // İndirimler
-                Rule.RuleType.ALERT          // Son olarak uyarılar
+                Rule.RuleType.LIMIT_CHECK,    
+                Rule.RuleType.FRAUD_CHECK,    
+                Rule.RuleType.GEOGRAPHIC,     
+                Rule.RuleType.TIME_BASED,     
+                Rule.RuleType.MCC_ROUTING,    
+                Rule.RuleType.REWARD,         
+                Rule.RuleType.DISCOUNT,       
+                Rule.RuleType.ALERT          
         };
 
         for (Rule.RuleType ruleType : priorityOrder) {
@@ -149,16 +126,14 @@ public final class RuleEngine {
         return allResults;
     }
 
-    /**
-     * Tek bir kuralı çalıştırır
-     */
+    
     private RuleResult evaluateRule(ParsedRule rule, TransactionContext context) throws RuleEvaluationException {
         try {
-            // AST'yi evaluate et
+            
             Object result = rule.getAst().evaluate(context);
 
             if (result instanceof Boolean && (Boolean) result) {
-                // Kural true döndü, action'ları çalıştır
+                
                 return executeRuleActions(rule, context);
             } else {
                 return RuleResult.notApplied(rule.getRuleId(), "Condition not met");
@@ -170,38 +145,36 @@ public final class RuleEngine {
         }
     }
 
-    /**
-     * Kural aksiyonlarını çalıştırır (DSL'deki "then" kısmı)
-     */
+    
     private RuleResult executeRuleActions(ParsedRule rule, TransactionContext context) {
-        // Bu method AST'deki action node'larını execute eder
-        // Şimdilik basit bir implementation
+        
+        
 
         RuleResult.Builder builder = RuleResult.builder(rule.getRuleId(),
                         mapRuleTypeToResultType(rule.getRuleType()))
                 .applied(true)
                 .description(rule.getDescription());
 
-        // Rule türüne göre default action'lar
+        
         switch (rule.getRuleType()) {
             case REWARD:
-                // Örnek: amount * 0.02 points
+                
                 builder.points(context.getAmount().multiply(new java.math.BigDecimal("0.02")));
                 break;
 
             case FRAUD_CHECK:
-                // Örnek: risk skoru artır
+                
                 builder.riskScore(50)
                         .alertMessage("Suspicious transaction detected");
                 break;
 
             case DISCOUNT:
-                // Örnek: %5 indirim
+                
                 builder.discountAmount(context.getAmount().multiply(new java.math.BigDecimal("0.05")));
                 break;
 
             default:
-                // Genel action
+                
                 builder.action("RULE_APPLIED");
                 break;
         }
@@ -219,9 +192,7 @@ public final class RuleEngine {
         }
     }
 
-    /**
-     * Kuralı aktif/pasif yapar
-     */
+    
     public boolean toggleRule(String ruleId, boolean active) {
         ParsedRule rule = ruleCache.get(ruleId);
         if (rule != null) {
@@ -231,9 +202,7 @@ public final class RuleEngine {
         return false;
     }
 
-    /**
-     * Kuralı siler
-     */
+    
     public boolean removeRule(String ruleId) {
         ParsedRule rule = ruleCache.remove(ruleId);
         if (rule != null) {
@@ -244,18 +213,14 @@ public final class RuleEngine {
         return false;
     }
 
-    /**
-     * Belirli türdeki kuralları listeler
-     */
+    
     public List<String> getRuleIdsByType(Rule.RuleType ruleType) {
         return rulesByType.get(ruleType).stream()
                 .map(ParsedRule::getRuleId)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Kural detaylarını getirir
-     */
+    
     public Optional<RuleInfo> getRuleInfo(String ruleId) {
         ParsedRule rule = ruleCache.get(ruleId);
         if (rule != null) {
@@ -267,9 +232,7 @@ public final class RuleEngine {
         return Optional.empty();
     }
 
-    /**
-     * Engine istatistikleri
-     */
+    
     public RuleEngineStatistics getStatistics() {
         statistics.setTotalRules(ruleCache.size());
         statistics.setTotalEvaluations(totalEvaluations.get());
@@ -280,18 +243,14 @@ public final class RuleEngine {
         return statistics;
     }
 
-    /**
-     * Cache'i temizler
-     */
+    
     public void clearCache() {
         ruleCache.clear();
         rulesByType.values().forEach(List::clear);
         statistics.reset();
     }
 
-    /**
-     * DSL expression'ını validate eder (parse etmeden)
-     */
+    
     public ValidationResult validateExpression(String dslExpression) {
         try {
             parser.parse(dslExpression);
@@ -301,7 +260,7 @@ public final class RuleEngine {
         }
     }
 
-    // Inner classes
+    
     public static final class ValidationResult {
         private final boolean valid;
         private final String errorMessage;
@@ -343,7 +302,7 @@ public final class RuleEngine {
             this.conditionCount = conditionCount;
         }
 
-        // Getters
+        
         public String getRuleId() { return ruleId; }
         public String getDslExpression() { return dslExpression; }
         public Rule.RuleType getRuleType() { return ruleType; }

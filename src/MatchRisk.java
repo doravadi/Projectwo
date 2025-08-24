@@ -1,4 +1,4 @@
-// MatchRisk.java - Match risk assessment
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +32,11 @@ public final class MatchRisk implements Serializable {
         return builder().level(RiskLevel.HIGH).build();
     }
 
-    // Getters
+    
     public RiskLevel getLevel() { return level; }
     public List<String> getFactors() { return factors; }
 
-    // Business logic
+    
     public boolean isHighRisk() {
         return level == RiskLevel.HIGH || level == RiskLevel.CRITICAL;
     }
@@ -65,7 +65,7 @@ public final class MatchRisk implements Serializable {
 
         public Builder addFactor(String factor) {
             this.factors.add(factor);
-            // Auto-adjust risk level based on factors
+            
             if (this.level == RiskLevel.LOW && !factors.isEmpty()) {
                 this.level = RiskLevel.MEDIUM;
             }

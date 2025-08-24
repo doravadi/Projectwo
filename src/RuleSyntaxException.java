@@ -1,19 +1,5 @@
 
-/**
- * DSL parse zamanında söz dizimi hataları için checked exception.
- *
- * Bu exception şu durumlarda fırlatılır:
- * - Geçersiz DSL syntax
- * - Desteklenmeyen operatör/anahtar kelime
- * - Parantez dengesizliği
- * - Beklenmeyen token
- * - EOF sırasında incomplete expression
- *
- * Örnek hatalar:
- * - "amount >" (incomplete comparison)
- * - "MCC in GROCERY, FUEL]" (missing opening bracket)
- * - "day == MONDAY and" (trailing operator)
- */
+
 public final class RuleSyntaxException extends Exception {
 
     private final String ruleText;
@@ -70,7 +56,7 @@ public final class RuleSyntaxException extends Exception {
         return sb.toString();
     }
 
-    // Factory methods for common parsing errors
+    
     public static RuleSyntaxException unexpectedToken(String ruleText, int position, String actualToken) {
         return new RuleSyntaxException(ruleText, position, "Unexpected token: '" + actualToken + "'");
     }
@@ -103,13 +89,13 @@ public final class RuleSyntaxException extends Exception {
         return new RuleSyntaxException(ruleText, position, "Invalid literal: '" + literal + "'");
     }
 
-    // Getters
+    
     public String getRuleText() { return ruleText; }
     public int getPosition() { return position; }
     public String getExpectedToken() { return expectedToken; }
     public String getActualToken() { return actualToken; }
 
-    // Helper method to create user-friendly error report
+    
     public String getUserFriendlyMessage() {
         if (ruleText == null || position < 0) {
             return getMessage();
@@ -127,7 +113,7 @@ public final class RuleSyntaxException extends Exception {
         sb.append("\nRule: ").append(ruleText).append("\n");
         sb.append("      ").append(" ".repeat(Math.max(0, position))).append("^ error here");
 
-        // Add suggestions based on common mistakes
+        
         addSuggestions(sb);
 
         return sb.toString();

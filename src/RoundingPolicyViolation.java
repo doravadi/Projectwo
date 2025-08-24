@@ -2,15 +2,7 @@
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * Para hesaplamalarında yuvarlama politikası ihlallerinde fırlatılan runtime exception.
- *
- * Bu exception şu durumlarda fırlatılır:
- * - Yanlış RoundingMode kullanımı
- * - Hassasiyet kaybına neden olan işlemler
- * - Faiz hesaplamalarında tolerans aşımı (±0.01 TL)
- * - Sweep line vs brute force farkı çok büyük
- */
+
 public final class RoundingPolicyViolation extends RuntimeException {
 
     private final BigDecimal expectedValue;
@@ -46,7 +38,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         this.operation = operation;
     }
 
-    // Factory methods for common banking scenarios
+    
     public static RoundingPolicyViolation toleranceExceeded(String operation,
                                                             BigDecimal expected,
                                                             BigDecimal actual,
@@ -95,7 +87,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
                 "interest_calculation_validation");
     }
 
-    // Getters
+    
     public BigDecimal getExpectedValue() {
         return expectedValue;
     }
@@ -116,9 +108,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return expectedValue != null && actualValue != null;
     }
 
-    /**
-     * Farkın mutlak değerini döndürür (varsa)
-     */
+    
     public BigDecimal getDifference() {
         if (!hasValueComparison()) {
             return null;
@@ -126,9 +116,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return actualValue.subtract(expectedValue).abs();
     }
 
-    /**
-     * Yüzde farkı hesaplar (varsa)
-     */
+    
     public BigDecimal getPercentageDifference() {
         if (!hasValueComparison() || expectedValue.compareTo(BigDecimal.ZERO) == 0) {
             return null;
@@ -139,9 +127,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
                 .multiply(new BigDecimal("100"));
     }
 
-    /**
-     * Tolerans dahilinde mi kontrol eder
-     */
+    
     public boolean isWithinTolerance(BigDecimal tolerance) {
         if (!hasValueComparison()) {
             return false;
@@ -175,9 +161,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return sb.toString();
     }
 
-    /**
-     * Recovery önerisi (debugging için)
-     */
+    
     public String getRecoveryAdvice() {
         if (usedRoundingMode == RoundingMode.UNNECESSARY) {
             return "Use explicit RoundingMode like HALF_UP or HALF_EVEN for monetary calculations";

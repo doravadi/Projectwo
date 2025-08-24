@@ -1,4 +1,4 @@
-// MatchingComparison.java - Comparison between two matching results
+
 import java.io.Serializable;
 
 public final class MatchingComparison implements Serializable {
@@ -25,7 +25,7 @@ public final class MatchingComparison implements Serializable {
         return new Builder();
     }
 
-    // Getters
+    
     public MatchingResult getResult1() { return result1; }
     public MatchingResult getResult2() { return result2; }
     public double getScoreDifference() { return scoreDifference; }

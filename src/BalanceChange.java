@@ -4,10 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Belirli bir tarihte bakiye değişimini temsil eden immutable value object.
- * Sweep line algoritmasında delta olayları için kullanılır.
- */
+
 public final class BalanceChange implements Comparable<BalanceChange> {
     private final LocalDate date;
     private final BigDecimal amount;
@@ -15,12 +12,12 @@ public final class BalanceChange implements Comparable<BalanceChange> {
     private final ChangeType type;
 
     public enum ChangeType {
-        PURCHASE,       // Alışveriş (-)
-        PAYMENT,        // Ödeme (+)
-        INTEREST,       // Faiz (-)
-        FEE,           // Komisyon (-)
-        REFUND,        // İade (+)
-        ADJUSTMENT     // Düzeltme (+/-)
+        PURCHASE,       
+        PAYMENT,        
+        INTEREST,       
+        FEE,           
+        REFUND,        
+        ADJUSTMENT     
     }
 
     public BalanceChange(LocalDate date, BigDecimal amount, String description, ChangeType type) {
@@ -30,7 +27,7 @@ public final class BalanceChange implements Comparable<BalanceChange> {
         this.type = Objects.requireNonNull(type, "ChangeType cannot be null");
     }
 
-    // Factory methods for common operations
+    
     public static BalanceChange purchase(LocalDate date, BigDecimal amount, String description) {
         return new BalanceChange(date, amount.negate(), description, ChangeType.PURCHASE);
     }
@@ -55,7 +52,7 @@ public final class BalanceChange implements Comparable<BalanceChange> {
         return new BalanceChange(date, amount, description, ChangeType.ADJUSTMENT);
     }
 
-    // Getters
+    
     public LocalDate getDate() {
         return date;
     }
@@ -72,7 +69,7 @@ public final class BalanceChange implements Comparable<BalanceChange> {
         return type;
     }
 
-    // Helper methods
+    
     public boolean isCredit() {
         return amount.compareTo(BigDecimal.ZERO) > 0;
     }
@@ -85,7 +82,7 @@ public final class BalanceChange implements Comparable<BalanceChange> {
         return amount.abs();
     }
 
-    // Immutable transformations
+    
     public BalanceChange withAmount(BigDecimal newAmount) {
         return new BalanceChange(date, newAmount, description, type);
     }
@@ -121,30 +118,30 @@ public final class BalanceChange implements Comparable<BalanceChange> {
 
     @Override
     public int compareTo(BalanceChange other) {
-        // Önce tarihe göre sırala
+        
         int dateCompare = date.compareTo(other.date);
         if (dateCompare != 0) {
             return dateCompare;
         }
 
-        // Aynı tarihte önce ödemeler, sonra harcamalar (stability için)
+        
         int typeCompare = Integer.compare(getTypeOrder(), other.getTypeOrder());
         if (typeCompare != 0) {
             return typeCompare;
         }
 
-        // Son olarak tutara göre (büyükten küçüğe - büyük işlemler önce)
+        
         return other.amount.compareTo(amount);
     }
 
     private int getTypeOrder() {
         return switch (type) {
-            case PAYMENT -> 1;      // Önce ödemeler (bakiye artırıcı)
-            case REFUND -> 2;       // Sonra iadeler
-            case ADJUSTMENT -> 3;   // Düzeltmeler
-            case PURCHASE -> 4;     // Alışverişler
-            case FEE -> 5;         // Komisyonlar
-            case INTEREST -> 6;     // Faiz en son
+            case PAYMENT -> 1;      
+            case REFUND -> 2;       
+            case ADJUSTMENT -> 3;   
+            case PURCHASE -> 4;     
+            case FEE -> 5;         
+            case INTEREST -> 6;     
         };
     }
 

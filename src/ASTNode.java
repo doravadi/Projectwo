@@ -4,75 +4,49 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.*;
 
-/**
- * Abstract Syntax Tree node'ları için base class.
- *
- * DSL parser tarafından oluşturulan AST'nin tüm node'ları bu interface'i implement eder.
- * Visitor pattern ile evaluation yapılır.
- *
- * Örnek AST yapısı:
- * "amount > 500 and MCC == GROCERY"
- *
- *       AND
- *      /   \
- *    GT     EQ
- *   /  \   /  \
- * amount 500 MCC GROCERY
- */
+
 public abstract class ASTNode {
 
-    /**
-     * Node'u evaluate eder ve sonuç döner
-     *
-     * @param context Transaction context
-     * @return Evaluation sonucu
-     * @throws RuleEvaluationException Evaluation hatası
-     */
+    
     public abstract Object evaluate(TransactionContext context) throws RuleEvaluationException;
 
-    /**
-     * Node'daki koşul sayısını döner (complexity metriği)
-     */
+    
     public abstract int getConditionCount();
 
-    /**
-     * Node türü
-     */
+    
     public abstract NodeType getNodeType();
 
-    /**
-     * Node'un string representation'ı
-     */
+    
     public abstract String toExpressionString();
 
-    // Node türleri
+    
     public enum NodeType {
-        // Logical operators
+        
         AND, OR, NOT,
 
-        // Comparison operators
+        
         EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_EQUAL, LESS_EQUAL,
 
-        // Membership operators
+        
         IN, NOT_IN, BETWEEN,
 
-        // Arithmetic operators
+        
         PLUS, MINUS, MULTIPLY, DIVIDE,
 
-        // Literals
+        
         NUMBER, STRING, BOOLEAN, DATE, TIME,
 
-        // Field references
+        
         FIELD,
 
-        // Collections
+        
         LIST, SET,
 
-        // Actions (then clause)
+        
         ASSIGNMENT, ACTION_BLOCK
     }
 
-    // Binary operator base class
+    
     public static abstract class BinaryOperatorNode extends ASTNode {
         protected final ASTNode left;
         protected final ASTNode right;
@@ -91,7 +65,7 @@ public abstract class ASTNode {
         public ASTNode getRight() { return right; }
     }
 
-    // Unary operator base class
+    
     public static abstract class UnaryOperatorNode extends ASTNode {
         protected final ASTNode operand;
 
@@ -107,7 +81,7 @@ public abstract class ASTNode {
         public ASTNode getOperand() { return operand; }
     }
 
-    // Logical AND node
+    
     public static final class AndNode extends BinaryOperatorNode {
         public AndNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -117,7 +91,7 @@ public abstract class ASTNode {
         public Object evaluate(TransactionContext context) throws RuleEvaluationException {
             Object leftResult = left.evaluate(context);
             if (!isTrue(leftResult)) {
-                return false; // Short-circuit evaluation
+                return false; 
             }
 
             Object rightResult = right.evaluate(context);
@@ -135,7 +109,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Logical OR node
+    
     public static final class OrNode extends BinaryOperatorNode {
         public OrNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -145,7 +119,7 @@ public abstract class ASTNode {
         public Object evaluate(TransactionContext context) throws RuleEvaluationException {
             Object leftResult = left.evaluate(context);
             if (isTrue(leftResult)) {
-                return true; // Short-circuit evaluation
+                return true; 
             }
 
             Object rightResult = right.evaluate(context);
@@ -163,7 +137,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Logical NOT node
+    
     public static final class NotNode extends UnaryOperatorNode {
         public NotNode(ASTNode operand) {
             super(operand);
@@ -186,7 +160,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Equality node
+    
     public static final class EqualsNode extends BinaryOperatorNode {
         public EqualsNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -211,7 +185,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Greater than node
+    
     public static final class GreaterThanNode extends BinaryOperatorNode {
         public GreaterThanNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -246,7 +220,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Field reference node
+    
     public static final class FieldNode extends ASTNode {
         private final String fieldName;
 
@@ -291,7 +265,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; // Field access is not a condition
+            return 0; 
         }
 
         @Override
@@ -309,7 +283,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Number literal node
+    
     public static final class NumberNode extends ASTNode {
         private final BigDecimal value;
 
@@ -336,7 +310,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; // Literal is not a condition
+            return 0; 
         }
 
         @Override
@@ -354,7 +328,7 @@ public abstract class ASTNode {
         }
     }
 
-    // String literal node
+    
     public static final class StringNode extends ASTNode {
         private final String value;
 
@@ -387,7 +361,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Enum literal node (for MCC, DayOfWeek, etc.)
+    
     public static final class EnumNode extends ASTNode {
         private final String enumName;
         private final Object enumValue;
@@ -398,25 +372,25 @@ public abstract class ASTNode {
         }
 
         private Object parseEnumValue(String name) {
-            // MCC categories
+            
             try {
                 return TransactionContext.MccCategory.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Ignore and try next
+                
             }
 
-            // Day of week
+            
             try {
                 return DayOfWeek.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Ignore and try next
+                
             }
 
-            // Transaction type
+            
             try {
                 return TransactionContext.TransactionType.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                // Return as string if no enum match
+                
                 return name;
             }
         }
@@ -433,7 +407,7 @@ public abstract class ASTNode {
 
         @Override
         public NodeType getNodeType() {
-            return NodeType.STRING; // Treat enum as string-like
+            return NodeType.STRING; 
         }
 
         @Override
@@ -450,7 +424,7 @@ public abstract class ASTNode {
         }
     }
 
-    // IN operator node (membership test)
+    
     public static final class InNode extends BinaryOperatorNode {
         public InNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -483,7 +457,7 @@ public abstract class ASTNode {
         }
     }
 
-    // List node for IN operations
+    
     public static final class ListNode extends ASTNode {
         private final List<ASTNode> elements;
 
@@ -502,7 +476,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; // List itself is not a condition
+            return 0; 
         }
 
         @Override
@@ -523,7 +497,7 @@ public abstract class ASTNode {
         }
     }
 
-    // Helper method for boolean evaluation
+    
     protected static boolean isTrue(Object value) {
         if (value == null) {
             return false;
@@ -537,6 +511,6 @@ public abstract class ASTNode {
         if (value instanceof String) {
             return !((String) value).isEmpty();
         }
-        return true; // Non-null objects are considered true
+        return true; 
     }
 }

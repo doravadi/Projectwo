@@ -1,4 +1,4 @@
-// MatchValidation.java - Match validation results
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,12 +22,12 @@ public final class MatchValidation implements Serializable {
         return new Builder();
     }
 
-    // Getters
+    
     public List<String> getErrors() { return errors; }
     public List<String> getWarnings() { return warnings; }
     public List<String> getInfos() { return infos; }
 
-    // Business logic
+    
     public boolean isValid() {
         return errors.isEmpty();
     }

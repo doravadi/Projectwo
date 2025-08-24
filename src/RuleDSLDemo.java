@@ -5,16 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-/**
- * DSL Rule Engine Demo & Test Utility
- *
- * Complete showcase of DSL Rule Engine modülü:
- * - Farklı kural türleri (REWARD, FRAUD_CHECK, DISCOUNT vb.)
- * - Performance benchmarking
- * - Error handling scenarios
- * - Complex rule combinations
- * - Real-world banking scenarios
- */
+
 public final class RuleDSLDemo {
 
     private final RuleEngine ruleEngine;
@@ -22,42 +13,40 @@ public final class RuleDSLDemo {
 
     public RuleDSLDemo() {
         this.ruleEngine = new RuleEngine();
-        this.random = new Random(12345); // Reproducible results
+        this.random = new Random(12345); 
     }
 
-    /**
-     * Ana demo method - tüm senaryoları çalıştırır
-     */
+    
     public void runAllDemos() {
         System.out.println("🎯 DSL RULE ENGINE MODULE DEMO");
         System.out.println("==============================");
 
         try {
-            // Demo 1: Basic DSL parsing and evaluation
+            
             System.out.println("\n1️⃣ BASIC DSL PARSING & EVALUATION");
             basicDSLDemo();
 
-            // Demo 2: Different rule types
+            
             System.out.println("\n2️⃣ DIFFERENT RULE TYPES DEMO");
             ruleTypesDemo();
 
-            // Demo 3: Complex conditions
+            
             System.out.println("\n3️⃣ COMPLEX CONDITIONS & LOGIC");
             complexConditionsDemo();
 
-            // Demo 4: Real-world banking scenarios
+            
             System.out.println("\n4️⃣ REAL-WORLD BANKING SCENARIOS");
             bankingScenariosDemo();
 
-            // Demo 5: Error handling
+            
             System.out.println("\n5️⃣ ERROR HANDLING & EDGE CASES");
             errorHandlingDemo();
 
-            // Demo 6: Performance benchmark
+            
             System.out.println("\n6️⃣ PERFORMANCE BENCHMARK");
             performanceBenchmarkDemo();
 
-            // Demo 7: Engine statistics
+            
             System.out.println("\n7️⃣ ENGINE STATISTICS");
             statisticsDemo();
 
@@ -69,25 +58,23 @@ public final class RuleDSLDemo {
         }
     }
 
-    /**
-     * Demo 1: Basic DSL parsing and evaluation
-     */
+    
     private void basicDSLDemo() throws RuleSyntaxException {
         System.out.println("Testing basic DSL expressions...");
 
-        // Simple amount condition
+        
         ruleEngine.addRule("RULE_001", "amount > 1000", Rule.RuleType.REWARD, 10,
                 "High amount bonus");
 
-        // MCC condition
+        
         ruleEngine.addRule("RULE_002", "mcc == GROCERY", Rule.RuleType.DISCOUNT, 5,
                 "Grocery discount");
 
-        // Time-based condition
+        
         ruleEngine.addRule("RULE_003", "hour >= 22 or hour <= 6", Rule.RuleType.FRAUD_CHECK, 20,
                 "Night transaction check");
 
-        // Test with sample context
+        
         TransactionContext context = createSampleContext(new BigDecimal("1500"),
                 TransactionContext.MccCategory.GROCERY, 23);
 
@@ -102,36 +89,34 @@ public final class RuleDSLDemo {
         });
     }
 
-    /**
-     * Demo 2: Different rule types showcase
-     */
+    
     private void ruleTypesDemo() throws RuleSyntaxException {
         System.out.println("Testing different rule types...");
 
-        // REWARD rules
+        
         ruleEngine.addRule("REWARD_001", "mcc in [GROCERY, FUEL] and amount > 500",
                 Rule.RuleType.REWARD, 10, "Category bonus");
 
         ruleEngine.addRule("REWARD_002", "day in [SAT, SUN] and mcc == ENTERTAINMENT",
                 Rule.RuleType.REWARD, 15, "Weekend entertainment bonus");
 
-        // FRAUD_CHECK rules
+        
         ruleEngine.addRule("FRAUD_001", "country != 'TR' and amount > 2000",
                 Rule.RuleType.FRAUD_CHECK, 50, "High foreign transaction");
 
         ruleEngine.addRule("FRAUD_002", "hour >= 2 and hour <= 5 and amount > 1000",
                 Rule.RuleType.FRAUD_CHECK, 30, "Late night high amount");
 
-        // DISCOUNT rules
+        
         ruleEngine.addRule("DISCOUNT_001", "customer_segment == 'PREMIUM' and amount > 1000",
                 Rule.RuleType.DISCOUNT, 5, "Premium customer discount");
 
-        // Test scenarios
+        
         TransactionContext[] testContexts = {
-                createSampleContext(new BigDecimal("800"), TransactionContext.MccCategory.GROCERY, 14), // Grocery reward
-                createWeekendContext(new BigDecimal("300"), TransactionContext.MccCategory.ENTERTAINMENT), // Weekend entertainment
-                createForeignContext(new BigDecimal("2500"), "US"), // Foreign fraud check
-                createNightContext(new BigDecimal("1200"), 3) // Night fraud check
+                createSampleContext(new BigDecimal("800"), TransactionContext.MccCategory.GROCERY, 14), 
+                createWeekendContext(new BigDecimal("300"), TransactionContext.MccCategory.ENTERTAINMENT), 
+                createForeignContext(new BigDecimal("2500"), "US"), 
+                createNightContext(new BigDecimal("1200"), 3) 
         };
 
         for (int i = 0; i < testContexts.length; i++) {
@@ -141,28 +126,26 @@ public final class RuleDSLDemo {
         }
     }
 
-    /**
-     * Demo 3: Complex conditions and logical operators
-     */
+    
     private void complexConditionsDemo() throws RuleSyntaxException {
         System.out.println("Testing complex logical conditions...");
 
-        // Complex AND/OR combinations
+        
         ruleEngine.addRule("COMPLEX_001",
                 "(mcc == GROCERY and amount > 500) or (mcc == FUEL and amount > 300)",
                 Rule.RuleType.REWARD, 10, "Multi-category bonus");
 
-        // Nested conditions with NOT
+        
         ruleEngine.addRule("COMPLEX_002",
                 "not (country == 'TR' and customer_age >= 65) and amount > 1000",
                 Rule.RuleType.ALERT, 5, "Non-senior foreign high amount");
 
-        // Multiple field conditions
+        
         ruleEngine.addRule("COMPLEX_003",
                 "customer_segment == 'PREMIUM' and monthly_spending > 5000 and day in [MON, TUE, WED, THU, FRI]",
                 Rule.RuleType.DISCOUNT, 15, "Premium weekday bonus");
 
-        // Test complex scenarios
+        
         TransactionContext complexContext = TransactionContext.builder()
                 .transactionId("TXN_COMPLEX_001")
                 .cardNumber("4111111111111111")
@@ -175,7 +158,7 @@ public final class RuleDSLDemo {
                 .customerAge(45)
                 .customerSegment("PREMIUM")
                 .monthlySpending(new BigDecimal("6000"))
-                .transactionDateTime(LocalDateTime.now().withDayOfMonth(15)) // Weekday
+                .transactionDateTime(LocalDateTime.now().withDayOfMonth(15)) 
                 .transactionType(TransactionContext.TransactionType.PURCHASE)
                 .build();
 
@@ -184,38 +167,36 @@ public final class RuleDSLDemo {
         printRuleResults(results);
     }
 
-    /**
-     * Demo 4: Real-world banking scenarios
-     */
+    
     private void bankingScenariosDemo() throws RuleSyntaxException {
         System.out.println("Testing real-world banking scenarios...");
 
-        // Cash advance limits
+        
         ruleEngine.addRule("CASH_LIMIT_001", "transaction_type == CASH_ADVANCE and amount > 2000",
                 Rule.RuleType.LIMIT_CHECK, 100, "Daily cash advance limit");
 
-        // International transaction alerts
+        
         ruleEngine.addRule("INTL_001", "country != 'TR' and amount > 500",
                 Rule.RuleType.ALERT, 25, "International transaction alert");
 
-        // Student discounts
+        
         ruleEngine.addRule("STUDENT_001", "customer_segment == 'STUDENT' and mcc in [EDUCATION, ENTERTAINMENT]",
                 Rule.RuleType.DISCOUNT, 8, "Student category discount");
 
-        // High-value transaction monitoring
+        
         ruleEngine.addRule("HIGH_VALUE_001", "amount > 10000",
                 Rule.RuleType.ALERT, 90, "High-value transaction monitoring");
 
-        // Weekend fuel bonus
+        
         ruleEngine.addRule("FUEL_WEEKEND_001", "mcc == FUEL and day in [SAT, SUN]",
                 Rule.RuleType.REWARD, 12, "Weekend fuel bonus");
 
-        // Business scenarios
+        
         TransactionContext[] businessScenarios = {
-                createBusinessContext("CASH_ADVANCE", new BigDecimal("2500")), // Cash advance limit
-                createStudentContext(TransactionContext.MccCategory.EDUCATION, new BigDecimal("200")), // Student discount
-                createHighValueContext(new BigDecimal("15000")), // High-value monitoring
-                createWeekendFuelContext(new BigDecimal("150")) // Weekend fuel bonus
+                createBusinessContext("CASH_ADVANCE", new BigDecimal("2500")), 
+                createStudentContext(TransactionContext.MccCategory.EDUCATION, new BigDecimal("200")), 
+                createHighValueContext(new BigDecimal("15000")), 
+                createWeekendFuelContext(new BigDecimal("150")) 
         };
 
         for (int i = 0; i < businessScenarios.length; i++) {
@@ -226,21 +207,19 @@ public final class RuleDSLDemo {
         }
     }
 
-    /**
-     * Demo 5: Error handling and edge cases
-     */
+    
     private void errorHandlingDemo() {
         System.out.println("Testing error handling and validation...");
 
         String[] invalidRules = {
-                "amount >", // Incomplete expression
-                "MCC in GROCERY, FUEL]", // Missing opening bracket
-                "amount == 'text'", // Type mismatch potential
-                "invalid_field > 100", // Invalid field name
-                "amount >> 500", // Invalid operator
-                "day in [MON and hour > 22", // Unbalanced parentheses
-                "not", // Missing operand
-                "amount > 500 and", // Trailing operator
+                "amount >", 
+                "MCC in GROCERY, FUEL]", 
+                "amount == 'text'", 
+                "invalid_field > 100", 
+                "amount >> 500", 
+                "day in [MON and hour > 22", 
+                "not", 
+                "amount > 500 and", 
         };
 
         String[] validationMessages = {
@@ -261,14 +240,14 @@ public final class RuleDSLDemo {
             RuleEngine.ValidationResult result = ruleEngine.validateExpression(invalidRules[i]);
             if (!result.isValid()) {
                 System.out.println("❌ " + validationMessages[i]);
-                // Uncomment to see detailed error:
-                // System.out.println("    Detail: " + result.getErrorMessage().orElse("No details"));
+                
+                
             } else {
                 System.out.println("✅ Unexpectedly valid!");
             }
         }
 
-        // Test runtime evaluation errors
+        
         System.out.println("\nTesting runtime evaluation scenarios:");
         try {
             ruleEngine.addRule("RUNTIME_ERROR_001", "amount > customer_age", Rule.RuleType.ALERT, 1,
@@ -291,13 +270,11 @@ public final class RuleDSLDemo {
         }
     }
 
-    /**
-     * Demo 6: Performance benchmark
-     */
+    
     private void performanceBenchmarkDemo() throws RuleSyntaxException {
         System.out.println("Running performance benchmark...");
 
-        // Add benchmark rules
+        
         String[] benchmarkRules = {
                 "amount > 100",
                 "mcc == GROCERY",
@@ -316,19 +293,19 @@ public final class RuleDSLDemo {
                     Rule.RuleType.REWARD, i + 1, "Benchmark rule " + (i + 1));
         }
 
-        // Generate test contexts
+        
         List<TransactionContext> testContexts = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             testContexts.add(createRandomContext());
         }
 
-        // Warm-up
+        
         System.out.println("  Warming up...");
         for (int i = 0; i < 100; i++) {
             ruleEngine.evaluateAllRules(testContexts.get(i % testContexts.size()));
         }
 
-        // Benchmark
+        
         System.out.println("  Running benchmark with " + testContexts.size() + " contexts...");
         long startTime = System.nanoTime();
 
@@ -350,16 +327,14 @@ public final class RuleDSLDemo {
         System.out.printf("    Average Rules/Context: %.1f\n", (double) totalRulesApplied / testContexts.size());
     }
 
-    /**
-     * Demo 7: Engine statistics
-     */
+    
     private void statisticsDemo() {
         System.out.println("Displaying engine statistics...");
 
         RuleEngineStatistics stats = ruleEngine.getStatistics();
         System.out.println(stats.generateSummaryReport());
 
-        // Rule management stats
+        
         System.out.println("Rule Management:");
         for (Rule.RuleType ruleType : Rule.RuleType.values()) {
             List<String> ruleIds = ruleEngine.getRuleIdsByType(ruleType);
@@ -370,7 +345,7 @@ public final class RuleDSLDemo {
         }
     }
 
-    // Helper methods for creating test contexts
+    
     private TransactionContext createSampleContext(BigDecimal amount,
                                                    TransactionContext.MccCategory mcc, int hour) {
         return TransactionContext.builder()
@@ -488,7 +463,7 @@ public final class RuleDSLDemo {
         return createSampleContext(
                 amounts[random.nextInt(amounts.length)],
                 mccs[random.nextInt(mccs.length)],
-                8 + random.nextInt(14) // Hour between 8-21
+                8 + random.nextInt(14) 
         );
     }
 
@@ -521,7 +496,7 @@ public final class RuleDSLDemo {
         });
     }
 
-    // Main method for standalone testing
+    
     public static void main(String[] args) {
         RuleDSLDemo demo = new RuleDSLDemo();
         demo.runAllDemos();

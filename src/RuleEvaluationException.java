@@ -1,15 +1,6 @@
 
 
-/**
- * DSL kural çalıştırma zamanında oluşan hatalar için checked exception.
- *
- * Bu exception şu durumlarda fırlatılır:
- * - AST evaluation sırasında runtime hatası
- * - Undefined variable/field erişimi
- * - Type casting hataları
- * - Mathematical operation errors (division by zero vb.)
- * - Null reference hatası kuralda
- */
+
 public final class RuleEvaluationException extends Exception {
 
     private final String ruleId;

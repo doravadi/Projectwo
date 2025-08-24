@@ -1,4 +1,4 @@
-// AuthStatus.java - Authorization status enum
+
 public enum AuthStatus {
 
     PENDING("Pending", "Authorization request sent, awaiting response"),
@@ -28,9 +28,7 @@ public enum AuthStatus {
         return description;
     }
 
-    /**
-     * Check if authorization is in final state (cannot be changed)
-     */
+    
     public boolean isFinalState() {
         return this == CAPTURED ||
                 this == EXPIRED ||
@@ -38,44 +36,34 @@ public enum AuthStatus {
                 this == TIMEOUT;
     }
 
-    /**
-     * Check if authorization can be matched with presentment
-     */
+    
     public boolean canBeMatched() {
         return this == APPROVED;
     }
 
-    /**
-     * Check if authorization can be captured
-     */
+    
     public boolean canBeCaptured() {
         return this == APPROVED || this == PARTIALLY_CAPTURED;
     }
 
-    /**
-     * Check if authorization can be reversed
-     */
+    
     public boolean canBeReversed() {
         return this == APPROVED ||
                 this == PARTIALLY_CAPTURED ||
                 this == PENDING;
     }
 
-    /**
-     * Get next possible states from current state
-     */
+    
     public AuthStatus[] getNextPossibleStates() {
         return switch (this) {
             case PENDING -> new AuthStatus[]{APPROVED, DECLINED, TIMEOUT};
             case APPROVED -> new AuthStatus[]{CAPTURED, PARTIALLY_CAPTURED, REVERSED, EXPIRED};
             case PARTIALLY_CAPTURED -> new AuthStatus[]{CAPTURED, REVERSED};
-            case DECLINED, EXPIRED, CAPTURED, REVERSED, TIMEOUT -> new AuthStatus[]{}; // Final states
+            case DECLINED, EXPIRED, CAPTURED, REVERSED, TIMEOUT -> new AuthStatus[]{}; 
         };
     }
 
-    /**
-     * Parse status from string (case-insensitive)
-     */
+    
     public static AuthStatus fromString(String status) {
         if (status == null || status.trim().isEmpty()) {
             throw new IllegalArgumentException("Auth status cannot be null or empty");
@@ -90,9 +78,7 @@ public enum AuthStatus {
         }
     }
 
-    /**
-     * Check if status transition is valid
-     */
+    
     public boolean canTransitionTo(AuthStatus newStatus) {
         AuthStatus[] possibleStates = getNextPossibleStates();
 

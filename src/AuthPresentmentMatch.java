@@ -1,14 +1,11 @@
-// AuthPresentmentMatch.java - Individual auth-presentment match pair
+
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.io.Serializable;
 
-/**
- * Immutable representation of a matched auth-presentment pair
- * Contains the match details, scoring, and business validation
- */
+
 public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMatch>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,7 +18,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private final MatchValidation validation;
     private final MatchRisk risk;
 
-    // Private constructor - use factory methods
+    
     private AuthPresentmentMatch(Auth auth, Presentment presentment, double score) {
         this.auth = Objects.requireNonNull(auth, "Auth cannot be null");
         this.presentment = Objects.requireNonNull(presentment, "Presentment cannot be null");
@@ -31,28 +28,24 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         this.validation = validateMatch(auth, presentment);
         this.risk = assessRisk(auth, presentment, score);
 
-        // Business rule validation
+        
         if (!validation.isValid()) {
             throw new IllegalArgumentException("Invalid match: " + validation.getErrorMessage());
         }
     }
 
-    /**
-     * Create match with calculated score
-     */
+    
     public static AuthPresentmentMatch of(Auth auth, Presentment presentment) {
         double score = auth.calculateMatchingScore(presentment);
         return new AuthPresentmentMatch(auth, presentment, score);
     }
 
-    /**
-     * Create match with explicit score (for algorithm results)
-     */
+    
     public static AuthPresentmentMatch withScore(Auth auth, Presentment presentment, double score) {
         return new AuthPresentmentMatch(auth, presentment, score);
     }
 
-    // Getters
+    
     public Auth getAuth() { return auth; }
     public Presentment getPresentment() { return presentment; }
     public double getScore() { return score; }
@@ -61,7 +54,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     public MatchValidation getValidation() { return validation; }
     public MatchRisk getRisk() { return risk; }
 
-    // Business logic methods
+    
     public boolean isHighQuality() {
         return quality == MatchQuality.EXCELLENT || quality == MatchQuality.GOOD;
     }
@@ -82,38 +75,32 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         return isValid() && auth.canBeMatched() && presentment.canBeMatched();
     }
 
-    /**
-     * Calculate potential settlement amount
-     */
+    
     public Money getSettlementAmount() {
-        // Settlement amount is typically the presentment amount
-        // but cannot exceed the auth amount
+        
+        
         Money authAmount = auth.getAmount();
         Money presentmentAmount = presentment.getAmount();
 
-        // For refunds, use presentment amount directly
+        
         if (presentment.isRefund()) {
             return presentmentAmount;
         }
 
-        // For sales, use minimum of auth and presentment (prevent overcharging)
+        
         if (presentmentAmount.getAmount().compareTo(authAmount.getAmount()) <= 0) {
             return presentmentAmount;
         } else {
-            return authAmount; // Cap at authorized amount
+            return authAmount; 
         }
     }
 
-    /**
-     * Calculate amount variance (presentment vs auth)
-     */
+    
     public Money getAmountVariance() {
         return presentment.getAmount().subtract(auth.getAmount());
     }
 
-    /**
-     * Get absolute amount variance
-     */
+    
     public Money getAbsoluteAmountVariance() {
         Money variance = getAmountVariance();
         if (variance.isNegative()) {
@@ -122,37 +109,27 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         return variance;
     }
 
-    /**
-     * Calculate time gap between auth and presentment
-     */
+    
     public Duration getTimeDifference() {
         return Duration.between(auth.getTimestamp(), presentment.getTimestamp());
     }
 
-    /**
-     * Get time difference in hours
-     */
+    
     public long getTimeDifferenceHours() {
         return getTimeDifference().toHours();
     }
 
-    /**
-     * Check if presentment came unusually fast after auth
-     */
+    
     public boolean isSuspiciouslyFast() {
         return getTimeDifferenceHours() < 1 && score > 80;
     }
 
-    /**
-     * Check if presentment came unusually slow after auth
-     */
+    
     public boolean isSuspiciouslySlow() {
-        return getTimeDifferenceHours() > 168; // More than 1 week
+        return getTimeDifferenceHours() > 168; 
     }
 
-    /**
-     * Get match confidence level
-     */
+    
     public MatchConfidence getConfidence() {
         if (score >= 95 && validation.isFullyValid()) {
             return MatchConfidence.VERY_HIGH;
@@ -167,14 +144,12 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         }
     }
 
-    /**
-     * Generate match summary for reporting
-     */
+    
     public MatchSummary generateSummary() {
         return MatchSummary.builder()
                 .authId(auth.getAuthId())
                 .presentmentId(presentment.getPresentmentId())
-                .cardId(CardId.fromCardNumber(auth.getCardNumber(), "12", "25")) // Simplified
+                .cardId(CardId.fromCardNumber(auth.getCardNumber(), "12", "25")) 
                 .score(score)
                 .quality(quality)
                 .confidence(getConfidence())
@@ -186,7 +161,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
                 .build();
     }
 
-    // Private helper methods
+    
     private double validateScore(double score) {
         if (score < 0 || score > 100) {
             throw new IllegalArgumentException("Score must be between 0 and 100: " + score);
@@ -204,28 +179,28 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private MatchValidation validateMatch(Auth auth, Presentment presentment) {
         MatchValidation.Builder builder = MatchValidation.builder();
 
-        // Card number must match
+        
         if (!auth.getCardNumber().equals(presentment.getCardNumber())) {
             builder.addError("Card number mismatch");
             return builder.build();
         }
 
-        // Currency must match
+        
         if (!auth.getAmount().getCurrency().equals(presentment.getAmount().getCurrency())) {
             builder.addError("Currency mismatch");
         }
 
-        // Auth must not be expired
+        
         if (auth.isExpired()) {
             builder.addError("Authorization has expired");
         }
 
-        // Presentment amount validations
+        
         Money authAmount = auth.getAmount();
         Money presAmount = presentment.getAmount();
 
         if (presentment.isSale() && presAmount.getAmount().compareTo(authAmount.getAmount()) > 0) {
-            // Check if it's within tip tolerance (15%)
+            
             Money tipTolerance = authAmount.multiply(new java.math.BigDecimal("1.15"));
             if (presAmount.getAmount().compareTo(tipTolerance.getAmount()) > 0) {
                 builder.addWarning("Presentment amount significantly exceeds auth amount");
@@ -234,7 +209,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             }
         }
 
-        // Time validations
+        
         if (presentment.getTimestamp().isBefore(auth.getTimestamp())) {
             builder.addWarning("Presentment timestamp before auth timestamp");
         }
@@ -244,12 +219,12 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             builder.addWarning("Very long time gap between auth and presentment");
         }
 
-        // Merchant validations
+        
         if (!auth.getMerchantId().equals(presentment.getMerchantId())) {
             builder.addWarning("Merchant ID mismatch");
         }
 
-        // MCC validations
+        
         if (!auth.getMccCode().equals(presentment.getMccCode())) {
             builder.addInfo("MCC code mismatch (may be normal)");
         }
@@ -260,14 +235,14 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private MatchRisk assessRisk(Auth auth, Presentment presentment, double score) {
         MatchRisk.Builder builder = MatchRisk.builder();
 
-        // Low score = high risk
+        
         if (score < 50) {
             builder.addFactor("Very low matching score");
         } else if (score < 70) {
             builder.addFactor("Low matching score");
         }
 
-        // Amount risks
+        
         Money variance = getAbsoluteAmountVariance();
         Money authAmount = auth.getAmount();
 
@@ -281,21 +256,21 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             }
         }
 
-        // Time risks
+        
         long hoursGap = getTimeDifferenceHours();
         if (hoursGap < 0) {
             builder.addFactor("Presentment before authorization");
-        } else if (hoursGap > 720) { // 30 days
+        } else if (hoursGap > 720) { 
             builder.addFactor("Very delayed presentment");
         }
 
-        // Cross-border risks
-        // (This would need country code extraction from merchant data)
+        
+        
 
         return builder.build();
     }
 
-    // Object contract methods
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -314,13 +289,13 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
 
     @Override
     public int compareTo(AuthPresentmentMatch other) {
-        // Sort by score descending (best matches first)
+        
         int scoreComparison = Double.compare(other.score, this.score);
         if (scoreComparison != 0) {
             return scoreComparison;
         }
 
-        // Then by auth timestamp (newer first)
+        
         return other.auth.getTimestamp().compareTo(this.auth.getTimestamp());
     }
 
@@ -330,7 +305,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
                 auth.getAuthId(), presentment.getPresentmentId(), score, quality);
     }
 
-    // Enums for match properties
+    
     public enum MatchQuality {
         EXCELLENT("Excellent", 90, 100),
         GOOD("Good", 75, 89),

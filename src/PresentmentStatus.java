@@ -1,4 +1,4 @@
-// PresentmentStatus.java - Presentment status enum
+
 public enum PresentmentStatus {
 
     PENDING("Pending", "Presentment received, awaiting processing"),
@@ -31,9 +31,7 @@ public enum PresentmentStatus {
         return description;
     }
 
-    /**
-     * Check if presentment is in a final state (cannot be changed)
-     */
+    
     public boolean isFinalState() {
         return this == SETTLED ||
                 this == REJECTED ||
@@ -42,53 +40,39 @@ public enum PresentmentStatus {
                 this == FAILED;
     }
 
-    /**
-     * Check if presentment is in a successful completion state
-     */
+    
     public boolean isSuccessfullyCompleted() {
         return this == SETTLED || this == PARTIAL_SETTLED;
     }
 
-    /**
-     * Check if presentment can be matched with authorization
-     */
+    
     public boolean canBeMatched() {
         return this == PENDING || this == PROCESSING;
     }
 
-    /**
-     * Check if presentment can be settled
-     */
+    
     public boolean canBeSettled() {
         return this == MATCHED || this == PARTIAL_SETTLED;
     }
 
-    /**
-     * Check if presentment can be cancelled
-     */
+    
     public boolean canBeCancelled() {
         return this == PENDING ||
                 this == MATCHED ||
                 this == PROCESSING;
     }
 
-    /**
-     * Check if presentment can be disputed
-     */
+    
     public boolean canBeDisputed() {
         return this == SETTLED || this == PARTIAL_SETTLED;
     }
 
-    /**
-     * Check if presentment has failed or been rejected
-     */
+    
     public boolean hasFailedOrBeenRejected() {
         return this == REJECTED || this == FAILED || this == RETURNED;
     }
 
-    /**
-     * Get next possible states from current state
-     */
+    
     public PresentmentStatus[] getNextPossibleStates() {
         return switch (this) {
             case PENDING -> new PresentmentStatus[]{
@@ -109,17 +93,15 @@ public enum PresentmentStatus {
             case DISPUTED -> new PresentmentStatus[]{
                     SETTLED, RETURNED, CANCELLED
             };
-            // Final states have no transitions
+            
             case REJECTED, CANCELLED, EXPIRED, FAILED, RETURNED -> new PresentmentStatus[]{};
         };
     }
 
-    /**
-     * Check if status transition is valid
-     */
+    
     public boolean canTransitionTo(PresentmentStatus newStatus) {
         if (this == newStatus) {
-            return true; // Same state transition always allowed
+            return true; 
         }
 
         PresentmentStatus[] possibleStates = getNextPossibleStates();
@@ -133,25 +115,21 @@ public enum PresentmentStatus {
         return false;
     }
 
-    /**
-     * Get processing priority (higher number = higher priority)
-     */
+    
     public int getProcessingPriority() {
         return switch (this) {
-            case DISPUTED -> 10; // Highest priority - disputes need immediate attention
-            case RETURNED -> 8;  // High priority - failures need resolution
-            case FAILED -> 8;    // High priority - system issues
-            case PROCESSING -> 6; // Medium-high priority - active processing
-            case MATCHED -> 5;   // Medium priority - ready for settlement
-            case PENDING -> 3;   // Lower priority - awaiting matching
-            case PARTIAL_SETTLED -> 2; // Low priority - partially complete
-            default -> 1;        // Lowest priority - final states
+            case DISPUTED -> 10; 
+            case RETURNED -> 8;  
+            case FAILED -> 8;    
+            case PROCESSING -> 6; 
+            case MATCHED -> 5;   
+            case PENDING -> 3;   
+            case PARTIAL_SETTLED -> 2; 
+            default -> 1;        
         };
     }
 
-    /**
-     * Check if status indicates an error condition
-     */
+    
     public boolean isErrorStatus() {
         return this == REJECTED ||
                 this == FAILED ||
@@ -159,32 +137,26 @@ public enum PresentmentStatus {
                 this == EXPIRED;
     }
 
-    /**
-     * Check if status indicates active processing
-     */
+    
     public boolean isActiveProcessing() {
         return this == PROCESSING ||
                 this == PENDING ||
                 this == MATCHED;
     }
 
-    /**
-     * Get typical processing time in hours for this status
-     */
+    
     public int getTypicalProcessingTimeHours() {
         return switch (this) {
-            case PENDING -> 2;        // Usually matched within 2 hours
-            case PROCESSING -> 1;     // Processing should complete in 1 hour
-            case MATCHED -> 24;       // Settlement within 24 hours
-            case PARTIAL_SETTLED -> 48; // Complete settlement within 48 hours
-            case DISPUTED -> 2160;    // 90 days for dispute resolution
-            default -> 0;             // Final states don't process further
+            case PENDING -> 2;        
+            case PROCESSING -> 1;     
+            case MATCHED -> 24;       
+            case PARTIAL_SETTLED -> 48; 
+            case DISPUTED -> 2160;    
+            default -> 0;             
         };
     }
 
-    /**
-     * Parse status from string (case-insensitive)
-     */
+    
     public static PresentmentStatus fromString(String status) {
         if (status == null || status.trim().isEmpty()) {
             throw new IllegalArgumentException("Presentment status cannot be null or empty");
@@ -199,37 +171,30 @@ public enum PresentmentStatus {
         }
     }
 
-    /**
-     * Get all statuses that require manual intervention
-     */
+    
     public static PresentmentStatus[] getManualInterventionRequired() {
         return new PresentmentStatus[]{
                 DISPUTED, FAILED, RETURNED, REJECTED
         };
     }
 
-    /**
-     * Get all statuses that are actively being processed
-     */
+    
     public static PresentmentStatus[] getActiveStatuses() {
         return new PresentmentStatus[]{
                 PENDING, PROCESSING, MATCHED, PARTIAL_SETTLED
         };
     }
 
-    /**
-     * Get settlement impact on merchant account
-     * 1.0 = full positive impact, 0.0 = no impact, -1.0 = full negative impact
-     */
+    
     public double getSettlementImpact() {
         return switch (this) {
-            case SETTLED -> 1.0;           // Full positive settlement
-            case PARTIAL_SETTLED -> 0.5;   // Partial positive settlement
-            case DISPUTED -> -0.5;         // Potential negative impact
-            case RETURNED -> -1.0;         // Full negative impact
-            case REJECTED -> -0.2;         // Small negative impact (fees)
-            case FAILED -> -0.1;           // Minimal negative impact
-            default -> 0.0;                // No financial impact
+            case SETTLED -> 1.0;           
+            case PARTIAL_SETTLED -> 0.5;   
+            case DISPUTED -> -0.5;         
+            case RETURNED -> -1.0;         
+            case REJECTED -> -0.2;         
+            case FAILED -> -0.1;           
+            default -> 0.0;                
         };
     }
 

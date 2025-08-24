@@ -4,14 +4,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Arbitrage opportunity sonucunu temsil eden immutable value object.
- *
- * Örnek: TRY → USD → EUR → TRY cycle'ında:
- * - Currency path: [TRY, USD, EUR, TRY] 
- * - Pair path: [TRY/USD, USD/EUR, EUR/TRY]
- * - Total rate: 1.0347 (3.47% profit)
- */
+
 public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportunity> {
 
     private final List<Currency> currencyPath;
@@ -22,7 +15,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     private final LocalDateTime detectionTime;
     private final String opportunityId;
 
-    // Calculated fields
+    
     private final int pathLength;
     private final BigDecimal minInvestment;
     private final OpportunityQuality quality;
@@ -47,7 +40,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         validateOpportunity();
     }
 
-    // Getters
+    
     public List<Currency> getCurrencyPath() { return currencyPath; }
     public List<CurrencyPair> getPairPath() { return pairPath; }
     public BigDecimal getTotalExchangeRate() { return totalExchangeRate; }
@@ -59,7 +52,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     public BigDecimal getMinInvestment() { return minInvestment; }
     public OpportunityQuality getQuality() { return quality; }
 
-    // Business methods
+    
     public boolean isCycle() {
         return currencyPath.size() > 1 &&
                 currencyPath.get(0).equals(currencyPath.get(currencyPath.size() - 1));
@@ -74,7 +67,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
             return false;
         }
 
-        // Normalize paths for comparison (cycles can start at different points)
+        
         List<Currency> thisNormalized = normalizeCyclePath(this.currencyPath);
         List<Currency> otherNormalized = normalizeCyclePath(other.currencyPath);
 
@@ -82,9 +75,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 thisNormalized.equals(reverseList(otherNormalized));
     }
 
-    /**
-     * Belirli yatırım tutarı için kar hesaplama
-     */
+    
     public BigDecimal calculateProfit(BigDecimal investmentAmount) {
         Objects.requireNonNull(investmentAmount, "Investment amount cannot be null");
         if (investmentAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -95,9 +86,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         return finalAmount.subtract(investmentAmount);
     }
 
-    /**
-     * Execution simulation - spread'leri dikkate alarak gerçekçi kar
-     */
+    
     public ExecutionResult simulateExecution(BigDecimal investmentAmount) {
         Objects.requireNonNull(investmentAmount, "Investment amount cannot be null");
 
@@ -106,7 +95,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         List<ExecutionStep> steps = new ArrayList<>();
 
         for (CurrencyPair pair : pairPath) {
-            // Bid price kullan (daha konservatif)
+            
             BigDecimal beforeAmount = currentAmount;
             currentAmount = pair.convertWithBid(currentAmount);
             BigDecimal spread = pair.getSpread().multiply(beforeAmount, MATH_CONTEXT)
@@ -124,30 +113,26 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 realizedProfitPercentage, totalSpread, steps);
     }
 
-    /**
-     * Opportunity expiry - rate'lerin yaşı
-     */
+    
     public boolean isStale(int maxAgeMinutes) {
         return pairPath.stream().anyMatch(pair -> pair.isStale(maxAgeMinutes));
     }
 
-    /**
-     * Risk assessment
-     */
+    
     public RiskAssessment assessRisk() {
-        // Path length risk (longer = riskier)
-        int pathRisk = Math.min(pathLength - 2, 5) * 20; // 0-100 scale
+        
+        int pathRisk = Math.min(pathLength - 2, 5) * 20; 
 
-        // Spread risk (wider spreads = riskier)
+        
         double avgSpreadBps = pairPath.stream()
                 .mapToDouble(pair -> pair.getSpreadBps().doubleValue())
                 .average().orElse(0.0);
-        int spreadRisk = (int) Math.min(avgSpreadBps / 2, 50); // 0-50 scale
+        int spreadRisk = (int) Math.min(avgSpreadBps / 2, 50); 
 
-        // Age risk (stale rates = riskier)  
-        int ageRisk = isStale(5) ? 30 : 0; // 0 or 30
+        
+        int ageRisk = isStale(5) ? 30 : 0; 
 
-        // Quality risk
+        
         int qualityRisk = switch (quality) {
             case EXCELLENT -> 0;
             case GOOD -> 10;
@@ -160,7 +145,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         return new RiskAssessment(totalRisk, pathRisk, spreadRisk, ageRisk, qualityRisk);
     }
 
-    // Helper methods
+    
     private String generateOpportunityId() {
         String pathStr = currencyPath.stream()
                 .map(Currency::name)
@@ -171,14 +156,14 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     }
 
     private BigDecimal calculateMinInvestment() {
-        // Minimum investment to overcome spreads
+        
         BigDecimal totalSpreadCost = pairPath.stream()
                 .map(CurrencyPair::getSpread)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Minimum için spread cost'u profit rate'e böl
+        
         if (profitPercentage.compareTo(BigDecimal.ZERO) <= 0) {
-            return new BigDecimal("10000"); // High minimum for non-profitable
+            return new BigDecimal("10000"); 
         }
 
         BigDecimal profitRate = profitPercentage.divide(new BigDecimal("100"), MATH_CONTEXT);
@@ -192,18 +177,18 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 .mapToDouble(pair -> pair.getSpreadBps().doubleValue())
                 .average().orElse(100.0);
 
-        // Quality scoring
+        
         int score = 100;
 
-        // Profit bonus/penalty
+        
         if (profitValue >= 2.0) score += 20;
         else if (profitValue >= 1.0) score += 10;
         else if (profitValue <= 0.1) score -= 30;
 
-        // Path length penalty
+        
         score -= (pathLen - 3) * 10;
 
-        // Spread penalty
+        
         score -= (int) (avgSpread / 5);
 
         if (score >= 80) return OpportunityQuality.EXCELLENT;
@@ -215,7 +200,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     private List<Currency> normalizeCyclePath(List<Currency> path) {
         if (path.size() <= 2) return new ArrayList<>(path);
 
-        // Find minimum currency as starting point for normalization
+        
         Currency minCurrency = path.stream().min(Currency::compareTo).orElse(path.get(0));
         int startIndex = path.indexOf(minCurrency);
 
@@ -247,12 +232,12 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         }
     }
 
-    // Enums
+    
     public enum OpportunityQuality {
         EXCELLENT, GOOD, FAIR, POOR
     }
 
-    // Nested classes
+    
     public static final class ExecutionStep {
         private final CurrencyPair pair;
         private final BigDecimal inputAmount;
@@ -313,7 +298,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     }
 
     public static final class RiskAssessment {
-        private final int totalRisk;        // 0-100
+        private final int totalRisk;        
         private final int pathRisk;
         private final int spreadRisk;
         private final int ageRisk;
@@ -350,15 +335,15 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
 
     @Override
     public int compareTo(ArbitrageOpportunity other) {
-        // Primary: profit percentage (higher first)
+        
         int profitCompare = other.profitPercentage.compareTo(this.profitPercentage);
         if (profitCompare != 0) return profitCompare;
 
-        // Secondary: path length (shorter first) 
+        
         int pathCompare = Integer.compare(this.pathLength, other.pathLength);
         if (pathCompare != 0) return pathCompare;
 
-        // Tertiary: detection time (newer first)
+        
         return other.detectionTime.compareTo(this.detectionTime);
     }
 

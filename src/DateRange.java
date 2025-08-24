@@ -4,10 +4,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-/**
- * Immutable tarih aralığı value object.
- * Sweep line algoritmasında dönem tanımları için kullanılır.
- */
+
 public final class DateRange implements Comparable<DateRange> {
     private final LocalDate startDate;
     private final LocalDate endDate;
@@ -22,7 +19,7 @@ public final class DateRange implements Comparable<DateRange> {
         }
     }
 
-    // Factory methods
+    
     public static DateRange of(LocalDate startDate, LocalDate endDate) {
         return new DateRange(startDate, endDate);
     }
@@ -43,7 +40,7 @@ public final class DateRange implements Comparable<DateRange> {
         return new DateRange(start, end);
     }
 
-    // Getters
+    
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -52,7 +49,7 @@ public final class DateRange implements Comparable<DateRange> {
         return endDate;
     }
 
-    // Query methods
+    
     public boolean contains(LocalDate date) {
         Objects.requireNonNull(date, "Date cannot be null");
         return !date.isBefore(startDate) && !date.isAfter(endDate);
@@ -75,7 +72,7 @@ public final class DateRange implements Comparable<DateRange> {
         return startDate.equals(endDate);
     }
 
-    // Operations
+    
     public DateRange extend(int days) {
         return new DateRange(startDate, endDate.plusDays(days));
     }

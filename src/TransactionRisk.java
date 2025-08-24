@@ -4,19 +4,11 @@ import java.util.Objects;
 import java.util.EnumSet;
 import java.util.Set;
 
-/**
- * Transaction risk assessment value object.
- *
- * Fraud detection için işlem risk analizi:
- * - Velocity risk: Çok hızlı işlemler
- * - Location risk: Coğrafi anomaliler  
- * - Amount risk: Alışılmadık tutarlar
- * - Pattern risk: Şüpheli desenler
- */
+
 public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     private final String transactionId;
-    private final String cardNumber;        // Masked: ****1234
+    private final String cardNumber;        
     private final BigDecimal amount;
     private final String merchantName;
     private final String merchantCity;
@@ -24,8 +16,8 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
     private final LocalDateTime transactionTime;
     private final TransactionType type;
 
-    // Risk assessment
-    private final int riskScore;           // 0-100
+    
+    private final int riskScore;           
     private final RiskLevel riskLevel;
     private final EnumSet<RiskFactor> riskFactors;
     private final String riskReason;
@@ -56,7 +48,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                     return level;
                 }
             }
-            return LOW; // Default
+            return LOW; 
         }
 
         public int getMinScore() { return minScore; }
@@ -106,7 +98,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
         validateTransaction();
     }
 
-    // Factory methods
+    
     public static TransactionRisk lowRisk(String transactionId, String cardNumber, BigDecimal amount,
                                           String merchantName, String merchantCity, String merchantCountry,
                                           LocalDateTime transactionTime, TransactionType type) {
@@ -124,7 +116,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                 merchantCountry, transactionTime, type, score, factors, reason);
     }
 
-    // Getters
+    
     public String getTransactionId() { return transactionId; }
     public String getCardNumber() { return cardNumber; }
     public BigDecimal getAmount() { return amount; }
@@ -138,7 +130,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
     public EnumSet<RiskFactor> getRiskFactors() { return EnumSet.copyOf(riskFactors); }
     public String getRiskReason() { return riskReason; }
 
-    // Business logic methods
+    
     public boolean isHighRisk() {
         return riskLevel == RiskLevel.HIGH || riskLevel == RiskLevel.CRITICAL;
     }
@@ -171,16 +163,14 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     public boolean isNightTransaction() {
         int hour = transactionTime.getHour();
-        return hour < 6 || hour > 22; // 22:00 - 06:00 arası gece
+        return hour < 6 || hour > 22; 
     }
 
     public boolean isWeekendTransaction() {
-        return transactionTime.getDayOfWeek().getValue() >= 6; // Cumartesi=6, Pazar=7
+        return transactionTime.getDayOfWeek().getValue() >= 6; 
     }
 
-    /**
-     * Risk faktörlerine göre risk score hesaplama
-     */
+    
     private static int calculateRiskScore(EnumSet<RiskFactor> factors, BigDecimal amount) {
         int baseScore = 10;
 
@@ -199,19 +189,17 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
             };
         }
 
-        // Amount-based adjustment
+        
         if (amount.compareTo(new BigDecimal("10000")) > 0) {
-            baseScore += 15; // Yüksek tutar
+            baseScore += 15; 
         } else if (amount.compareTo(new BigDecimal("100")) < 0) {
-            baseScore -= 5; // Düşük tutar
+            baseScore -= 5; 
         }
 
         return Math.max(0, Math.min(100, baseScore));
     }
 
-    /**
-     * Detaylı risk analizi
-     */
+    
     public RiskAnalysis getDetailedAnalysis() {
         return new RiskAnalysis(
                 riskScore,
@@ -220,7 +208,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                 isNightTransaction(),
                 isWeekendTransaction(),
                 isInternational(),
-                amount.compareTo(new BigDecimal("5000")) > 0, // High amount
+                amount.compareTo(new BigDecimal("5000")) > 0, 
                 calculateUrgency()
         );
     }
@@ -246,7 +234,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
         }
     }
 
-    // Nested classes
+    
     public enum Urgency {
         LOW, MEDIUM, HIGH, IMMEDIATE
     }
@@ -274,7 +262,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
             this.urgency = urgency;
         }
 
-        // Getters
+        
         public int getRiskScore() { return riskScore; }
         public RiskLevel getRiskLevel() { return riskLevel; }
         public int getFactorCount() { return factorCount; }
@@ -293,15 +281,15 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     @Override
     public int compareTo(TransactionRisk other) {
-        // Primary: Risk score (higher first)
+        
         int scoreCompare = Integer.compare(other.riskScore, this.riskScore);
         if (scoreCompare != 0) return scoreCompare;
 
-        // Secondary: Transaction time (newer first)
+        
         int timeCompare = other.transactionTime.compareTo(this.transactionTime);
         if (timeCompare != 0) return timeCompare;
 
-        // Tertiary: Amount (higher first)
+        
         return other.amount.compareTo(this.amount);
     }
 

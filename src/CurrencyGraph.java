@@ -2,14 +2,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Currency exchange graph - Bellman-Ford algoritması için.
- *
- * Graph representation:
- * - Vertices: Currency (TRY, USD, EUR, GBP, JPY)
- * - Edges: CurrencyPair with -log(rate) weights
- * - Negative cycle = Arbitrage opportunity
- */
+
 public final class CurrencyGraph {
 
     private final Map<Currency, Integer> currencyToIndex;
@@ -18,7 +11,7 @@ public final class CurrencyGraph {
     private final Set<CurrencyPair> currencyPairs;
     private final int vertexCount;
 
-    // Supported currencies - exactly 5
+    
     private static final Currency[] SUPPORTED_CURRENCIES = {
             Currency.TRY, Currency.USD, Currency.EUR, Currency.GBP, Currency.JPY
     };
@@ -33,9 +26,7 @@ public final class CurrencyGraph {
         initializeGraph();
     }
 
-    /**
-     * Currency pair ekler - otomatik olarak reverse pair'i de ekler
-     */
+    
     public void addCurrencyPair(CurrencyPair pair) {
         Objects.requireNonNull(pair, "Currency pair cannot be null");
 
@@ -44,14 +35,14 @@ public final class CurrencyGraph {
 
         currencyPairs.add(pair);
 
-        // Forward edge: from → to
+        
         int fromIndex = currencyToIndex.get(pair.getFromCurrency());
         int toIndex = currencyToIndex.get(pair.getToCurrency());
 
         Edge forwardEdge = new Edge(fromIndex, toIndex, pair.getLogWeight(), pair);
         adjacencyList.get(fromIndex).add(forwardEdge);
 
-        // Reverse edge: to → from (automatically generated)
+        
         try {
             CurrencyPair reversePair = pair.reverse();
             currencyPairs.add(reversePair);
@@ -60,22 +51,18 @@ public final class CurrencyGraph {
             adjacencyList.get(toIndex).add(reverseEdge);
 
         } catch (IllegalStateException e) {
-            // Skip reverse if rate is zero
+            
             System.err.println("Warning: Cannot create reverse pair for " + pair.getPairId());
         }
     }
 
-    /**
-     * Birden fazla currency pair ekler
-     */
+    
     public void addCurrencyPairs(Collection<CurrencyPair> pairs) {
         Objects.requireNonNull(pairs, "Currency pairs cannot be null");
         pairs.forEach(this::addCurrencyPair);
     }
 
-    /**
-     * Graph'ta edge var mı kontrol eder
-     */
+    
     public boolean hasEdge(Currency from, Currency to) {
         if (!isCurrencySupported(from) || !isCurrencySupported(to)) {
             return false;
@@ -88,50 +75,40 @@ public final class CurrencyGraph {
                 .anyMatch(edge -> edge.getToIndex() == toIndex);
     }
 
-    /**
-     * İki currency arasındaki en iyi rate'i bulur
-     */
+    
     public Optional<CurrencyPair> getBestRate(Currency from, Currency to) {
         return currencyPairs.stream()
                 .filter(pair -> pair.getFromCurrency().equals(from) &&
                         pair.getToCurrency().equals(to))
-                .min(Comparator.comparing(CurrencyPair::getLogWeight)); // En düşük log weight = en yüksek rate
+                .min(Comparator.comparing(CurrencyPair::getLogWeight)); 
     }
 
-    /**
-     * Adjacency list'i döndürür (Bellman-Ford için)
-     */
+    
     public List<Edge> getAllEdges() {
         return adjacencyList.stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Belirli bir currency'den çıkan edge'ler
-     */
+    
     public List<Edge> getEdgesFrom(Currency currency) {
         validateCurrencySupport(currency);
         int index = currencyToIndex.get(currency);
         return new ArrayList<>(adjacencyList.get(index));
     }
 
-    /**
-     * Graph connectivity kontrolü
-     */
+    
     public boolean isConnected() {
         if (currencyPairs.isEmpty()) return false;
 
-        // Simple DFS to check connectivity
+        
         Set<Integer> visited = new HashSet<>();
         dfsVisit(0, visited);
 
         return visited.size() == vertexCount;
     }
 
-    /**
-     * Graph istatistikleri
-     */
+    
     public GraphStatistics getStatistics() {
         int totalEdges = getAllEdges().size();
         int totalPairs = currencyPairs.size();
@@ -154,9 +131,7 @@ public final class CurrencyGraph {
                 isConnected(), averageSpread, staleRateCount);
     }
 
-    /**
-     * Graph'ı temizler
-     */
+    
     public void clear() {
         currencyPairs.clear();
         for (List<Edge> edges : adjacencyList) {
@@ -164,9 +139,9 @@ public final class CurrencyGraph {
         }
     }
 
-    // Helper methods
+    
     private void initializeGraph() {
-        // Currency indexing
+        
         for (int i = 0; i < SUPPORTED_CURRENCIES.length; i++) {
             Currency currency = SUPPORTED_CURRENCIES[i];
             currencyToIndex.put(currency, i);
@@ -196,7 +171,7 @@ public final class CurrencyGraph {
         }
     }
 
-    // Getters
+    
     public int getVertexCount() { return vertexCount; }
     public Set<CurrencyPair> getCurrencyPairs() { return new HashSet<>(currencyPairs); }
 
@@ -212,14 +187,12 @@ public final class CurrencyGraph {
         return SUPPORTED_CURRENCIES.clone();
     }
 
-    // Nested classes
-    /**
-     * Graph edge - Bellman-Ford için
-     */
+    
+    
     public static final class Edge {
         private final int fromIndex;
         private final int toIndex;
-        private final double weight;        // -log(rate)
+        private final double weight;        
         private final CurrencyPair pair;
 
         public Edge(int fromIndex, int toIndex, double weight, CurrencyPair pair) {
@@ -241,9 +214,7 @@ public final class CurrencyGraph {
         }
     }
 
-    /**
-     * Graph istatistikleri
-     */
+    
     public static final class GraphStatistics {
         private final int totalEdges;
         private final int totalPairs;

@@ -1,4 +1,4 @@
-// MatchingStatistics.java - Statistical analysis of matching results
+
 import java.io.Serializable;
 
 public final class MatchingStatistics implements Serializable {
@@ -35,7 +35,7 @@ public final class MatchingStatistics implements Serializable {
         return builder().build();
     }
 
-    // Getters
+    
     public double getMinScore() { return minScore; }
     public double getMaxScore() { return maxScore; }
     public double getAverageScore() { return averageScore; }
@@ -54,7 +54,7 @@ public final class MatchingStatistics implements Serializable {
         int total = getTotalMatches();
         if (total == 0) return 0.0;
 
-        // Weighted quality score
+        
         return (excellentMatches * 4.0 + goodMatches * 3.0 + fairMatches * 2.0 + poorMatches * 1.0) / total;
     }
 

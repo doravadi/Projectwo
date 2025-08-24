@@ -1,4 +1,4 @@
-// Currency.java - Para birimi enum'ı
+
 public enum Currency {
     TRY("Turkish Lira", 2),
     USD("US Dollar", 2),

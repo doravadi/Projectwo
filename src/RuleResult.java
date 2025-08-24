@@ -4,19 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Kural çalıştırma sonuçlarını temsil eden immutable value object.
- *
- * Bir kural çalıştırıldığında üretebileceği sonuçlar:
- * - Puan kazanımı/kaybı
- * - İndirim tutarı
- * - Risk skoru
- * - Uyarı mesajları
- * - Özel parametreler
- *
- * Örnek: "GROCERY kategorisinde 500 TL üstü alışverişte 2x puan"
- * Sonuç: points=20.0, multiplier=2.0, description="Grocery bonus applied"
- */
+
 public final class RuleResult {
 
     private final String ruleId;
@@ -39,7 +27,7 @@ public final class RuleResult {
         this.errors = Collections.unmodifiableList(new ArrayList<>(builder.errors));
     }
 
-    // Getters
+    
     public String getRuleId() { return ruleId; }
     public ResultType getResultType() { return resultType; }
     public boolean isApplied() { return applied; }
@@ -49,7 +37,7 @@ public final class RuleResult {
     public List<String> getWarnings() { return warnings; }
     public List<String> getErrors() { return errors; }
 
-    // Convenience methods for common result values
+    
     public Optional<BigDecimal> getPoints() {
         return getValueAs("points", BigDecimal.class);
     }
@@ -83,7 +71,7 @@ public final class RuleResult {
         return Optional.empty();
     }
 
-    // Success indicators
+    
     public boolean hasErrors() {
         return !errors.isEmpty();
     }
@@ -96,7 +84,7 @@ public final class RuleResult {
         return applied && !hasErrors();
     }
 
-    // Factory methods
+    
     public static RuleResult notApplied(String ruleId, String reason) {
         return builder(ruleId, ResultType.NOT_APPLIED)
                 .applied(false)
@@ -137,7 +125,7 @@ public final class RuleResult {
                 .build();
     }
 
-    // Builder
+    
     public static Builder builder(String ruleId, ResultType resultType) {
         return new Builder(ruleId, resultType);
     }
@@ -192,7 +180,7 @@ public final class RuleResult {
             return this;
         }
 
-        // Convenience value setters
+        
         public Builder points(BigDecimal points) {
             return value("points", points);
         }
@@ -222,7 +210,7 @@ public final class RuleResult {
         }
     }
 
-    // Result types
+    
     public enum ResultType {
         POINTS("Puan kazanımı/kaybı"),
         DISCOUNT("İndirim uygulaması"),

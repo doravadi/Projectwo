@@ -1,4 +1,4 @@
-// ConflictResolution.java - Bulk import strategy
+
 public enum ConflictResolution {
     SKIP_CONFLICTS("Skip conflicting ranges"),
     MERGE_RANGES("Merge overlapping ranges"),

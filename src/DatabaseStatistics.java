@@ -1,4 +1,4 @@
-// DatabaseStatistics.java - Database statistics
+
 import java.util.*;
 import java.io.Serializable;
 

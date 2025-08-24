@@ -1,12 +1,9 @@
-// Auth.java - Authorization value object
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.io.Serializable;
 
-/**
- * Immutable authorization transaction value object
- * Represents a payment authorization request/response
- */
+
 public final class Auth implements Comparable<Auth>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -22,7 +19,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
     private final String responseCode;
     private final String authCode;
 
-    // Private constructor - use builder
+    
     private Auth(Builder builder) {
         this.authId = Objects.requireNonNull(builder.authId, "Auth ID cannot be null");
         this.cardNumber = Objects.requireNonNull(builder.cardNumber, "Card number cannot be null");
@@ -32,10 +29,10 @@ public final class Auth implements Comparable<Auth>, Serializable {
         this.mccCode = Objects.requireNonNull(builder.mccCode, "MCC code cannot be null");
         this.status = Objects.requireNonNull(builder.status, "Status cannot be null");
         this.expiryTime = Objects.requireNonNull(builder.expiryTime, "Expiry time cannot be null");
-        this.responseCode = builder.responseCode; // Can be null for pending auths
-        this.authCode = builder.authCode; // Can be null for declined auths
+        this.responseCode = builder.responseCode; 
+        this.authCode = builder.authCode; 
 
-        // Business validation
+        
         validateAuth();
     }
 
@@ -43,7 +40,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
         return new Builder();
     }
 
-    // Factory methods for common scenarios
+    
     public static Auth approved(String authId, CardNumber cardNumber, Money amount,
                                 LocalDateTime timestamp, String merchantId, String mccCode,
                                 String authCode) {
@@ -55,8 +52,8 @@ public final class Auth implements Comparable<Auth>, Serializable {
                 .merchantId(merchantId)
                 .mccCode(mccCode)
                 .status(AuthStatus.APPROVED)
-                .expiryTime(timestamp.plusDays(7)) // Standard 7-day expiry
-                .responseCode("00") // Approved response code
+                .expiryTime(timestamp.plusDays(7)) 
+                .responseCode("00") 
                 .authCode(authCode)
                 .build();
     }
@@ -72,12 +69,12 @@ public final class Auth implements Comparable<Auth>, Serializable {
                 .merchantId(merchantId)
                 .mccCode(mccCode)
                 .status(AuthStatus.DECLINED)
-                .expiryTime(timestamp.plusHours(1)) // Short expiry for declined
+                .expiryTime(timestamp.plusHours(1)) 
                 .responseCode(responseCode)
                 .build();
     }
 
-    // Getters
+    
     public String getAuthId() { return authId; }
     public CardNumber getCardNumber() { return cardNumber; }
     public Money getAmount() { return amount; }
@@ -89,7 +86,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
     public String getResponseCode() { return responseCode; }
     public String getAuthCode() { return authCode; }
 
-    // Business logic methods
+    
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryTime);
     }
@@ -110,10 +107,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
         return isApproved() && !isExpired();
     }
 
-    /**
-     * Calculate matching score with a presentment
-     * Higher score = better match
-     */
+    
     public double calculateMatchingScore(Presentment presentment) {
         if (!canBeMatched()) {
             return 0.0;
@@ -121,31 +115,31 @@ public final class Auth implements Comparable<Auth>, Serializable {
 
         double score = 0.0;
 
-        // Card number must match exactly
+        
         if (!this.cardNumber.equals(presentment.getCardNumber())) {
             return 0.0;
         }
 
-        // Amount matching (exact match = 100, close match = partial score)
+        
         double amountScore = calculateAmountScore(presentment.getAmount());
-        score += amountScore * 0.4; // 40% weight
+        score += amountScore * 0.4; 
 
-        // Time proximity (closer in time = higher score)
+        
         double timeScore = calculateTimeScore(presentment.getTimestamp());
-        score += timeScore * 0.3; // 30% weight
+        score += timeScore * 0.3; 
 
-        // Merchant matching
+        
         double merchantScore = calculateMerchantScore(presentment.getMerchantId());
-        score += merchantScore * 0.2; // 20% weight
+        score += merchantScore * 0.2; 
 
-        // MCC matching
+        
         double mccScore = calculateMccScore(presentment.getMccCode());
-        score += mccScore * 0.1; // 10% weight
+        score += mccScore * 0.1; 
 
         return Math.min(100.0, score);
     }
 
-    // Builder pattern
+    
     public static class Builder {
         private String authId;
         private CardNumber cardNumber;
@@ -174,7 +168,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
         }
     }
 
-    // Private validation and scoring methods
+    
     private void validateAuth() {
         if (authId.trim().isEmpty()) {
             throw new IllegalArgumentException("Auth ID cannot be empty");
@@ -199,10 +193,10 @@ public final class Auth implements Comparable<Auth>, Serializable {
 
     private double calculateAmountScore(Money presentmentAmount) {
         if (this.amount.equals(presentmentAmount)) {
-            return 100.0; // Perfect match
+            return 100.0; 
         }
 
-        // Calculate percentage difference
+        
         double thisAmountValue = this.amount.getAmount().doubleValue();
         double presentmentAmountValue = presentmentAmount.getAmount().doubleValue();
 
@@ -212,47 +206,47 @@ public final class Auth implements Comparable<Auth>, Serializable {
 
         double percentageDiff = Math.abs(thisAmountValue - presentmentAmountValue) / thisAmountValue * 100;
 
-        // Score decreases as difference increases
-        if (percentageDiff <= 1) return 95.0;      // Within 1%
-        if (percentageDiff <= 5) return 80.0;      // Within 5%
-        if (percentageDiff <= 10) return 60.0;     // Within 10%
-        if (percentageDiff <= 20) return 30.0;     // Within 20%
+        
+        if (percentageDiff <= 1) return 95.0;      
+        if (percentageDiff <= 5) return 80.0;      
+        if (percentageDiff <= 10) return 60.0;     
+        if (percentageDiff <= 20) return 30.0;     
 
-        return 0.0; // Too different
+        return 0.0; 
     }
 
     private double calculateTimeScore(LocalDateTime presentmentTime) {
         long hoursDifference = Math.abs(java.time.Duration.between(this.timestamp, presentmentTime).toHours());
 
-        if (hoursDifference <= 1) return 100.0;    // Within 1 hour
-        if (hoursDifference <= 24) return 80.0;    // Within 24 hours
-        if (hoursDifference <= 72) return 60.0;    // Within 3 days
-        if (hoursDifference <= 168) return 30.0;   // Within 1 week
+        if (hoursDifference <= 1) return 100.0;    
+        if (hoursDifference <= 24) return 80.0;    
+        if (hoursDifference <= 72) return 60.0;    
+        if (hoursDifference <= 168) return 30.0;   
 
-        return 10.0; // Older than 1 week but not expired
+        return 10.0; 
     }
 
     private double calculateMerchantScore(String presentmentMerchantId) {
         if (this.merchantId.equals(presentmentMerchantId)) {
-            return 100.0; // Exact match
+            return 100.0; 
         }
 
-        // Fuzzy matching could be implemented here
-        // For now, no match = 0 score
+        
+        
         return 0.0;
     }
 
     private double calculateMccScore(String presentmentMccCode) {
         if (this.mccCode.equals(presentmentMccCode)) {
-            return 100.0; // Exact match
+            return 100.0; 
         }
 
-        // MCC categories could be grouped (e.g., 5411-5499 are grocery stores)
-        // For now, exact match only
+        
+        
         return 0.0;
     }
 
-    // Object contract methods
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -269,7 +263,7 @@ public final class Auth implements Comparable<Auth>, Serializable {
 
     @Override
     public int compareTo(Auth other) {
-        // Sort by timestamp (newest first)
+        
         return other.timestamp.compareTo(this.timestamp);
     }
 
