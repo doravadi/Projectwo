@@ -32,11 +32,16 @@ public final class MatchRisk implements Serializable {
         return builder().level(RiskLevel.HIGH).build();
     }
 
-    
-    public RiskLevel getLevel() { return level; }
-    public List<String> getFactors() { return factors; }
 
-    
+    public RiskLevel getLevel() {
+        return level;
+    }
+
+    public List<String> getFactors() {
+        return factors;
+    }
+
+
     public boolean isHighRisk() {
         return level == RiskLevel.HIGH || level == RiskLevel.CRITICAL;
     }
@@ -65,7 +70,7 @@ public final class MatchRisk implements Serializable {
 
         public Builder addFactor(String factor) {
             this.factors.add(factor);
-            
+
             if (this.level == RiskLevel.LOW && !factors.isEmpty()) {
                 this.level = RiskLevel.MEDIUM;
             }

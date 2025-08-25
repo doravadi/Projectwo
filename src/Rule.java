@@ -5,31 +5,31 @@ import java.util.Map;
 
 public interface Rule {
 
-    
+
     String getRuleId();
 
-    
+
     int getPriority();
 
-    
+
     String getDescription();
 
-    
+
     boolean isActive();
 
-    
+
     boolean isApplicable(TransactionContext context);
 
-    
+
     RuleResult execute(TransactionContext context) throws RuleEvaluationException;
 
-    
+
     int getConditionCount();
 
-    
+
     RuleType getRuleType();
 
-    
+
     enum RuleType {
         REWARD("Puan/ödül kuralları"),
         FRAUD_CHECK("Fraud tespit kuralları"),

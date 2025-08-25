@@ -38,7 +38,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         this.operation = operation;
     }
 
-    
+
     public static RoundingPolicyViolation toleranceExceeded(String operation,
                                                             BigDecimal expected,
                                                             BigDecimal actual,
@@ -87,7 +87,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
                 "interest_calculation_validation");
     }
 
-    
+
     public BigDecimal getExpectedValue() {
         return expectedValue;
     }
@@ -108,7 +108,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return expectedValue != null && actualValue != null;
     }
 
-    
+
     public BigDecimal getDifference() {
         if (!hasValueComparison()) {
             return null;
@@ -116,7 +116,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return actualValue.subtract(expectedValue).abs();
     }
 
-    
+
     public BigDecimal getPercentageDifference() {
         if (!hasValueComparison() || expectedValue.compareTo(BigDecimal.ZERO) == 0) {
             return null;
@@ -127,7 +127,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
                 .multiply(new BigDecimal("100"));
     }
 
-    
+
     public boolean isWithinTolerance(BigDecimal tolerance) {
         if (!hasValueComparison()) {
             return false;
@@ -161,7 +161,7 @@ public final class RoundingPolicyViolation extends RuntimeException {
         return sb.toString();
     }
 
-    
+
     public String getRecoveryAdvice() {
         if (usedRoundingMode == RoundingMode.UNNECESSARY) {
             return "Use explicit RoundingMode like HALF_UP or HALF_EVEN for monetary calculations";

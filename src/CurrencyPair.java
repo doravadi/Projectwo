@@ -10,12 +10,12 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
     private final Currency fromCurrency;
     private final Currency toCurrency;
     private final BigDecimal exchangeRate;
-    private final BigDecimal bidPrice;        
-    private final BigDecimal askPrice;        
+    private final BigDecimal bidPrice;
+    private final BigDecimal askPrice;
     private final LocalDateTime timestamp;
-    private final String source;              
+    private final String source;
 
-    
+
     private final double logWeight;
 
     private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP);
@@ -32,13 +32,13 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
 
         validateRates();
 
-        
+
         this.logWeight = -Math.log(exchangeRate.doubleValue());
     }
 
-    
+
     public static CurrencyPair of(Currency from, Currency to, BigDecimal rate, String source) {
-        
+
         BigDecimal spread = rate.multiply(new BigDecimal("0.001"), MATH_CONTEXT);
         BigDecimal bid = rate.subtract(spread);
         BigDecimal ask = rate.add(spread);
@@ -48,7 +48,7 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
 
     public static CurrencyPair ofMidRate(Currency from, Currency to, BigDecimal midRate,
                                          BigDecimal spreadBps, String source) {
-        
+
         BigDecimal spreadFactor = spreadBps.divide(new BigDecimal("10000"), MATH_CONTEXT);
         BigDecimal spreadAmount = midRate.multiply(spreadFactor, MATH_CONTEXT);
 
@@ -58,17 +58,40 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
         return new CurrencyPair(from, to, midRate, bid, ask, source);
     }
 
-    
-    public Currency getFromCurrency() { return fromCurrency; }
-    public Currency getToCurrency() { return toCurrency; }
-    public BigDecimal getExchangeRate() { return exchangeRate; }
-    public BigDecimal getBidPrice() { return bidPrice; }
-    public BigDecimal getAskPrice() { return askPrice; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public String getSource() { return source; }
-    public double getLogWeight() { return logWeight; }
 
-    
+    public Currency getFromCurrency() {
+        return fromCurrency;
+    }
+
+    public Currency getToCurrency() {
+        return toCurrency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public BigDecimal getBidPrice() {
+        return bidPrice;
+    }
+
+    public BigDecimal getAskPrice() {
+        return askPrice;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public double getLogWeight() {
+        return logWeight;
+    }
+
+
     public BigDecimal getSpread() {
         return askPrice.subtract(bidPrice);
     }
@@ -86,7 +109,7 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
     }
 
     public boolean isMajorPair() {
-        
+
         Currency[] majors = {Currency.TRY, Currency.USD, Currency.EUR,
                 Currency.GBP, Currency.JPY};
 
@@ -96,7 +119,7 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
         return fromIsMajor && toIsMajor;
     }
 
-    
+
     public CurrencyPair reverse() {
         if (exchangeRate.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalStateException("Cannot reverse zero rate pair");
@@ -110,7 +133,7 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
                 reverseBid, reverseAsk, source + "_REVERSED");
     }
 
-    
+
     public BigDecimal convert(BigDecimal amount) {
         Objects.requireNonNull(amount, "Amount cannot be null");
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
@@ -120,35 +143,35 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
         return amount.multiply(exchangeRate, MATH_CONTEXT);
     }
 
-    
+
     public BigDecimal convertWithBid(BigDecimal amount) {
         Objects.requireNonNull(amount, "Amount cannot be null");
         return amount.multiply(bidPrice, MATH_CONTEXT);
     }
 
-    
+
     public boolean isStale(int maxAgeMinutes) {
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(maxAgeMinutes);
         return timestamp.isBefore(cutoff);
     }
 
-    
+
     public int getQualityScore() {
         int score = 100;
 
-        
+
         BigDecimal spreadBps = getSpreadBps();
         if (spreadBps.compareTo(new BigDecimal("10")) > 0) {
             score -= spreadBps.subtract(new BigDecimal("10")).intValue();
         }
 
-        
+
         long minutesOld = java.time.Duration.between(timestamp, LocalDateTime.now()).toMinutes();
         if (minutesOld > 5) {
             score -= (int) Math.min(minutesOld - 5, 50);
         }
 
-        
+
         if (isCross()) {
             score -= 10;
         }
@@ -177,8 +200,8 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
             throw new IllegalArgumentException("Bid price cannot be higher than ask price");
         }
 
-        
-        BigDecimal maxDeviation = exchangeRate.multiply(new BigDecimal("0.1")); 
+
+        BigDecimal maxDeviation = exchangeRate.multiply(new BigDecimal("0.1"));
         if (bidPrice.subtract(exchangeRate).abs().compareTo(maxDeviation) > 0 ||
                 askPrice.subtract(exchangeRate).abs().compareTo(maxDeviation) > 0) {
             throw new IllegalArgumentException("Bid/ask prices deviate too much from mid rate");
@@ -203,19 +226,19 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
 
     @Override
     public int compareTo(CurrencyPair other) {
-        
+
         int fromCompare = fromCurrency.compareTo(other.fromCurrency);
         if (fromCompare != 0) return fromCompare;
 
-        
+
         int toCompare = toCurrency.compareTo(other.toCurrency);
         if (toCompare != 0) return toCompare;
 
-        
+
         int sourceCompare = source.compareTo(other.source);
         if (sourceCompare != 0) return sourceCompare;
 
-        
+
         return other.timestamp.compareTo(timestamp);
     }
 
@@ -226,7 +249,7 @@ public final class CurrencyPair implements Comparable<CurrencyPair> {
                 getSpreadBps(), source);
     }
 
-    
+
     public String getPairId() {
         return fromCurrency + "/" + toCurrency;
     }

@@ -3,10 +3,10 @@ import java.math.BigDecimal;
 
 public final class FraudDetectionConfig {
 
-    private final int criticalRiskThreshold;      
-    private final int moderateRiskThreshold;     
-    private final int duplicateAlertThreshold;   
-    private final BigDecimal highAmountThreshold; 
+    private final int criticalRiskThreshold;
+    private final int moderateRiskThreshold;
+    private final int duplicateAlertThreshold;
+    private final BigDecimal highAmountThreshold;
 
     public FraudDetectionConfig(int criticalRiskThreshold, int moderateRiskThreshold,
                                 int duplicateAlertThreshold, BigDecimal highAmountThreshold) {
@@ -24,8 +24,19 @@ public final class FraudDetectionConfig {
         return new FraudDetectionConfig(60, 30, 20, new BigDecimal("2000"));
     }
 
-    public int getCriticalRiskThreshold() { return criticalRiskThreshold; }
-    public int getModerateRiskThreshold() { return moderateRiskThreshold; }
-    public int getDuplicateAlertThreshold() { return duplicateAlertThreshold; }
-    public BigDecimal getHighAmountThreshold() { return highAmountThreshold; }
+    public int getCriticalRiskThreshold() {
+        return criticalRiskThreshold;
+    }
+
+    public int getModerateRiskThreshold() {
+        return moderateRiskThreshold;
+    }
+
+    public int getDuplicateAlertThreshold() {
+        return duplicateAlertThreshold;
+    }
+
+    public BigDecimal getHighAmountThreshold() {
+        return highAmountThreshold;
+    }
 }

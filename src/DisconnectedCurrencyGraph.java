@@ -42,7 +42,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         this.analysis = analysis;
     }
 
-    
+
     public static DisconnectedCurrencyGraph missingCurrencyPairs(Set<Currency> isolatedCurrencies,
                                                                  Set<Currency> connectedCurrencies) {
         String message = "Currency graph has isolated currencies - missing exchange rate pairs";
@@ -62,7 +62,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
                 sourceCurrency, unreachableCurrencies.size());
         Set<Currency> connected = new HashSet<>(java.util.Arrays.asList(Currency.values()));
         connected.removeAll(unreachableCurrencies);
-        connected.remove(sourceCurrency); 
+        connected.remove(sourceCurrency);
 
         GraphConnectivityAnalysis analysis = new GraphConnectivityAnalysis(
                 Currency.values().length,
@@ -86,7 +86,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return new DisconnectedCurrencyGraph(message, new HashSet<>(), new HashSet<>(), analysis);
     }
 
-    
+
     public Set<Currency> getDisconnectedCurrencies() {
         return disconnectedCurrencies != null ?
                 new HashSet<>(disconnectedCurrencies) : new HashSet<>();
@@ -97,23 +97,33 @@ public final class DisconnectedCurrencyGraph extends Exception {
                 new HashSet<>(connectedCurrencies) : new HashSet<>();
     }
 
-    public int getTotalVertices() { return totalVertices; }
-    public int getConnectedVertices() { return connectedVertices; }
-    public int getDisconnectedVertices() { return totalVertices - connectedVertices; }
+    public int getTotalVertices() {
+        return totalVertices;
+    }
 
-    public GraphConnectivityAnalysis getAnalysis() { return analysis; }
+    public int getConnectedVertices() {
+        return connectedVertices;
+    }
+
+    public int getDisconnectedVertices() {
+        return totalVertices - connectedVertices;
+    }
+
+    public GraphConnectivityAnalysis getAnalysis() {
+        return analysis;
+    }
 
     public boolean hasConnectivityAnalysis() {
         return analysis != null;
     }
 
-    
+
     public double getConnectivityPercentage() {
         if (totalVertices == 0) return 0.0;
         return (double) connectedVertices / totalVertices * 100.0;
     }
 
-    
+
     public List<String> getRecoverySuggestions() {
         List<String> suggestions = new ArrayList<>();
 
@@ -142,7 +152,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return suggestions;
     }
 
-    
+
     public Set<String> getCriticalMissingPairs() {
         if (analysis == null || disconnectedCurrencies == null) {
             return new HashSet<>();
@@ -150,7 +160,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
 
         Set<String> critical = new HashSet<>();
 
-        
+
         for (Currency disconnected : disconnectedCurrencies) {
             if (!disconnected.equals(Currency.USD)) {
                 critical.add(disconnected + "/USD");
@@ -161,7 +171,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return critical;
     }
 
-    
+
     private static String buildDetailedMessage(String message,
                                                Set<Currency> disconnectedCurrencies,
                                                Set<Currency> connectedCurrencies,
@@ -185,12 +195,12 @@ public final class DisconnectedCurrencyGraph extends Exception {
 
     private static int calculateMissingPairCount(Set<Currency> disconnected, Set<Currency> connected) {
         int totalCurrencies = disconnected.size() + connected.size();
-        int maxPossiblePairs = totalCurrencies * (totalCurrencies - 1); 
+        int maxPossiblePairs = totalCurrencies * (totalCurrencies - 1);
 
-        
+
         int connectedPairs = connected.size() * (connected.size() - 1);
-        int disconnectedPairs = 0; 
-        int crossPairs = 0; 
+        int disconnectedPairs = 0;
+        int crossPairs = 0;
 
         int actualPairs = connectedPairs + disconnectedPairs + crossPairs;
         return maxPossiblePairs - actualPairs;
@@ -199,7 +209,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
     private static Set<String> identifyMissingPairs(Set<Currency> disconnected, Set<Currency> connected) {
         Set<String> missing = new HashSet<>();
 
-        
+
         for (Currency disc : disconnected) {
             for (Currency conn : connected) {
                 missing.add(disc + "/" + conn);
@@ -207,7 +217,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
             }
         }
 
-        
+
         Currency[] discArray = disconnected.toArray(new Currency[0]);
         for (int i = 0; i < discArray.length; i++) {
             for (int j = i + 1; j < discArray.length; j++) {
@@ -219,7 +229,7 @@ public final class DisconnectedCurrencyGraph extends Exception {
         return missing;
     }
 
-    
+
     public static final class GraphConnectivityAnalysis {
         private final int totalVertices;
         private final int connectedVertices;
@@ -235,11 +245,25 @@ public final class DisconnectedCurrencyGraph extends Exception {
                     "Missing pairs cannot be null"));
         }
 
-        public int getTotalVertices() { return totalVertices; }
-        public int getConnectedVertices() { return connectedVertices; }
-        public int getDisconnectedVertices() { return totalVertices - connectedVertices; }
-        public int getMissingPairCount() { return missingPairCount; }
-        public Set<String> getMissingPairs() { return new HashSet<>(missingPairs); }
+        public int getTotalVertices() {
+            return totalVertices;
+        }
+
+        public int getConnectedVertices() {
+            return connectedVertices;
+        }
+
+        public int getDisconnectedVertices() {
+            return totalVertices - connectedVertices;
+        }
+
+        public int getMissingPairCount() {
+            return missingPairCount;
+        }
+
+        public Set<String> getMissingPairs() {
+            return new HashSet<>(missingPairs);
+        }
 
         public double getConnectivityRatio() {
             return totalVertices > 0 ? (double) connectedVertices / totalVertices : 0.0;

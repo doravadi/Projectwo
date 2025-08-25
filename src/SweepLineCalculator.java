@@ -7,7 +7,7 @@ import java.util.*;
 
 public final class SweepLineCalculator {
 
-    
+
     private final NavigableMap<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> deltaMap;
     private final EnumMap<DailyBalance.BalanceBucket, BigDecimal> initialBalances;
 
@@ -21,23 +21,23 @@ public final class SweepLineCalculator {
         this.initialBalances = new EnumMap<>(initialBalances);
     }
 
-    
+
     public void addBalanceChange(BalanceChange change, DailyBalance.BalanceBucket targetBucket) {
         Objects.requireNonNull(change, "BalanceChange cannot be null");
         Objects.requireNonNull(targetBucket, "Target bucket cannot be null");
 
         LocalDate date = change.getDate();
 
-        
+
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> deltas =
                 deltaMap.computeIfAbsent(date, k -> createZeroBuckets());
 
-        
+
         BigDecimal currentDelta = deltas.get(targetBucket);
         deltas.put(targetBucket, currentDelta.add(change.getAmount()));
     }
 
-    
+
     public void addBalanceChanges(List<BalanceChange> changes,
                                   Map<BalanceChange, DailyBalance.BalanceBucket> bucketMapping) {
         for (BalanceChange change : changes) {
@@ -48,7 +48,7 @@ public final class SweepLineCalculator {
         }
     }
 
-    
+
     public List<DailyBalance> calculateDailyBalances(DateRange period) {
         Objects.requireNonNull(period, "Period cannot be null");
 
@@ -58,15 +58,15 @@ public final class SweepLineCalculator {
 
         LocalDate currentDate = period.getStartDate();
 
-        
+
         for (Map.Entry<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> entry :
                 deltaMap.headMap(currentDate, false).entrySet()) {
             applyDeltas(runningBalances, entry.getValue());
         }
 
-        
+
         while (!currentDate.isAfter(period.getEndDate())) {
-            
+
             EnumMap<DailyBalance.BalanceBucket, BigDecimal> dailyDeltas =
                     deltaMap.get(currentDate);
 
@@ -74,7 +74,7 @@ public final class SweepLineCalculator {
                 applyDeltas(runningBalances, dailyDeltas);
             }
 
-            
+
             DailyBalance dailyBalance = new DailyBalance(currentDate,
                     new EnumMap<>(runningBalances));
             result.add(dailyBalance);
@@ -85,14 +85,14 @@ public final class SweepLineCalculator {
         return result;
     }
 
-    
+
     public DailyBalance getBalanceAt(LocalDate date) {
         Objects.requireNonNull(date, "Date cannot be null");
 
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> runningBalances =
                 new EnumMap<>(initialBalances);
 
-        
+
         for (Map.Entry<LocalDate, EnumMap<DailyBalance.BalanceBucket, BigDecimal>> entry :
                 deltaMap.headMap(date, true).entrySet()) {
             applyDeltas(runningBalances, entry.getValue());
@@ -101,7 +101,7 @@ public final class SweepLineCalculator {
         return new DailyBalance(date, runningBalances);
     }
 
-    
+
     public EnumMap<DailyBalance.BalanceBucket, BigDecimal> calculateAverageBalances(DateRange period) {
         List<DailyBalance> dailyBalances = calculateDailyBalances(period);
         int dayCount = dailyBalances.size();
@@ -112,7 +112,7 @@ public final class SweepLineCalculator {
 
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> sums = createZeroBuckets();
 
-        
+
         for (DailyBalance daily : dailyBalances) {
             for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
                 BigDecimal currentSum = sums.get(bucket);
@@ -121,7 +121,7 @@ public final class SweepLineCalculator {
             }
         }
 
-        
+
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> averages = createZeroBuckets();
         BigDecimal dayCountDecimal = new BigDecimal(dayCount);
 
@@ -134,7 +134,7 @@ public final class SweepLineCalculator {
         return averages;
     }
 
-    
+
     public BigDecimal getTotalDelta(DailyBalance.BalanceBucket bucket, DateRange period) {
         return deltaMap.entrySet().stream()
                 .filter(entry -> period.contains(entry.getKey()))
@@ -143,12 +143,12 @@ public final class SweepLineCalculator {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    
+
     public Set<LocalDate> getChangePoints() {
         return new TreeSet<>(deltaMap.keySet());
     }
 
-    
+
     public void clear() {
         deltaMap.clear();
         for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
@@ -156,14 +156,14 @@ public final class SweepLineCalculator {
         }
     }
 
-    
+
     public Map<String, Object> getStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("changePointCount", deltaMap.size());
         stats.put("dateRange", deltaMap.isEmpty() ? "empty" :
                 deltaMap.firstKey() + " to " + deltaMap.lastKey());
 
-        
+
         EnumMap<DailyBalance.BalanceBucket, Integer> bucketChangeCounts =
                 new EnumMap<>(DailyBalance.BalanceBucket.class);
 
@@ -178,7 +178,7 @@ public final class SweepLineCalculator {
         return stats;
     }
 
-    
+
     private void applyDeltas(EnumMap<DailyBalance.BalanceBucket, BigDecimal> balances,
                              EnumMap<DailyBalance.BalanceBucket, BigDecimal> deltas) {
         for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {

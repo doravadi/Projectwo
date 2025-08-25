@@ -26,17 +26,17 @@ public final class PaymentAllocationService {
         this.allocationIdCounter = new AtomicLong(1);
     }
 
-    
+
     public void setAccountBuckets(String accountId, List<DebtBucket> buckets) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(buckets, "Buckets cannot be null");
 
-        
+
         List<DebtBucket> bucketCopy = new ArrayList<>(buckets);
         accountBuckets.put(accountId, bucketCopy);
     }
 
-    
+
     public void addDebtBucket(String accountId, DebtBucket bucket) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(bucket, "Bucket cannot be null");
@@ -44,7 +44,7 @@ public final class PaymentAllocationService {
         accountBuckets.computeIfAbsent(accountId, k -> new ArrayList<>()).add(bucket);
     }
 
-    
+
     public PaymentAllocation allocatePayment(String accountId, BigDecimal paymentAmount,
                                              PaymentAllocation.AllocationStrategy strategyType) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
@@ -63,19 +63,19 @@ public final class PaymentAllocationService {
 
         PaymentAllocation allocation = strategy.allocate(buckets, paymentAmount, allocationId);
 
-        
+
         validateAllocation(buckets, allocation);
 
-        
+
         updateBucketsAfterAllocation(accountId, allocation);
 
-        
+
         allocationHistory.put(allocationId, allocation);
 
         return allocation;
     }
 
-    
+
     public StrategyComparison compareAllStrategies(String accountId, BigDecimal paymentAmount) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
@@ -100,16 +100,16 @@ public final class PaymentAllocationService {
         return new StrategyComparison(results, errors, findBestAllocation(results));
     }
 
-    
+
     public AllocationComparison compareDPvsBankRule(String accountId, BigDecimal paymentAmount) {
         List<DebtBucket> buckets = getAccountBuckets(accountId);
 
-        
+
         AllocationStrategy bankRule = AllocationStrategy.createStrategy(PaymentAllocation.AllocationStrategy.BANK_RULE);
         PaymentAllocation bankRuleResult = bankRule.allocate(buckets, paymentAmount,
                 "BANK_" + generateAllocationId());
 
-        
+
         AllocationStrategy dpOptimal = AllocationStrategy.createStrategy(PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         PaymentAllocation dpResult = dpOptimal.allocate(buckets, paymentAmount,
                 "DP_" + generateAllocationId());
@@ -117,7 +117,7 @@ public final class PaymentAllocationService {
         return new AllocationComparison(bankRuleResult, dpResult);
     }
 
-    
+
     public void applyAllocation(String accountId, String allocationId) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(allocationId, "Allocation ID cannot be null");
@@ -130,16 +130,16 @@ public final class PaymentAllocationService {
         updateBucketsAfterAllocation(accountId, allocation);
     }
 
-    
+
     public List<DebtBucket> getAccountBuckets(String accountId) {
         List<DebtBucket> buckets = accountBuckets.get(accountId);
         if (buckets == null) {
             throw new IllegalArgumentException("Account not found: " + accountId);
         }
-        return new ArrayList<>(buckets); 
+        return new ArrayList<>(buckets);
     }
 
-    
+
     public List<PaymentAllocation> getAllocationHistory(String accountId) {
         return allocationHistory.values().stream()
                 .filter(allocation -> allocation.getAllocationId().contains(accountId))
@@ -147,7 +147,7 @@ public final class PaymentAllocationService {
                 .toList();
     }
 
-    
+
     public Map<String, Object> getSystemStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("activeAccounts", accountBuckets.size());
@@ -155,7 +155,7 @@ public final class PaymentAllocationService {
         stats.put("totalBuckets", accountBuckets.values().stream()
                 .mapToInt(List::size).sum());
 
-        
+
         Map<PaymentAllocation.AllocationStrategy, Long> strategyUsage = new EnumMap<>(PaymentAllocation.AllocationStrategy.class);
         for (PaymentAllocation allocation : allocationHistory.values()) {
             strategyUsage.merge(allocation.getStrategy(), 1L, Long::sum);
@@ -165,16 +165,16 @@ public final class PaymentAllocationService {
         return stats;
     }
 
-    
+
     private void validateAllocation(List<DebtBucket> buckets, PaymentAllocation allocation) {
-        
+
         BigDecimal totalAllocated = allocation.getTotalAllocatedAmount();
         if (totalAllocated.compareTo(allocation.getTotalPaymentAmount()) > 0) {
             throw AllocationInvariantBroken.totalMismatch(allocation.getTotalPaymentAmount(),
                     totalAllocated, allocation.getBucketAllocations());
         }
 
-        
+
         for (Map.Entry<String, BigDecimal> entry : allocation.getBucketAllocations().entrySet()) {
             String bucketId = entry.getKey();
             BigDecimal allocatedAmount = entry.getValue();
@@ -185,21 +185,21 @@ public final class PaymentAllocationService {
                     .orElse(null);
 
             if (bucket == null) {
-                continue; 
+                continue;
             }
 
-            
+
             if (allocatedAmount.compareTo(bucket.getCurrentBalance()) > 0) {
                 throw AllocationInvariantBroken.allocationOverflow(bucketId,
                         bucket.getCurrentBalance(), allocatedAmount);
             }
 
-            
+
             if (allocatedAmount.compareTo(BigDecimal.ZERO) > 0 &&
                     allocatedAmount.compareTo(bucket.getMinimumPayment()) < 0 &&
                     allocatedAmount.compareTo(bucket.getCurrentBalance()) < 0) {
 
-                
+
                 throw AllocationInvariantBroken.minimumPaymentViolation(bucketId,
                         bucket.getMinimumPayment(), allocatedAmount);
             }
@@ -218,7 +218,7 @@ public final class PaymentAllocationService {
             if (allocatedAmount.compareTo(BigDecimal.ZERO) > 0) {
                 DebtBucket updatedBucket = bucket.withPayment(allocatedAmount);
 
-                
+
                 if (updatedBucket.getCurrentBalance().compareTo(BigDecimal.ZERO) < 0) {
                     throw AllocationInvariantBroken.negativeBalance(bucket.getBucketId(),
                             BigDecimal.ZERO, updatedBucket.getCurrentBalance(), allocatedAmount);
@@ -247,7 +247,7 @@ public final class PaymentAllocationService {
                 System.currentTimeMillis();
     }
 
-    
+
     public static final class StrategyComparison {
         private final Map<PaymentAllocation.AllocationStrategy, PaymentAllocation> results;
         private final Map<PaymentAllocation.AllocationStrategy, Exception> errors;
@@ -264,10 +264,14 @@ public final class PaymentAllocationService {
         public Map<PaymentAllocation.AllocationStrategy, PaymentAllocation> getResults() {
             return new EnumMap<>(results);
         }
+
         public Map<PaymentAllocation.AllocationStrategy, Exception> getErrors() {
             return new EnumMap<>(errors);
         }
-        public PaymentAllocation.AllocationStrategy getBestStrategy() { return bestStrategy; }
+
+        public PaymentAllocation.AllocationStrategy getBestStrategy() {
+            return bestStrategy;
+        }
 
         public PaymentAllocation getBestAllocation() {
             return results.get(bestStrategy);
@@ -293,9 +297,17 @@ public final class PaymentAllocationService {
                     .subtract(bankRuleAllocation.getTotalInterestSaved());
         }
 
-        public PaymentAllocation getBankRuleAllocation() { return bankRuleAllocation; }
-        public PaymentAllocation getDpOptimalAllocation() { return dpOptimalAllocation; }
-        public BigDecimal getInterestSavingsDifference() { return interestSavingsDifference; }
+        public PaymentAllocation getBankRuleAllocation() {
+            return bankRuleAllocation;
+        }
+
+        public PaymentAllocation getDpOptimalAllocation() {
+            return dpOptimalAllocation;
+        }
+
+        public BigDecimal getInterestSavingsDifference() {
+            return interestSavingsDifference;
+        }
 
         public boolean isDpBetter() {
             return interestSavingsDifference.compareTo(BigDecimal.ZERO) > 0;

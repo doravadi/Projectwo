@@ -28,7 +28,7 @@ public enum AuthStatus {
         return description;
     }
 
-    
+
     public boolean isFinalState() {
         return this == CAPTURED ||
                 this == EXPIRED ||
@@ -36,34 +36,34 @@ public enum AuthStatus {
                 this == TIMEOUT;
     }
 
-    
+
     public boolean canBeMatched() {
         return this == APPROVED;
     }
 
-    
+
     public boolean canBeCaptured() {
         return this == APPROVED || this == PARTIALLY_CAPTURED;
     }
 
-    
+
     public boolean canBeReversed() {
         return this == APPROVED ||
                 this == PARTIALLY_CAPTURED ||
                 this == PENDING;
     }
 
-    
+
     public AuthStatus[] getNextPossibleStates() {
         return switch (this) {
             case PENDING -> new AuthStatus[]{APPROVED, DECLINED, TIMEOUT};
             case APPROVED -> new AuthStatus[]{CAPTURED, PARTIALLY_CAPTURED, REVERSED, EXPIRED};
             case PARTIALLY_CAPTURED -> new AuthStatus[]{CAPTURED, REVERSED};
-            case DECLINED, EXPIRED, CAPTURED, REVERSED, TIMEOUT -> new AuthStatus[]{}; 
+            case DECLINED, EXPIRED, CAPTURED, REVERSED, TIMEOUT -> new AuthStatus[]{};
         };
     }
 
-    
+
     public static AuthStatus fromString(String status) {
         if (status == null || status.trim().isEmpty()) {
             throw new IllegalArgumentException("Auth status cannot be null or empty");
@@ -78,7 +78,7 @@ public enum AuthStatus {
         }
     }
 
-    
+
     public boolean canTransitionTo(AuthStatus newStatus) {
         AuthStatus[] possibleStates = getNextPossibleStates();
 

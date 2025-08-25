@@ -13,7 +13,7 @@ public final class RuleEngine {
     private final Map<Rule.RuleType, List<ParsedRule>> rulesByType;
     private final RuleEngineStatistics statistics;
 
-    
+
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong totalParsingTime = new AtomicLong(0);
     private final AtomicLong totalEvaluationTime = new AtomicLong(0);
@@ -24,13 +24,13 @@ public final class RuleEngine {
         this.rulesByType = new EnumMap<>(Rule.RuleType.class);
         this.statistics = new RuleEngineStatistics();
 
-        
+
         for (Rule.RuleType type : Rule.RuleType.values()) {
             rulesByType.put(type, new ArrayList<>());
         }
     }
 
-    
+
     public void addRule(String ruleId, String dslExpression, Rule.RuleType ruleType,
                         int priority, String description) throws RuleSyntaxException {
         Objects.requireNonNull(ruleId, "Rule ID cannot be null");
@@ -50,7 +50,7 @@ public final class RuleEngine {
             ruleCache.put(ruleId, parsedRule);
             rulesByType.get(ruleType).add(parsedRule);
 
-            
+
             rulesByType.get(ruleType).sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
 
             statistics.incrementRulesAdded();
@@ -60,7 +60,7 @@ public final class RuleEngine {
         }
     }
 
-    
+
     public List<RuleResult> evaluateRules(Rule.RuleType ruleType, TransactionContext context) {
         Objects.requireNonNull(ruleType, "Rule type cannot be null");
         Objects.requireNonNull(context, "Transaction context cannot be null");
@@ -98,22 +98,22 @@ public final class RuleEngine {
         }
     }
 
-    
+
     public Map<Rule.RuleType, List<RuleResult>> evaluateAllRules(TransactionContext context) {
         Objects.requireNonNull(context, "Transaction context cannot be null");
 
         Map<Rule.RuleType, List<RuleResult>> allResults = new EnumMap<>(Rule.RuleType.class);
 
-        
+
         Rule.RuleType[] priorityOrder = {
-                Rule.RuleType.LIMIT_CHECK,    
-                Rule.RuleType.FRAUD_CHECK,    
-                Rule.RuleType.GEOGRAPHIC,     
-                Rule.RuleType.TIME_BASED,     
-                Rule.RuleType.MCC_ROUTING,    
-                Rule.RuleType.REWARD,         
-                Rule.RuleType.DISCOUNT,       
-                Rule.RuleType.ALERT          
+                Rule.RuleType.LIMIT_CHECK,
+                Rule.RuleType.FRAUD_CHECK,
+                Rule.RuleType.GEOGRAPHIC,
+                Rule.RuleType.TIME_BASED,
+                Rule.RuleType.MCC_ROUTING,
+                Rule.RuleType.REWARD,
+                Rule.RuleType.DISCOUNT,
+                Rule.RuleType.ALERT
         };
 
         for (Rule.RuleType ruleType : priorityOrder) {
@@ -126,14 +126,14 @@ public final class RuleEngine {
         return allResults;
     }
 
-    
+
     private RuleResult evaluateRule(ParsedRule rule, TransactionContext context) throws RuleEvaluationException {
         try {
-            
+
             Object result = rule.getAst().evaluate(context);
 
             if (result instanceof Boolean && (Boolean) result) {
-                
+
                 return executeRuleActions(rule, context);
             } else {
                 return RuleResult.notApplied(rule.getRuleId(), "Condition not met");
@@ -145,36 +145,35 @@ public final class RuleEngine {
         }
     }
 
-    
+
     private RuleResult executeRuleActions(ParsedRule rule, TransactionContext context) {
-        
-        
+
 
         RuleResult.Builder builder = RuleResult.builder(rule.getRuleId(),
                         mapRuleTypeToResultType(rule.getRuleType()))
                 .applied(true)
                 .description(rule.getDescription());
 
-        
+
         switch (rule.getRuleType()) {
             case REWARD:
-                
+
                 builder.points(context.getAmount().multiply(new java.math.BigDecimal("0.02")));
                 break;
 
             case FRAUD_CHECK:
-                
+
                 builder.riskScore(50)
                         .alertMessage("Suspicious transaction detected");
                 break;
 
             case DISCOUNT:
-                
+
                 builder.discountAmount(context.getAmount().multiply(new java.math.BigDecimal("0.05")));
                 break;
 
             default:
-                
+
                 builder.action("RULE_APPLIED");
                 break;
         }
@@ -184,15 +183,20 @@ public final class RuleEngine {
 
     private RuleResult.ResultType mapRuleTypeToResultType(Rule.RuleType ruleType) {
         switch (ruleType) {
-            case REWARD: return RuleResult.ResultType.POINTS;
-            case FRAUD_CHECK: return RuleResult.ResultType.ALERT;
-            case DISCOUNT: return RuleResult.ResultType.DISCOUNT;
-            case ALERT: return RuleResult.ResultType.ALERT;
-            default: return RuleResult.ResultType.ACTION;
+            case REWARD:
+                return RuleResult.ResultType.POINTS;
+            case FRAUD_CHECK:
+                return RuleResult.ResultType.ALERT;
+            case DISCOUNT:
+                return RuleResult.ResultType.DISCOUNT;
+            case ALERT:
+                return RuleResult.ResultType.ALERT;
+            default:
+                return RuleResult.ResultType.ACTION;
         }
     }
 
-    
+
     public boolean toggleRule(String ruleId, boolean active) {
         ParsedRule rule = ruleCache.get(ruleId);
         if (rule != null) {
@@ -202,7 +206,7 @@ public final class RuleEngine {
         return false;
     }
 
-    
+
     public boolean removeRule(String ruleId) {
         ParsedRule rule = ruleCache.remove(ruleId);
         if (rule != null) {
@@ -213,14 +217,14 @@ public final class RuleEngine {
         return false;
     }
 
-    
+
     public List<String> getRuleIdsByType(Rule.RuleType ruleType) {
         return rulesByType.get(ruleType).stream()
                 .map(ParsedRule::getRuleId)
                 .collect(Collectors.toList());
     }
 
-    
+
     public Optional<RuleInfo> getRuleInfo(String ruleId) {
         ParsedRule rule = ruleCache.get(ruleId);
         if (rule != null) {
@@ -232,7 +236,7 @@ public final class RuleEngine {
         return Optional.empty();
     }
 
-    
+
     public RuleEngineStatistics getStatistics() {
         statistics.setTotalRules(ruleCache.size());
         statistics.setTotalEvaluations(totalEvaluations.get());
@@ -243,14 +247,14 @@ public final class RuleEngine {
         return statistics;
     }
 
-    
+
     public void clearCache() {
         ruleCache.clear();
         rulesByType.values().forEach(List::clear);
         statistics.reset();
     }
 
-    
+
     public ValidationResult validateExpression(String dslExpression) {
         try {
             parser.parse(dslExpression);
@@ -260,7 +264,7 @@ public final class RuleEngine {
         }
     }
 
-    
+
     public static final class ValidationResult {
         private final boolean valid;
         private final String errorMessage;
@@ -278,8 +282,13 @@ public final class RuleEngine {
             return new ValidationResult(false, errorMessage);
         }
 
-        public boolean isValid() { return valid; }
-        public Optional<String> getErrorMessage() { return Optional.ofNullable(errorMessage); }
+        public boolean isValid() {
+            return valid;
+        }
+
+        public Optional<String> getErrorMessage() {
+            return Optional.ofNullable(errorMessage);
+        }
     }
 
     public static final class RuleInfo {
@@ -302,13 +311,33 @@ public final class RuleEngine {
             this.conditionCount = conditionCount;
         }
 
-        
-        public String getRuleId() { return ruleId; }
-        public String getDslExpression() { return dslExpression; }
-        public Rule.RuleType getRuleType() { return ruleType; }
-        public int getPriority() { return priority; }
-        public String getDescription() { return description; }
-        public boolean isActive() { return active; }
-        public int getConditionCount() { return conditionCount; }
+
+        public String getRuleId() {
+            return ruleId;
+        }
+
+        public String getDslExpression() {
+            return dslExpression;
+        }
+
+        public Rule.RuleType getRuleType() {
+            return ruleType;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public int getConditionCount() {
+            return conditionCount;
+        }
     }
 }

@@ -12,5 +12,7 @@ public enum ConflictResolution {
         this.description = description;
     }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 }

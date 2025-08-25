@@ -56,7 +56,7 @@ public final class RuleSyntaxException extends Exception {
         return sb.toString();
     }
 
-    
+
     public static RuleSyntaxException unexpectedToken(String ruleText, int position, String actualToken) {
         return new RuleSyntaxException(ruleText, position, "Unexpected token: '" + actualToken + "'");
     }
@@ -89,13 +89,24 @@ public final class RuleSyntaxException extends Exception {
         return new RuleSyntaxException(ruleText, position, "Invalid literal: '" + literal + "'");
     }
 
-    
-    public String getRuleText() { return ruleText; }
-    public int getPosition() { return position; }
-    public String getExpectedToken() { return expectedToken; }
-    public String getActualToken() { return actualToken; }
 
-    
+    public String getRuleText() {
+        return ruleText;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public String getExpectedToken() {
+        return expectedToken;
+    }
+
+    public String getActualToken() {
+        return actualToken;
+    }
+
+
     public String getUserFriendlyMessage() {
         if (ruleText == null || position < 0) {
             return getMessage();
@@ -113,7 +124,7 @@ public final class RuleSyntaxException extends Exception {
         sb.append("\nRule: ").append(ruleText).append("\n");
         sb.append("      ").append(" ".repeat(Math.max(0, position))).append("^ error here");
 
-        
+
         addSuggestions(sb);
 
         return sb.toString();

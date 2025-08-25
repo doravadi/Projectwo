@@ -27,17 +27,40 @@ public final class RuleResult {
         this.errors = Collections.unmodifiableList(new ArrayList<>(builder.errors));
     }
 
-    
-    public String getRuleId() { return ruleId; }
-    public ResultType getResultType() { return resultType; }
-    public boolean isApplied() { return applied; }
-    public LocalDateTime getEvaluationTime() { return evaluationTime; }
-    public Optional<String> getDescription() { return Optional.ofNullable(description); }
-    public Map<String, Object> getValues() { return values; }
-    public List<String> getWarnings() { return warnings; }
-    public List<String> getErrors() { return errors; }
 
-    
+    public String getRuleId() {
+        return ruleId;
+    }
+
+    public ResultType getResultType() {
+        return resultType;
+    }
+
+    public boolean isApplied() {
+        return applied;
+    }
+
+    public LocalDateTime getEvaluationTime() {
+        return evaluationTime;
+    }
+
+    public Optional<String> getDescription() {
+        return Optional.ofNullable(description);
+    }
+
+    public Map<String, Object> getValues() {
+        return values;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    public List<String> getErrors() {
+        return errors;
+    }
+
+
     public Optional<BigDecimal> getPoints() {
         return getValueAs("points", BigDecimal.class);
     }
@@ -71,7 +94,7 @@ public final class RuleResult {
         return Optional.empty();
     }
 
-    
+
     public boolean hasErrors() {
         return !errors.isEmpty();
     }
@@ -84,7 +107,7 @@ public final class RuleResult {
         return applied && !hasErrors();
     }
 
-    
+
     public static RuleResult notApplied(String ruleId, String reason) {
         return builder(ruleId, ResultType.NOT_APPLIED)
                 .applied(false)
@@ -125,7 +148,7 @@ public final class RuleResult {
                 .build();
     }
 
-    
+
     public static Builder builder(String ruleId, ResultType resultType) {
         return new Builder(ruleId, resultType);
     }
@@ -180,7 +203,7 @@ public final class RuleResult {
             return this;
         }
 
-        
+
         public Builder points(BigDecimal points) {
             return value("points", points);
         }
@@ -210,7 +233,7 @@ public final class RuleResult {
         }
     }
 
-    
+
     public enum ResultType {
         POINTS("Puan kazanımı/kaybı"),
         DISCOUNT("İndirim uygulaması"),

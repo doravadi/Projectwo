@@ -36,18 +36,50 @@ public final class MatchSummary implements Serializable {
         return new Builder();
     }
 
-    
-    public String getAuthId() { return authId; }
-    public String getPresentmentId() { return presentmentId; }
-    public CardId getCardId() { return cardId; }
-    public double getScore() { return score; }
-    public AuthPresentmentMatch.MatchQuality getQuality() { return quality; }
-    public AuthPresentmentMatch.MatchConfidence getConfidence() { return confidence; }
-    public Money getSettlementAmount() { return settlementAmount; }
-    public long getTimeDifferenceHours() { return timeDifferenceHours; }
-    public boolean requiresReview() { return requiresReview; }
-    public List<String> getValidationIssues() { return validationIssues; }
-    public List<String> getRiskFactors() { return riskFactors; }
+
+    public String getAuthId() {
+        return authId;
+    }
+
+    public String getPresentmentId() {
+        return presentmentId;
+    }
+
+    public CardId getCardId() {
+        return cardId;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public AuthPresentmentMatch.MatchQuality getQuality() {
+        return quality;
+    }
+
+    public AuthPresentmentMatch.MatchConfidence getConfidence() {
+        return confidence;
+    }
+
+    public Money getSettlementAmount() {
+        return settlementAmount;
+    }
+
+    public long getTimeDifferenceHours() {
+        return timeDifferenceHours;
+    }
+
+    public boolean requiresReview() {
+        return requiresReview;
+    }
+
+    public List<String> getValidationIssues() {
+        return validationIssues;
+    }
+
+    public List<String> getRiskFactors() {
+        return riskFactors;
+    }
 
     public static class Builder {
         private String authId;
@@ -62,17 +94,60 @@ public final class MatchSummary implements Serializable {
         private List<String> validationIssues;
         private List<String> riskFactors;
 
-        public Builder authId(String authId) { this.authId = authId; return this; }
-        public Builder presentmentId(String presentmentId) { this.presentmentId = presentmentId; return this; }
-        public Builder cardId(CardId cardId) { this.cardId = cardId; return this; }
-        public Builder score(double score) { this.score = score; return this; }
-        public Builder quality(AuthPresentmentMatch.MatchQuality quality) { this.quality = quality; return this; }
-        public Builder confidence(AuthPresentmentMatch.MatchConfidence confidence) { this.confidence = confidence; return this; }
-        public Builder settlementAmount(Money settlementAmount) { this.settlementAmount = settlementAmount; return this; }
-        public Builder timeDifferenceHours(long timeDifferenceHours) { this.timeDifferenceHours = timeDifferenceHours; return this; }
-        public Builder requiresReview(boolean requiresReview) { this.requiresReview = requiresReview; return this; }
-        public Builder validationIssues(List<String> validationIssues) { this.validationIssues = validationIssues; return this; }
-        public Builder riskFactors(List<String> riskFactors) { this.riskFactors = riskFactors; return this; }
+        public Builder authId(String authId) {
+            this.authId = authId;
+            return this;
+        }
+
+        public Builder presentmentId(String presentmentId) {
+            this.presentmentId = presentmentId;
+            return this;
+        }
+
+        public Builder cardId(CardId cardId) {
+            this.cardId = cardId;
+            return this;
+        }
+
+        public Builder score(double score) {
+            this.score = score;
+            return this;
+        }
+
+        public Builder quality(AuthPresentmentMatch.MatchQuality quality) {
+            this.quality = quality;
+            return this;
+        }
+
+        public Builder confidence(AuthPresentmentMatch.MatchConfidence confidence) {
+            this.confidence = confidence;
+            return this;
+        }
+
+        public Builder settlementAmount(Money settlementAmount) {
+            this.settlementAmount = settlementAmount;
+            return this;
+        }
+
+        public Builder timeDifferenceHours(long timeDifferenceHours) {
+            this.timeDifferenceHours = timeDifferenceHours;
+            return this;
+        }
+
+        public Builder requiresReview(boolean requiresReview) {
+            this.requiresReview = requiresReview;
+            return this;
+        }
+
+        public Builder validationIssues(List<String> validationIssues) {
+            this.validationIssues = validationIssues;
+            return this;
+        }
+
+        public Builder riskFactors(List<String> riskFactors) {
+            this.riskFactors = riskFactors;
+            return this;
+        }
 
         public MatchSummary build() {
             return new MatchSummary(this);

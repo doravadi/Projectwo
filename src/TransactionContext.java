@@ -23,15 +23,15 @@ public final class TransactionContext {
     private final String merchantCountry;
     private final LocalDateTime transactionDateTime;
     private final TransactionType transactionType;
-    private final String channel; 
+    private final String channel;
 
-    
+
     private final Integer customerAge;
-    private final String customerSegment; 
+    private final String customerSegment;
     private final String customerCity;
     private final String customerCountry;
     private final BigDecimal accountBalance;
-    private final BigDecimal monthlySpending; 
+    private final BigDecimal monthlySpending;
 
     private TransactionContext(Builder builder) {
         this.transactionId = Objects.requireNonNull(builder.transactionId, "Transaction ID cannot be null");
@@ -66,28 +66,84 @@ public final class TransactionContext {
         }
     }
 
-    
-    public String getTransactionId() { return transactionId; }
-    public String getCardNumber() { return cardNumber; }
-    public String getCustomerId() { return customerId; }
-    public String getAccountId() { return accountId; }
-    public BigDecimal getAmount() { return amount; }
-    public String getCurrency() { return currency; }
-    public MccCategory getMccCategory() { return mccCategory; }
-    public Optional<String> getMerchantName() { return Optional.ofNullable(merchantName); }
-    public Optional<String> getMerchantCity() { return Optional.ofNullable(merchantCity); }
-    public Optional<String> getMerchantCountry() { return Optional.ofNullable(merchantCountry); }
-    public LocalDateTime getTransactionDateTime() { return transactionDateTime; }
-    public TransactionType getTransactionType() { return transactionType; }
-    public Optional<String> getChannel() { return Optional.ofNullable(channel); }
-    public Optional<Integer> getCustomerAge() { return Optional.ofNullable(customerAge); }
-    public Optional<String> getCustomerSegment() { return Optional.ofNullable(customerSegment); }
-    public Optional<String> getCustomerCity() { return Optional.ofNullable(customerCity); }
-    public Optional<String> getCustomerCountry() { return Optional.ofNullable(customerCountry); }
-    public Optional<BigDecimal> getAccountBalance() { return Optional.ofNullable(accountBalance); }
-    public Optional<BigDecimal> getMonthlySpending() { return Optional.ofNullable(monthlySpending); }
 
-    
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public MccCategory getMccCategory() {
+        return mccCategory;
+    }
+
+    public Optional<String> getMerchantName() {
+        return Optional.ofNullable(merchantName);
+    }
+
+    public Optional<String> getMerchantCity() {
+        return Optional.ofNullable(merchantCity);
+    }
+
+    public Optional<String> getMerchantCountry() {
+        return Optional.ofNullable(merchantCountry);
+    }
+
+    public LocalDateTime getTransactionDateTime() {
+        return transactionDateTime;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public Optional<String> getChannel() {
+        return Optional.ofNullable(channel);
+    }
+
+    public Optional<Integer> getCustomerAge() {
+        return Optional.ofNullable(customerAge);
+    }
+
+    public Optional<String> getCustomerSegment() {
+        return Optional.ofNullable(customerSegment);
+    }
+
+    public Optional<String> getCustomerCity() {
+        return Optional.ofNullable(customerCity);
+    }
+
+    public Optional<String> getCustomerCountry() {
+        return Optional.ofNullable(customerCountry);
+    }
+
+    public Optional<BigDecimal> getAccountBalance() {
+        return Optional.ofNullable(accountBalance);
+    }
+
+    public Optional<BigDecimal> getMonthlySpending() {
+        return Optional.ofNullable(monthlySpending);
+    }
+
+
     public LocalDate getTransactionDate() {
         return transactionDateTime.toLocalDate();
     }
@@ -120,7 +176,7 @@ public final class TransactionContext {
                 !merchantCountry.equals(customerCountry);
     }
 
-    
+
     public static Builder builder() {
         return new Builder();
     }
@@ -246,7 +302,7 @@ public final class TransactionContext {
         }
     }
 
-    
+
     public enum TransactionType {
         PURCHASE,
         CASH_ADVANCE,
@@ -257,7 +313,7 @@ public final class TransactionContext {
         WITHDRAWAL
     }
 
-    
+
     public enum MccCategory {
         GROCERY,
         FUEL,

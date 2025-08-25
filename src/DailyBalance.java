@@ -13,29 +13,29 @@ public final class DailyBalance implements Comparable<DailyBalance> {
     private final BigDecimal totalBalance;
 
     public enum BalanceBucket {
-        PURCHASE,           
-        CASH_ADVANCE,       
-        INSTALLMENT,        
-        FEES_INTEREST       
+        PURCHASE,
+        CASH_ADVANCE,
+        INSTALLMENT,
+        FEES_INTEREST
     }
 
     public DailyBalance(LocalDate date, EnumMap<BalanceBucket, BigDecimal> balances) {
         this.date = Objects.requireNonNull(date, "Date cannot be null");
         Objects.requireNonNull(balances, "Balances cannot be null");
 
-        
+
         this.balances = new EnumMap<>(BalanceBucket.class);
         for (BalanceBucket bucket : BalanceBucket.values()) {
             BigDecimal balance = balances.getOrDefault(bucket, BigDecimal.ZERO);
             this.balances.put(bucket, Objects.requireNonNull(balance, "Balance cannot be null"));
         }
 
-        
+
         this.totalBalance = this.balances.values().stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    
+
     public static DailyBalance of(LocalDate date, BigDecimal totalBalance) {
         EnumMap<BalanceBucket, BigDecimal> balances = new EnumMap<>(BalanceBucket.class);
         balances.put(BalanceBucket.PURCHASE, totalBalance);
@@ -55,7 +55,7 @@ public final class DailyBalance implements Comparable<DailyBalance> {
         return new DailyBalance(date, balances);
     }
 
-    
+
     public LocalDate getDate() {
         return date;
     }
@@ -69,10 +69,10 @@ public final class DailyBalance implements Comparable<DailyBalance> {
     }
 
     public EnumMap<BalanceBucket, BigDecimal> getAllBalances() {
-        return new EnumMap<>(balances); 
+        return new EnumMap<>(balances);
     }
 
-    
+
     public DailyBalance addChange(BalanceChange change, BalanceBucket targetBucket) {
         if (!date.equals(change.getDate())) {
             throw new IllegalArgumentException("Change date must match balance date");
@@ -93,9 +93,9 @@ public final class DailyBalance implements Comparable<DailyBalance> {
         return new DailyBalance(date, newBalances);
     }
 
-    
+
     public BigDecimal getInterestBearingBalance() {
-        
+
         return balances.entrySet().stream()
                 .filter(entry -> entry.getValue().compareTo(BigDecimal.ZERO) > 0)
                 .map(Map.Entry::getValue)

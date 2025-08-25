@@ -17,14 +17,14 @@ public final class SweepLineService {
         this.accountCalculators = new ConcurrentHashMap<>();
         this.interestCalculator = Objects.requireNonNull(interestCalculator);
         this.mathContext = new MathContext(10, RoundingMode.HALF_UP);
-        this.toleranceThreshold = new BigDecimal("0.01"); 
+        this.toleranceThreshold = new BigDecimal("0.01");
     }
 
     public static SweepLineService createDefault() {
         return new SweepLineService(InterestCalculator.createDefault());
     }
 
-    
+
     public void addBalanceChange(String accountId, BalanceChange change,
                                  DailyBalance.BalanceBucket bucket) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
@@ -35,7 +35,7 @@ public final class SweepLineService {
         calculator.addBalanceChange(change, bucket);
     }
 
-    
+
     public void addBalanceChanges(String accountId,
                                   List<BalanceChange> changes,
                                   Map<BalanceChange, DailyBalance.BalanceBucket> bucketMapping) {
@@ -47,7 +47,7 @@ public final class SweepLineService {
         calculator.addBalanceChanges(changes, bucketMapping);
     }
 
-    
+
     public InterestCalculator.InterestCalculationResult calculateStatementInterest(
             String accountId, DateRange statementPeriod) {
 
@@ -58,13 +58,13 @@ public final class SweepLineService {
         InterestCalculator.InterestCalculationResult result =
                 interestCalculator.calculateInterest(calculator, statementPeriod);
 
-        
+
         validateResultAccuracy(calculator, statementPeriod, result);
 
         return result;
     }
 
-    
+
     public List<InterestCalculator.DailyInterest> calculateDailyInterest(String accountId, DateRange period) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(period, "Period cannot be null");
@@ -73,7 +73,7 @@ public final class SweepLineService {
         return interestCalculator.calculateDailyInterest(calculator, period);
     }
 
-    
+
     public List<DailyBalance> getDailyBalanceHistory(String accountId, DateRange period) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(period, "Period cannot be null");
@@ -82,7 +82,7 @@ public final class SweepLineService {
         return calculator.calculateDailyBalances(period);
     }
 
-    
+
     public DailyBalance getBalanceAt(String accountId, LocalDate date) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(date, "Date cannot be null");
@@ -91,7 +91,7 @@ public final class SweepLineService {
         return calculator.getBalanceAt(date);
     }
 
-    
+
     public BenchmarkResult benchmarkAccuracy(String accountId, DateRange period) {
         SweepLineCalculator calculator = getCalculator(accountId);
 
@@ -111,19 +111,19 @@ public final class SweepLineService {
                 difference, withinTolerance, sweepDuration, bruteDuration);
     }
 
-    
+
     public boolean removeAccount(String accountId) {
         return accountCalculators.remove(accountId) != null;
     }
 
-    
+
     public Map<String, Object> getSystemStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("activeAccounts", accountCalculators.size());
         stats.put("toleranceThreshold", toleranceThreshold);
         stats.put("mathContext", mathContext);
 
-        
+
         Map<String, Object> accountStats = new HashMap<>();
         for (Map.Entry<String, SweepLineCalculator> entry : accountCalculators.entrySet()) {
             accountStats.put(entry.getKey(), entry.getValue().getStatistics());
@@ -133,7 +133,7 @@ public final class SweepLineService {
         return stats;
     }
 
-    
+
     private SweepLineCalculator getOrCreateCalculator(String accountId) {
         return accountCalculators.computeIfAbsent(accountId,
                 k -> new SweepLineCalculator());
@@ -147,7 +147,7 @@ public final class SweepLineService {
         return calculator;
     }
 
-    
+
     private void validateResultAccuracy(SweepLineCalculator calculator,
                                         DateRange period,
                                         InterestCalculator.InterestCalculationResult result) {
@@ -161,22 +161,22 @@ public final class SweepLineService {
         }
     }
 
-    
+
     private BigDecimal calculateBruteForceInterest(SweepLineCalculator calculator, DateRange period) {
         List<DailyBalance> dailyBalances = calculator.calculateDailyBalances(period);
         BigDecimal totalInterest = BigDecimal.ZERO;
 
         for (DailyBalance daily : dailyBalances) {
-            
+
             for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
                 BigDecimal balance = daily.getBalance(bucket);
                 if (balance.compareTo(BigDecimal.ZERO) <= 0) {
-                    continue; 
+                    continue;
                 }
 
                 BigDecimal rate = interestCalculator.getRate(bucket);
 
-                
+
                 BigDecimal dailyInterest = balance
                         .multiply(rate, mathContext)
                         .divide(new BigDecimal("365"), mathContext)
@@ -189,7 +189,7 @@ public final class SweepLineService {
         return totalInterest;
     }
 
-    
+
     public static final class BenchmarkResult {
         private final BigDecimal sweepLineResult;
         private final BigDecimal bruteForceResult;
@@ -209,12 +209,29 @@ public final class SweepLineService {
             this.bruteForceDuration = bruteForceDuration;
         }
 
-        public BigDecimal getSweepLineResult() { return sweepLineResult; }
-        public BigDecimal getBruteForceResult() { return bruteForceResult; }
-        public BigDecimal getDifference() { return difference; }
-        public boolean isWithinTolerance() { return withinTolerance; }
-        public long getSweepLineDuration() { return sweepLineDuration; }
-        public long getBruteForceDuration() { return bruteForceDuration; }
+        public BigDecimal getSweepLineResult() {
+            return sweepLineResult;
+        }
+
+        public BigDecimal getBruteForceResult() {
+            return bruteForceResult;
+        }
+
+        public BigDecimal getDifference() {
+            return difference;
+        }
+
+        public boolean isWithinTolerance() {
+            return withinTolerance;
+        }
+
+        public long getSweepLineDuration() {
+            return sweepLineDuration;
+        }
+
+        public long getBruteForceDuration() {
+            return bruteForceDuration;
+        }
 
         public double getSpeedupRatio() {
             return (double) bruteForceDuration / sweepLineDuration;

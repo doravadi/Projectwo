@@ -9,7 +9,7 @@ public final class PaymentAllocation {
     private final BigDecimal totalPaymentAmount;
     private final LocalDateTime allocationTime;
     private final AllocationStrategy strategy;
-    private final Map<String, BigDecimal> bucketAllocations;  
+    private final Map<String, BigDecimal> bucketAllocations;
     private final BigDecimal totalInterestSaved;
     private final BigDecimal remainingPayment;
     private final AllocationMetrics metrics;
@@ -26,7 +26,9 @@ public final class PaymentAllocation {
             this.description = description;
         }
 
-        public String getDescription() { return description; }
+        public String getDescription() {
+            return description;
+        }
     }
 
     public PaymentAllocation(String allocationId, BigDecimal totalPaymentAmount,
@@ -45,7 +47,7 @@ public final class PaymentAllocation {
         validateAllocation();
     }
 
-    
+
     public static PaymentAllocation createOptimalAllocation(String allocationId,
                                                             BigDecimal paymentAmount,
                                                             Map<String, BigDecimal> bucketAllocations,
@@ -66,19 +68,40 @@ public final class PaymentAllocation {
                 bucketAllocations, BigDecimal.ZERO, remainingPayment, defaultMetrics);
     }
 
-    
-    public String getAllocationId() { return allocationId; }
-    public BigDecimal getTotalPaymentAmount() { return totalPaymentAmount; }
-    public LocalDateTime getAllocationTime() { return allocationTime; }
-    public AllocationStrategy getStrategy() { return strategy; }
+
+    public String getAllocationId() {
+        return allocationId;
+    }
+
+    public BigDecimal getTotalPaymentAmount() {
+        return totalPaymentAmount;
+    }
+
+    public LocalDateTime getAllocationTime() {
+        return allocationTime;
+    }
+
+    public AllocationStrategy getStrategy() {
+        return strategy;
+    }
+
     public Map<String, BigDecimal> getBucketAllocations() {
         return new HashMap<>(bucketAllocations);
     }
-    public BigDecimal getTotalInterestSaved() { return totalInterestSaved; }
-    public BigDecimal getRemainingPayment() { return remainingPayment; }
-    public AllocationMetrics getMetrics() { return metrics; }
 
-    
+    public BigDecimal getTotalInterestSaved() {
+        return totalInterestSaved;
+    }
+
+    public BigDecimal getRemainingPayment() {
+        return remainingPayment;
+    }
+
+    public AllocationMetrics getMetrics() {
+        return metrics;
+    }
+
+
     public BigDecimal getAllocatedAmount(String bucketId) {
         return bucketAllocations.getOrDefault(bucketId, BigDecimal.ZERO);
     }
@@ -108,7 +131,7 @@ public final class PaymentAllocation {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    
+
     public BigDecimal getInterestSavingsVs(PaymentAllocation other) {
         return this.totalInterestSaved.subtract(other.totalInterestSaved);
     }
@@ -121,7 +144,7 @@ public final class PaymentAllocation {
         return this.totalInterestSaved.compareTo(other.totalInterestSaved) > 0;
     }
 
-    
+
     public Map<String, Double> getBucketAllocationPercentages() {
         if (totalPaymentAmount.compareTo(BigDecimal.ZERO) == 0) {
             return new HashMap<>();
@@ -163,7 +186,7 @@ public final class PaymentAllocation {
             throw new IllegalArgumentException("Total allocated amount exceeds payment amount");
         }
 
-        
+
         for (Map.Entry<String, BigDecimal> entry : bucketAllocations.entrySet()) {
             if (entry.getValue().compareTo(BigDecimal.ZERO) < 0) {
                 throw new IllegalArgumentException("Allocation cannot be negative for bucket: " + entry.getKey());
@@ -196,7 +219,7 @@ public final class PaymentAllocation {
                 getAllocatedBucketCount(), totalInterestSaved);
     }
 
-    
+
     public static final class AllocationMetrics {
         private final int iterationCount;
         private final BigDecimal interestSaved;
@@ -211,10 +234,21 @@ public final class PaymentAllocation {
             this.computationTimeMs = computationTimeMs;
         }
 
-        public int getIterationCount() { return iterationCount; }
-        public BigDecimal getInterestSaved() { return interestSaved; }
-        public BigDecimal getOptimizationScore() { return optimizationScore; }
-        public long getComputationTimeMs() { return computationTimeMs; }
+        public int getIterationCount() {
+            return iterationCount;
+        }
+
+        public BigDecimal getInterestSaved() {
+            return interestSaved;
+        }
+
+        public BigDecimal getOptimizationScore() {
+            return optimizationScore;
+        }
+
+        public long getComputationTimeMs() {
+            return computationTimeMs;
+        }
 
         @Override
         public String toString() {

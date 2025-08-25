@@ -25,7 +25,9 @@ public final class AllocationInvariantBroken extends RuntimeException {
             this.description = description;
         }
 
-        public String getDescription() { return description; }
+        public String getDescription() {
+            return description;
+        }
     }
 
     public AllocationInvariantBroken(String message) {
@@ -57,7 +59,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         this.context = context != null ? Map.copyOf(context) : null;
     }
 
-    
+
     public static AllocationInvariantBroken negativeBalance(String bucketId,
                                                             BigDecimal expectedBalance,
                                                             BigDecimal actualBalance,
@@ -112,11 +114,23 @@ public final class AllocationInvariantBroken extends RuntimeException {
                 InvariantType.TOTAL_MISMATCH, context);
     }
 
-    
-    public String getBucketId() { return bucketId; }
-    public BigDecimal getExpectedBalance() { return expectedBalance; }
-    public BigDecimal getActualBalance() { return actualBalance; }
-    public InvariantType getViolationType() { return violationType; }
+
+    public String getBucketId() {
+        return bucketId;
+    }
+
+    public BigDecimal getExpectedBalance() {
+        return expectedBalance;
+    }
+
+    public BigDecimal getActualBalance() {
+        return actualBalance;
+    }
+
+    public InvariantType getViolationType() {
+        return violationType;
+    }
+
     public Map<String, Object> getContext() {
         return context != null ? Map.copyOf(context) : null;
     }
@@ -125,7 +139,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         return expectedBalance != null && actualBalance != null;
     }
 
-    
+
     public BigDecimal getBalanceDifference() {
         if (!hasBalanceComparison()) {
             return null;
@@ -133,21 +147,21 @@ public final class AllocationInvariantBroken extends RuntimeException {
         return actualBalance.subtract(expectedBalance).abs();
     }
 
-    
+
     public int getSeverityLevel() {
         if (violationType == null) return 0;
 
         return switch (violationType) {
-            case NEGATIVE_BALANCE -> 5;           
-            case MINIMUM_PAYMENT_VIOLATION -> 4; 
-            case ALLOCATION_OVERFLOW -> 4;       
-            case DP_INCONSISTENCY -> 3;         
-            case BUCKET_CAPACITY_EXCEEDED -> 3;  
-            case TOTAL_MISMATCH -> 2;            
+            case NEGATIVE_BALANCE -> 5;
+            case MINIMUM_PAYMENT_VIOLATION -> 4;
+            case ALLOCATION_OVERFLOW -> 4;
+            case DP_INCONSISTENCY -> 3;
+            case BUCKET_CAPACITY_EXCEEDED -> 3;
+            case TOTAL_MISMATCH -> 2;
         };
     }
 
-    
+
     public String getRecoveryAdvice() {
         if (violationType == null) {
             return "Review allocation logic and validate inputs";
@@ -169,7 +183,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         };
     }
 
-    
+
     public String getContextSummary() {
         if (context == null || context.isEmpty()) {
             return "No context available";
@@ -181,7 +195,7 @@ public final class AllocationInvariantBroken extends RuntimeException {
         }
 
         if (sb.length() > 2) {
-            sb.setLength(sb.length() - 2); 
+            sb.setLength(sb.length() - 2);
         }
 
         return sb.toString();

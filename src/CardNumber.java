@@ -23,21 +23,21 @@ public final class CardNumber implements Serializable {
             throw new IllegalArgumentException("Card number cannot be null or empty");
         }
 
-        
+
         String cleaned = number.replaceAll("[\\s-]", "");
 
-        
+
         if (!cleaned.matches("\\d+")) {
             throw new IllegalArgumentException("Card number must contain only digits");
         }
 
-        
+
         if (cleaned.length() < 13 || cleaned.length() > 19) {
             throw new IllegalArgumentException(
                     String.format("Card number must be 13-19 digits, got %d", cleaned.length()));
         }
 
-        
+
         if (!isValidLuhn(cleaned)) {
             throw new IllegalArgumentException("Invalid card number (Luhn check failed)");
         }
@@ -46,19 +46,19 @@ public final class CardNumber implements Serializable {
     }
 
     private long extractBin(String cardNumber) {
-        
-        int binLength = Math.min(8, cardNumber.length() - 4); 
-        binLength = Math.max(6, binLength); 
+
+        int binLength = Math.min(8, cardNumber.length() - 4);
+        binLength = Math.max(6, binLength);
 
         return Long.parseLong(cardNumber.substring(0, binLength));
     }
 
-    
+
     private boolean isValidLuhn(String number) {
         int sum = 0;
         boolean isEven = false;
 
-        
+
         for (int i = number.length() - 1; i >= 0; i--) {
             int digit = Character.getNumericValue(number.charAt(i));
 
@@ -86,7 +86,7 @@ public final class CardNumber implements Serializable {
 
     public String getMaskedNumber() {
         if (number.length() < 10) {
-            return number; 
+            return number;
         }
 
         return number.substring(0, 6) +

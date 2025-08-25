@@ -10,36 +10,36 @@ public final class PaymentAllocationDemo {
 
     public PaymentAllocationDemo() {
         this.service = new PaymentAllocationService();
-        this.random = new Random(12345); 
+        this.random = new Random(12345);
     }
 
-    
+
     public void runAllDemos() {
         System.out.println("🎯 PAYMENT ALLOCATION DP MODULE DEMO");
         System.out.println("=====================================");
 
         try {
-            
+
             System.out.println("\n1️⃣ BASIC ALLOCATION DEMO");
             basicAllocationDemo();
 
-            
+
             System.out.println("\n2️⃣ STRATEGY COMPARISON DEMO");
             strategyComparisonDemo();
 
-            
+
             System.out.println("\n3️⃣ DP vs BANK RULE COMPARISON");
             dpVsBankRuleDemo();
 
-            
+
             System.out.println("\n4️⃣ GRANULARITY IMPACT TEST");
             granularityImpactDemo();
 
-            
+
             System.out.println("\n5️⃣ EDGE CASES & EXCEPTION HANDLING");
             edgeCasesDemo();
 
-            
+
             System.out.println("\n6️⃣ PERFORMANCE BENCHMARK");
             performanceBenchmarkDemo();
 
@@ -51,11 +51,11 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    
+
     private void basicAllocationDemo() {
         String accountId = "ACC_001";
 
-        
+
         List<DebtBucket> buckets = createSampleBuckets();
         service.setAccountBuckets(accountId, buckets);
 
@@ -65,7 +65,7 @@ public final class PaymentAllocationDemo {
         BigDecimal paymentAmount = new BigDecimal("1500.00");
         System.out.println("\n💰 Payment Amount: " + paymentAmount + " TL");
 
-        
+
         PaymentAllocation allocation = service.allocatePayment(accountId, paymentAmount,
                 PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
 
@@ -84,7 +84,7 @@ public final class PaymentAllocationDemo {
         System.out.println("  Computation Time: " + allocation.getMetrics().getComputationTimeMs() + "ms");
     }
 
-    
+
     private void strategyComparisonDemo() {
         String accountId = "ACC_002";
         List<DebtBucket> buckets = createComplexBuckets();
@@ -116,7 +116,7 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    
+
     private void dpVsBankRuleDemo() {
         String accountId = "ACC_003";
         List<DebtBucket> buckets = createHighInterestBuckets();
@@ -139,7 +139,7 @@ public final class PaymentAllocationDemo {
         printAllocationDetails(comparison.getDpOptimalAllocation());
     }
 
-    
+
     private void granularityImpactDemo() {
         String accountId = "ACC_004";
         List<DebtBucket> buckets = createSampleBuckets();
@@ -150,7 +150,7 @@ public final class PaymentAllocationDemo {
         System.out.println("🔬 Granularity Impact Analysis:");
         System.out.println("  Payment Amount: " + paymentAmount + " TL");
 
-        int[] granularities = {1, 10, 100, 1000}; 
+        int[] granularities = {1, 10, 100, 1000};
 
         for (int granularity : granularities) {
             PaymentOptimizer optimizer = new PaymentOptimizer(granularity);
@@ -169,18 +169,18 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    
+
     private void edgeCasesDemo() {
         System.out.println("🧪 Edge Cases Testing:");
 
-        
+
         testEdgeCase("Empty buckets", () -> {
             service.setAccountBuckets("EDGE_001", new ArrayList<>());
             return service.allocatePayment("EDGE_001", new BigDecimal("100"),
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         });
 
-        
+
         testEdgeCase("Zero payment", () -> {
             List<DebtBucket> buckets = createSampleBuckets();
             service.setAccountBuckets("EDGE_002", buckets);
@@ -188,7 +188,7 @@ public final class PaymentAllocationDemo {
                     PaymentAllocation.AllocationStrategy.BANK_RULE);
         });
 
-        
+
         testEdgeCase("Payment exceeds total debt", () -> {
             List<DebtBucket> buckets = List.of(
                     DebtBucket.createPurchaseBucket("SMALL_1", new BigDecimal("50"), LocalDate.now().plusDays(30))
@@ -198,21 +198,21 @@ public final class PaymentAllocationDemo {
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
         });
 
-        
+
         testEdgeCase("Manual allocation overflow", () -> {
             List<DebtBucket> buckets = createSampleBuckets();
             service.setAccountBuckets("EDGE_004", buckets);
 
-            
+
             Map<String, BigDecimal> manualAllocations = new HashMap<>();
-            manualAllocations.put("PURCHASE_001", new BigDecimal("10000")); 
+            manualAllocations.put("PURCHASE_001", new BigDecimal("10000"));
 
             AllocationStrategy manualStrategy = new AllocationStrategy.ManualStrategy(manualAllocations);
             return manualStrategy.allocate(buckets, new BigDecimal("500"), "MANUAL_001");
         });
     }
 
-    
+
     private void performanceBenchmarkDemo() {
         System.out.println("⚡ Performance Benchmark:");
 
@@ -224,13 +224,13 @@ public final class PaymentAllocationDemo {
             List<DebtBucket> buckets = createRandomBuckets(bucketCount);
             service.setAccountBuckets(accountId, buckets);
 
-            
+
             long startTime = System.nanoTime();
             PaymentAllocation dpResult = service.allocatePayment(accountId, basePayment,
                     PaymentAllocation.AllocationStrategy.DP_OPTIMAL);
             long dpTime = System.nanoTime() - startTime;
 
-            
+
             startTime = System.nanoTime();
             PaymentAllocation bankResult = service.allocatePayment(accountId, basePayment,
                     PaymentAllocation.AllocationStrategy.BANK_RULE);
@@ -243,13 +243,13 @@ public final class PaymentAllocationDemo {
                     (double) dpTime / bankTime);
         }
 
-        
+
         System.out.println("\n📊 System Statistics:");
         Map<String, Object> stats = service.getSystemStatistics();
         stats.forEach((key, value) -> System.out.println("  " + key + ": " + value));
     }
 
-    
+
     private List<DebtBucket> createSampleBuckets() {
         return List.of(
                 DebtBucket.createPurchaseBucket("PURCHASE_001", new BigDecimal("1200.50"), LocalDate.now().plusDays(30)),
@@ -290,8 +290,8 @@ public final class PaymentAllocationDemo {
 
         for (int i = 0; i < count; i++) {
             DebtBucket.BucketType type = types[random.nextInt(types.length)];
-            BigDecimal balance = new BigDecimal(100 + random.nextInt(4900)); 
-            LocalDate dueDate = LocalDate.now().plusDays(random.nextInt(60) - 10); 
+            BigDecimal balance = new BigDecimal(100 + random.nextInt(4900));
+            LocalDate dueDate = LocalDate.now().plusDays(random.nextInt(60) - 10);
 
             String bucketId = type.name() + "_" + String.format("%03d", i);
 
@@ -300,8 +300,8 @@ public final class PaymentAllocationDemo {
                 case CASH_ADVANCE -> buckets.add(DebtBucket.createCashAdvanceBucket(bucketId, balance, dueDate));
                 case OVERDUE -> buckets.add(DebtBucket.createOverdueBucket(bucketId, balance, dueDate));
                 default -> {
-                    BigDecimal rate = new BigDecimal("0.10").add(new BigDecimal(random.nextDouble() * 0.30)); 
-                    BigDecimal minPayment = balance.multiply(new BigDecimal("0.05")); 
+                    BigDecimal rate = new BigDecimal("0.10").add(new BigDecimal(random.nextDouble() * 0.30));
+                    BigDecimal minPayment = balance.multiply(new BigDecimal("0.05"));
                     buckets.add(new DebtBucket(bucketId, type, balance, rate, minPayment, dueDate, type.getDefaultPriority()));
                 }
             }
@@ -332,7 +332,7 @@ public final class PaymentAllocationDemo {
         }
     }
 
-    
+
     public static void main(String[] args) {
         PaymentAllocationDemo demo = new PaymentAllocationDemo();
         demo.runAllDemos();

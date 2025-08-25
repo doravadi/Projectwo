@@ -15,7 +15,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     private final LocalDateTime detectionTime;
     private final String opportunityId;
 
-    
+
     private final int pathLength;
     private final BigDecimal minInvestment;
     private final OpportunityQuality quality;
@@ -40,19 +40,48 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         validateOpportunity();
     }
 
-    
-    public List<Currency> getCurrencyPath() { return currencyPath; }
-    public List<CurrencyPair> getPairPath() { return pairPath; }
-    public BigDecimal getTotalExchangeRate() { return totalExchangeRate; }
-    public BigDecimal getProfitPercentage() { return profitPercentage; }
-    public Currency getStartCurrency() { return startCurrency; }
-    public LocalDateTime getDetectionTime() { return detectionTime; }
-    public String getOpportunityId() { return opportunityId; }
-    public int getPathLength() { return pathLength; }
-    public BigDecimal getMinInvestment() { return minInvestment; }
-    public OpportunityQuality getQuality() { return quality; }
 
-    
+    public List<Currency> getCurrencyPath() {
+        return currencyPath;
+    }
+
+    public List<CurrencyPair> getPairPath() {
+        return pairPath;
+    }
+
+    public BigDecimal getTotalExchangeRate() {
+        return totalExchangeRate;
+    }
+
+    public BigDecimal getProfitPercentage() {
+        return profitPercentage;
+    }
+
+    public Currency getStartCurrency() {
+        return startCurrency;
+    }
+
+    public LocalDateTime getDetectionTime() {
+        return detectionTime;
+    }
+
+    public String getOpportunityId() {
+        return opportunityId;
+    }
+
+    public int getPathLength() {
+        return pathLength;
+    }
+
+    public BigDecimal getMinInvestment() {
+        return minInvestment;
+    }
+
+    public OpportunityQuality getQuality() {
+        return quality;
+    }
+
+
     public boolean isCycle() {
         return currencyPath.size() > 1 &&
                 currencyPath.get(0).equals(currencyPath.get(currencyPath.size() - 1));
@@ -67,7 +96,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
             return false;
         }
 
-        
+
         List<Currency> thisNormalized = normalizeCyclePath(this.currencyPath);
         List<Currency> otherNormalized = normalizeCyclePath(other.currencyPath);
 
@@ -75,7 +104,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 thisNormalized.equals(reverseList(otherNormalized));
     }
 
-    
+
     public BigDecimal calculateProfit(BigDecimal investmentAmount) {
         Objects.requireNonNull(investmentAmount, "Investment amount cannot be null");
         if (investmentAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -86,7 +115,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         return finalAmount.subtract(investmentAmount);
     }
 
-    
+
     public ExecutionResult simulateExecution(BigDecimal investmentAmount) {
         Objects.requireNonNull(investmentAmount, "Investment amount cannot be null");
 
@@ -95,7 +124,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         List<ExecutionStep> steps = new ArrayList<>();
 
         for (CurrencyPair pair : pairPath) {
-            
+
             BigDecimal beforeAmount = currentAmount;
             currentAmount = pair.convertWithBid(currentAmount);
             BigDecimal spread = pair.getSpread().multiply(beforeAmount, MATH_CONTEXT)
@@ -113,26 +142,26 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 realizedProfitPercentage, totalSpread, steps);
     }
 
-    
+
     public boolean isStale(int maxAgeMinutes) {
         return pairPath.stream().anyMatch(pair -> pair.isStale(maxAgeMinutes));
     }
 
-    
-    public RiskAssessment assessRisk() {
-        
-        int pathRisk = Math.min(pathLength - 2, 5) * 20; 
 
-        
+    public RiskAssessment assessRisk() {
+
+        int pathRisk = Math.min(pathLength - 2, 5) * 20;
+
+
         double avgSpreadBps = pairPath.stream()
                 .mapToDouble(pair -> pair.getSpreadBps().doubleValue())
                 .average().orElse(0.0);
-        int spreadRisk = (int) Math.min(avgSpreadBps / 2, 50); 
+        int spreadRisk = (int) Math.min(avgSpreadBps / 2, 50);
 
-        
-        int ageRisk = isStale(5) ? 30 : 0; 
 
-        
+        int ageRisk = isStale(5) ? 30 : 0;
+
+
         int qualityRisk = switch (quality) {
             case EXCELLENT -> 0;
             case GOOD -> 10;
@@ -145,7 +174,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         return new RiskAssessment(totalRisk, pathRisk, spreadRisk, ageRisk, qualityRisk);
     }
 
-    
+
     private String generateOpportunityId() {
         String pathStr = currencyPath.stream()
                 .map(Currency::name)
@@ -156,14 +185,14 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     }
 
     private BigDecimal calculateMinInvestment() {
-        
+
         BigDecimal totalSpreadCost = pairPath.stream()
                 .map(CurrencyPair::getSpread)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        
+
         if (profitPercentage.compareTo(BigDecimal.ZERO) <= 0) {
-            return new BigDecimal("10000"); 
+            return new BigDecimal("10000");
         }
 
         BigDecimal profitRate = profitPercentage.divide(new BigDecimal("100"), MATH_CONTEXT);
@@ -177,18 +206,18 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
                 .mapToDouble(pair -> pair.getSpreadBps().doubleValue())
                 .average().orElse(100.0);
 
-        
+
         int score = 100;
 
-        
+
         if (profitValue >= 2.0) score += 20;
         else if (profitValue >= 1.0) score += 10;
         else if (profitValue <= 0.1) score -= 30;
 
-        
+
         score -= (pathLen - 3) * 10;
 
-        
+
         score -= (int) (avgSpread / 5);
 
         if (score >= 80) return OpportunityQuality.EXCELLENT;
@@ -200,7 +229,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     private List<Currency> normalizeCyclePath(List<Currency> path) {
         if (path.size() <= 2) return new ArrayList<>(path);
 
-        
+
         Currency minCurrency = path.stream().min(Currency::compareTo).orElse(path.get(0));
         int startIndex = path.indexOf(minCurrency);
 
@@ -232,12 +261,12 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
         }
     }
 
-    
+
     public enum OpportunityQuality {
         EXCELLENT, GOOD, FAIR, POOR
     }
 
-    
+
     public static final class ExecutionStep {
         private final CurrencyPair pair;
         private final BigDecimal inputAmount;
@@ -252,10 +281,21 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
             this.spreadCost = spreadCost;
         }
 
-        public CurrencyPair getPair() { return pair; }
-        public BigDecimal getInputAmount() { return inputAmount; }
-        public BigDecimal getOutputAmount() { return outputAmount; }
-        public BigDecimal getSpreadCost() { return spreadCost; }
+        public CurrencyPair getPair() {
+            return pair;
+        }
+
+        public BigDecimal getInputAmount() {
+            return inputAmount;
+        }
+
+        public BigDecimal getOutputAmount() {
+            return outputAmount;
+        }
+
+        public BigDecimal getSpreadCost() {
+            return spreadCost;
+        }
 
         @Override
         public String toString() {
@@ -283,12 +323,29 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
             this.steps = List.copyOf(steps);
         }
 
-        public BigDecimal getInvestmentAmount() { return investmentAmount; }
-        public BigDecimal getFinalAmount() { return finalAmount; }
-        public BigDecimal getRealizedProfit() { return realizedProfit; }
-        public BigDecimal getRealizedProfitPercentage() { return realizedProfitPercentage; }
-        public BigDecimal getTotalSpreadCost() { return totalSpreadCost; }
-        public List<ExecutionStep> getSteps() { return steps; }
+        public BigDecimal getInvestmentAmount() {
+            return investmentAmount;
+        }
+
+        public BigDecimal getFinalAmount() {
+            return finalAmount;
+        }
+
+        public BigDecimal getRealizedProfit() {
+            return realizedProfit;
+        }
+
+        public BigDecimal getRealizedProfitPercentage() {
+            return realizedProfitPercentage;
+        }
+
+        public BigDecimal getTotalSpreadCost() {
+            return totalSpreadCost;
+        }
+
+        public List<ExecutionStep> getSteps() {
+            return steps;
+        }
 
         @Override
         public String toString() {
@@ -298,7 +355,7 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
     }
 
     public static final class RiskAssessment {
-        private final int totalRisk;        
+        private final int totalRisk;
         private final int pathRisk;
         private final int spreadRisk;
         private final int ageRisk;
@@ -313,11 +370,25 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
             this.qualityRisk = qualityRisk;
         }
 
-        public int getTotalRisk() { return totalRisk; }
-        public int getPathRisk() { return pathRisk; }
-        public int getSpreadRisk() { return spreadRisk; }
-        public int getAgeRisk() { return ageRisk; }
-        public int getQualityRisk() { return qualityRisk; }
+        public int getTotalRisk() {
+            return totalRisk;
+        }
+
+        public int getPathRisk() {
+            return pathRisk;
+        }
+
+        public int getSpreadRisk() {
+            return spreadRisk;
+        }
+
+        public int getAgeRisk() {
+            return ageRisk;
+        }
+
+        public int getQualityRisk() {
+            return qualityRisk;
+        }
 
         public String getRiskLevel() {
             if (totalRisk <= 20) return "LOW";
@@ -335,15 +406,15 @@ public final class ArbitrageOpportunity implements Comparable<ArbitrageOpportuni
 
     @Override
     public int compareTo(ArbitrageOpportunity other) {
-        
+
         int profitCompare = other.profitPercentage.compareTo(this.profitPercentage);
         if (profitCompare != 0) return profitCompare;
 
-        
+
         int pathCompare = Integer.compare(this.pathLength, other.pathLength);
         if (pathCompare != 0) return pathCompare;
 
-        
+
         return other.detectionTime.compareTo(this.detectionTime);
     }
 

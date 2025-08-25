@@ -19,7 +19,7 @@ public final class DateRange implements Comparable<DateRange> {
         }
     }
 
-    
+
     public static DateRange of(LocalDate startDate, LocalDate endDate) {
         return new DateRange(startDate, endDate);
     }
@@ -40,7 +40,7 @@ public final class DateRange implements Comparable<DateRange> {
         return new DateRange(start, end);
     }
 
-    
+
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -49,7 +49,7 @@ public final class DateRange implements Comparable<DateRange> {
         return endDate;
     }
 
-    
+
     public boolean contains(LocalDate date) {
         Objects.requireNonNull(date, "Date cannot be null");
         return !date.isBefore(startDate) && !date.isAfter(endDate);
@@ -72,7 +72,7 @@ public final class DateRange implements Comparable<DateRange> {
         return startDate.equals(endDate);
     }
 
-    
+
     public DateRange extend(int days) {
         return new DateRange(startDate, endDate.plusDays(days));
     }

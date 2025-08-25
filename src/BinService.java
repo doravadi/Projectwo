@@ -17,7 +17,7 @@ public class BinService {
         this.countryCache = new ConcurrentHashMap<>();
     }
 
-    
+
     public PaymentRouting routePayment(CardNumber cardNumber) throws DomainException {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
 
@@ -44,7 +44,7 @@ public class BinService {
         }
     }
 
-    
+
     public Map<CardNumber, PaymentRouting> routePayments(List<CardNumber> cardNumbers) throws DomainException {
         Objects.requireNonNull(cardNumbers, "Card numbers cannot be null");
 
@@ -53,16 +53,16 @@ public class BinService {
         }
 
         try {
-            
+
             List<Long> bins = cardNumbers.stream()
                     .map(CardNumber::getBin)
                     .distinct()
                     .collect(Collectors.toList());
 
-            
+
             Map<Long, BinRange> binRanges = repository.findRangesForBins(bins);
 
-            
+
             Map<CardNumber, PaymentRouting> results = new HashMap<>();
 
             for (CardNumber cardNumber : cardNumbers) {
@@ -80,7 +80,7 @@ public class BinService {
 
                     results.put(cardNumber, routing);
                 } else {
-                    
+
                     logMissingBin(bin);
                 }
             }
@@ -92,7 +92,7 @@ public class BinService {
         }
     }
 
-    
+
     public void addBinRange(BinRange range) throws DomainException {
         Objects.requireNonNull(range, "BIN range cannot be null");
 
@@ -111,7 +111,7 @@ public class BinService {
         }
     }
 
-    
+
     public List<BinRange> findRangesByBank(String bankName) throws DomainException {
         Objects.requireNonNull(bankName, "Bank name cannot be null");
 
@@ -128,7 +128,7 @@ public class BinService {
         }
     }
 
-    
+
     public List<BinRange> findRangesByCountry(String country) throws DomainException {
         Objects.requireNonNull(country, "Country cannot be null");
 
@@ -145,12 +145,12 @@ public class BinService {
         }
     }
 
-    
+
     public void clearCache() {
         invalidateCache();
     }
 
-    
+
     private void validateBinRange(BinRange range) throws DomainException {
         if (range.getStartBin() < 100000L) {
             throw new InvalidBinRangeException("BIN start too small: " + range.getStartBin());
@@ -170,12 +170,12 @@ public class BinService {
     }
 
     private boolean isDomesticTransaction(BinRange range) {
-        
+
         return "TR".equals(range.getCountry());
     }
 
     private RiskLevel calculateRiskLevel(BinRange range) {
-        
+
         if ("US".equals(range.getCountry()) || "EU".equals(range.getCountry())) {
             return RiskLevel.LOW;
         } else if ("TR".equals(range.getCountry())) {
@@ -192,19 +192,19 @@ public class BinService {
     }
 
     private synchronized void refreshCache() throws InfrastructureException {
-        if (cacheValid) return; 
+        if (cacheValid) return;
 
         List<BinRange> allRanges = repository.findAll();
 
-        
+
         Map<String, List<BinRange>> newBankCache = allRanges.stream()
                 .collect(Collectors.groupingBy(BinRange::getBankName));
 
-        
+
         Map<String, List<BinRange>> newCountryCache = allRanges.stream()
                 .collect(Collectors.groupingBy(BinRange::getCountry));
 
-        
+
         bankCache.clear();
         bankCache.putAll(newBankCache);
         countryCache.clear();
@@ -229,7 +229,7 @@ public class BinService {
     }
 
     private void addRangeMergeConflicts(BinRange range, List<BinRange> successful, List<BinRangeConflict> conflicts) {
-        
+
         try {
             repository.addRange(range);
             successful.add(range);
@@ -239,23 +239,23 @@ public class BinService {
     }
 
     private void logMissingBin(long bin) {
-        
+
         System.err.println("Warning: No BIN range found for BIN: " + bin);
     }
 
     private void validateRangeConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        
-        
+
+
     }
 
     private void validateBankConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        
-        
+
+
     }
 
     private void validateCountryConsistency(List<BinRange> ranges, ValidationReport.Builder builder) {
-        
-        
+
+
     }
 
     private BinRange findLargestRange(List<BinRange> ranges) {

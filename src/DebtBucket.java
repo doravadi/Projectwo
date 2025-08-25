@@ -10,17 +10,17 @@ public final class DebtBucket implements Comparable<DebtBucket> {
     private final String bucketId;
     private final BucketType type;
     private final BigDecimal currentBalance;
-    private final BigDecimal interestRate;        
-    private final BigDecimal minimumPayment;      
-    private final LocalDate dueDate;              
-    private final int priority;                   
+    private final BigDecimal interestRate;
+    private final BigDecimal minimumPayment;
+    private final LocalDate dueDate;
+    private final int priority;
 
     public enum BucketType {
         PURCHASE(1, "Alışveriş"),
         CASH_ADVANCE(2, "Nakit Avans"),
         INSTALLMENT(3, "Taksit"),
         FEES_INTEREST(4, "Faiz ve Komisyon"),
-        OVERDUE(0, "Vadesi Geçmiş");  
+        OVERDUE(0, "Vadesi Geçmiş");
 
         private final int defaultPriority;
         private final String description;
@@ -30,8 +30,13 @@ public final class DebtBucket implements Comparable<DebtBucket> {
             this.description = description;
         }
 
-        public int getDefaultPriority() { return defaultPriority; }
-        public String getDescription() { return description; }
+        public int getDefaultPriority() {
+            return defaultPriority;
+        }
+
+        public String getDescription() {
+            return description;
+        }
     }
 
     public DebtBucket(String bucketId, BucketType type, BigDecimal currentBalance,
@@ -48,7 +53,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
         validateBucket();
     }
 
-    
+
     public static DebtBucket createPurchaseBucket(String bucketId, BigDecimal balance, LocalDate dueDate) {
         return new DebtBucket(bucketId, BucketType.PURCHASE, balance,
                 new BigDecimal("0.18"), balance.multiply(new BigDecimal("0.05")),
@@ -63,20 +68,40 @@ public final class DebtBucket implements Comparable<DebtBucket> {
 
     public static DebtBucket createOverdueBucket(String bucketId, BigDecimal balance, LocalDate dueDate) {
         return new DebtBucket(bucketId, BucketType.OVERDUE, balance,
-                new BigDecimal("0.40"), balance, 
+                new BigDecimal("0.40"), balance,
                 dueDate, BucketType.OVERDUE.getDefaultPriority());
     }
 
-    
-    public String getBucketId() { return bucketId; }
-    public BucketType getType() { return type; }
-    public BigDecimal getCurrentBalance() { return currentBalance; }
-    public BigDecimal getInterestRate() { return interestRate; }
-    public BigDecimal getMinimumPayment() { return minimumPayment; }
-    public LocalDate getDueDate() { return dueDate; }
-    public int getPriority() { return priority; }
 
-    
+    public String getBucketId() {
+        return bucketId;
+    }
+
+    public BucketType getType() {
+        return type;
+    }
+
+    public BigDecimal getCurrentBalance() {
+        return currentBalance;
+    }
+
+    public BigDecimal getInterestRate() {
+        return interestRate;
+    }
+
+    public BigDecimal getMinimumPayment() {
+        return minimumPayment;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+
     public boolean hasDebt() {
         return currentBalance.compareTo(BigDecimal.ZERO) > 0;
     }
@@ -88,17 +113,17 @@ public final class DebtBucket implements Comparable<DebtBucket> {
     public BigDecimal calculateDailyInterest() {
         if (!hasDebt()) return BigDecimal.ZERO;
 
-        
+
         return currentBalance.multiply(interestRate)
                 .divide(new BigDecimal("365"), 6, BigDecimal.ROUND_HALF_UP);
     }
 
     public BigDecimal getAvailablePaymentCapacity() {
-        
+
         return currentBalance.subtract(minimumPayment);
     }
 
-    
+
     public BigDecimal getValueDensity() {
         if (currentBalance.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
@@ -106,7 +131,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
         return interestRate.divide(currentBalance, 8, BigDecimal.ROUND_HALF_UP);
     }
 
-    
+
     public DebtBucket withPayment(BigDecimal paymentAmount) {
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
         if (paymentAmount.compareTo(BigDecimal.ZERO) < 0) {
@@ -118,7 +143,7 @@ public final class DebtBucket implements Comparable<DebtBucket> {
             newBalance = BigDecimal.ZERO;
         }
 
-        
+
         BigDecimal newMinimum = newBalance.compareTo(BigDecimal.ZERO) == 0 ?
                 BigDecimal.ZERO :
                 minimumPayment.multiply(newBalance).divide(currentBalance, 2, BigDecimal.ROUND_HALF_UP);
@@ -163,19 +188,19 @@ public final class DebtBucket implements Comparable<DebtBucket> {
 
     @Override
     public int compareTo(DebtBucket other) {
-        
+
         int priorityCompare = Integer.compare(priority, other.priority);
         if (priorityCompare != 0) {
             return priorityCompare;
         }
 
-        
+
         int rateCompare = other.interestRate.compareTo(interestRate);
         if (rateCompare != 0) {
             return rateCompare;
         }
 
-        
+
         return bucketId.compareTo(other.bucketId);
     }
 

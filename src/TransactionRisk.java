@@ -8,7 +8,7 @@ import java.util.Set;
 public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     private final String transactionId;
-    private final String cardNumber;        
+    private final String cardNumber;
     private final BigDecimal amount;
     private final String merchantName;
     private final String merchantCity;
@@ -16,8 +16,8 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
     private final LocalDateTime transactionTime;
     private final TransactionType type;
 
-    
-    private final int riskScore;           
+
+    private final int riskScore;
     private final RiskLevel riskLevel;
     private final EnumSet<RiskFactor> riskFactors;
     private final String riskReason;
@@ -48,12 +48,20 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                     return level;
                 }
             }
-            return LOW; 
+            return LOW;
         }
 
-        public int getMinScore() { return minScore; }
-        public int getMaxScore() { return maxScore; }
-        public String getDescription() { return description; }
+        public int getMinScore() {
+            return minScore;
+        }
+
+        public int getMaxScore() {
+            return maxScore;
+        }
+
+        public String getDescription() {
+            return description;
+        }
     }
 
     public enum RiskFactor {
@@ -74,7 +82,9 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
             this.description = description;
         }
 
-        public String getDescription() { return description; }
+        public String getDescription() {
+            return description;
+        }
     }
 
     public TransactionRisk(String transactionId, String cardNumber, BigDecimal amount,
@@ -98,7 +108,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
         validateTransaction();
     }
 
-    
+
     public static TransactionRisk lowRisk(String transactionId, String cardNumber, BigDecimal amount,
                                           String merchantName, String merchantCity, String merchantCountry,
                                           LocalDateTime transactionTime, TransactionType type) {
@@ -116,21 +126,56 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                 merchantCountry, transactionTime, type, score, factors, reason);
     }
 
-    
-    public String getTransactionId() { return transactionId; }
-    public String getCardNumber() { return cardNumber; }
-    public BigDecimal getAmount() { return amount; }
-    public String getMerchantName() { return merchantName; }
-    public String getMerchantCity() { return merchantCity; }
-    public String getMerchantCountry() { return merchantCountry; }
-    public LocalDateTime getTransactionTime() { return transactionTime; }
-    public TransactionType getType() { return type; }
-    public int getRiskScore() { return riskScore; }
-    public RiskLevel getRiskLevel() { return riskLevel; }
-    public EnumSet<RiskFactor> getRiskFactors() { return EnumSet.copyOf(riskFactors); }
-    public String getRiskReason() { return riskReason; }
 
-    
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getMerchantName() {
+        return merchantName;
+    }
+
+    public String getMerchantCity() {
+        return merchantCity;
+    }
+
+    public String getMerchantCountry() {
+        return merchantCountry;
+    }
+
+    public LocalDateTime getTransactionTime() {
+        return transactionTime;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public int getRiskScore() {
+        return riskScore;
+    }
+
+    public RiskLevel getRiskLevel() {
+        return riskLevel;
+    }
+
+    public EnumSet<RiskFactor> getRiskFactors() {
+        return EnumSet.copyOf(riskFactors);
+    }
+
+    public String getRiskReason() {
+        return riskReason;
+    }
+
+
     public boolean isHighRisk() {
         return riskLevel == RiskLevel.HIGH || riskLevel == RiskLevel.CRITICAL;
     }
@@ -163,14 +208,14 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     public boolean isNightTransaction() {
         int hour = transactionTime.getHour();
-        return hour < 6 || hour > 22; 
+        return hour < 6 || hour > 22;
     }
 
     public boolean isWeekendTransaction() {
-        return transactionTime.getDayOfWeek().getValue() >= 6; 
+        return transactionTime.getDayOfWeek().getValue() >= 6;
     }
 
-    
+
     private static int calculateRiskScore(EnumSet<RiskFactor> factors, BigDecimal amount) {
         int baseScore = 10;
 
@@ -189,17 +234,17 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
             };
         }
 
-        
+
         if (amount.compareTo(new BigDecimal("10000")) > 0) {
-            baseScore += 15; 
+            baseScore += 15;
         } else if (amount.compareTo(new BigDecimal("100")) < 0) {
-            baseScore -= 5; 
+            baseScore -= 5;
         }
 
         return Math.max(0, Math.min(100, baseScore));
     }
 
-    
+
     public RiskAnalysis getDetailedAnalysis() {
         return new RiskAnalysis(
                 riskScore,
@@ -208,7 +253,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
                 isNightTransaction(),
                 isWeekendTransaction(),
                 isInternational(),
-                amount.compareTo(new BigDecimal("5000")) > 0, 
+                amount.compareTo(new BigDecimal("5000")) > 0,
                 calculateUrgency()
         );
     }
@@ -234,7 +279,7 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
         }
     }
 
-    
+
     public enum Urgency {
         LOW, MEDIUM, HIGH, IMMEDIATE
     }
@@ -262,15 +307,38 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
             this.urgency = urgency;
         }
 
-        
-        public int getRiskScore() { return riskScore; }
-        public RiskLevel getRiskLevel() { return riskLevel; }
-        public int getFactorCount() { return factorCount; }
-        public boolean isNightTransaction() { return nightTransaction; }
-        public boolean isWeekendTransaction() { return weekendTransaction; }
-        public boolean isInternational() { return international; }
-        public boolean isHighAmount() { return highAmount; }
-        public Urgency getUrgency() { return urgency; }
+
+        public int getRiskScore() {
+            return riskScore;
+        }
+
+        public RiskLevel getRiskLevel() {
+            return riskLevel;
+        }
+
+        public int getFactorCount() {
+            return factorCount;
+        }
+
+        public boolean isNightTransaction() {
+            return nightTransaction;
+        }
+
+        public boolean isWeekendTransaction() {
+            return weekendTransaction;
+        }
+
+        public boolean isInternational() {
+            return international;
+        }
+
+        public boolean isHighAmount() {
+            return highAmount;
+        }
+
+        public Urgency getUrgency() {
+            return urgency;
+        }
 
         @Override
         public String toString() {
@@ -281,15 +349,15 @@ public final class TransactionRisk implements Comparable<TransactionRisk> {
 
     @Override
     public int compareTo(TransactionRisk other) {
-        
+
         int scoreCompare = Integer.compare(other.riskScore, this.riskScore);
         if (scoreCompare != 0) return scoreCompare;
 
-        
+
         int timeCompare = other.transactionTime.compareTo(this.transactionTime);
         if (timeCompare != 0) return timeCompare;
 
-        
+
         return other.amount.compareTo(this.amount);
     }
 

@@ -22,12 +22,20 @@ public final class MatchValidation implements Serializable {
         return new Builder();
     }
 
-    
-    public List<String> getErrors() { return errors; }
-    public List<String> getWarnings() { return warnings; }
-    public List<String> getInfos() { return infos; }
 
-    
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    public List<String> getInfos() {
+        return infos;
+    }
+
+
     public boolean isValid() {
         return errors.isEmpty();
     }

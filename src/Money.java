@@ -9,20 +9,20 @@ public final class Money implements Comparable<Money>, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    
+
     public static final MathContext MONEY_CONTEXT = new MathContext(19, RoundingMode.HALF_EVEN);
 
     private final BigDecimal amount;
     private final Currency currency;
 
-    
+
     private Money(BigDecimal amount, Currency currency) {
         this.amount = Objects.requireNonNull(amount, "Amount cannot be null")
                 .round(MONEY_CONTEXT);
         this.currency = Objects.requireNonNull(currency, "Currency cannot be null");
     }
 
-    
+
     public static Money of(BigDecimal amount, Currency currency) {
         return new Money(amount, currency);
     }
@@ -39,7 +39,7 @@ public final class Money implements Comparable<Money>, Serializable {
         return new Money(BigDecimal.ZERO, currency);
     }
 
-    
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -48,7 +48,7 @@ public final class Money implements Comparable<Money>, Serializable {
         return currency;
     }
 
-    
+
     public Money add(Money other) {
         validateSameCurrency(other);
         return new Money(this.amount.add(other.amount, MONEY_CONTEXT), this.currency);
@@ -67,7 +67,7 @@ public final class Money implements Comparable<Money>, Serializable {
         return new Money(this.amount.divide(divisor, MONEY_CONTEXT), this.currency);
     }
 
-    
+
     public boolean isPositive() {
         return amount.compareTo(BigDecimal.ZERO) > 0;
     }
@@ -80,7 +80,7 @@ public final class Money implements Comparable<Money>, Serializable {
         return amount.compareTo(BigDecimal.ZERO) == 0;
     }
 
-    
+
     private void validateSameCurrency(Money other) {
         if (!this.currency.equals(other.currency)) {
             throw new IllegalArgumentException(
@@ -89,7 +89,7 @@ public final class Money implements Comparable<Money>, Serializable {
         }
     }
 
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

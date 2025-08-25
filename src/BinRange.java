@@ -11,7 +11,7 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
     private final String cardType;
     private final String country;
 
-    
+
     private BinRange(long startBin, long endBin, String bankName, String cardType, String country) {
         if (startBin > endBin) {
             throw new IllegalArgumentException(
@@ -29,12 +29,12 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
         this.country = Objects.requireNonNull(country, "Country cannot be null");
     }
 
-    
+
     public static BinRange of(long startBin, long endBin, String bankName, String cardType, String country) {
         return new BinRange(startBin, endBin, bankName, cardType, country);
     }
 
-    
+
     public long getStartBin() {
         return startBin;
     }
@@ -55,7 +55,7 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
         return country;
     }
 
-    
+
     public boolean contains(long bin) {
         return bin >= startBin && bin <= endBin;
     }
@@ -68,13 +68,13 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
         return endBin - startBin + 1;
     }
 
-    
+
     public boolean isSingleBin() {
         return startBin == endBin;
     }
 
     public boolean isPrefix() {
-        
+
         String startStr = String.valueOf(startBin);
         String endStr = String.valueOf(endBin);
 
@@ -86,7 +86,7 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
         return false;
     }
 
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -107,13 +107,13 @@ public final class BinRange implements Comparable<BinRange>, Serializable {
 
     @Override
     public int compareTo(BinRange other) {
-        
+
         int startComparison = Long.compare(this.startBin, other.startBin);
         if (startComparison != 0) {
             return startComparison;
         }
 
-        
+
         return Long.compare(this.endBin, other.endBin);
     }
 

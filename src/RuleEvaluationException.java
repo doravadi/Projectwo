@@ -35,6 +35,11 @@ public final class RuleEvaluationException extends Exception {
                 ", expression='" + expression + "']: " + message;
     }
 
-    public String getRuleId() { return ruleId; }
-    public String getExpression() { return expression; }
+    public String getRuleId() {
+        return ruleId;
+    }
+
+    public String getExpression() {
+        return expression;
+    }
 }

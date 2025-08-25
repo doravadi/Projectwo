@@ -38,7 +38,7 @@ public class BinSearchBenchmark {
 
     public static void runComprehensiveBenchmark() {
         System.out.println("🚀 BIN Search Performance Benchmark");
-        System.out.println("=" .repeat(60));
+        System.out.println("=".repeat(60));
 
 
         int[] dataSizes = {100, 500, 1000, 5000, 10000};
@@ -52,7 +52,7 @@ public class BinSearchBenchmark {
 
 
         System.out.println("\n🎯 Special Scenario Tests");
-        System.out.println("=" .repeat(60));
+        System.out.println("=".repeat(60));
 
         testOverlapDetection();
         testRangeQueries();
@@ -174,7 +174,7 @@ public class BinSearchBenchmark {
         System.out.printf("💾 Memory: IntervalTree uses %.2fx %s memory\n",
                 memoryRatio, memoryRatio > 1 ? "more" : "less");
 
-        
+
         if (speedupRatio > 1.2 && memoryRatio < 2.0) {
             System.out.println("✅ Recommendation: Use IntervalTree");
         } else if (speedupRatio < 0.8) {
@@ -355,7 +355,7 @@ public class BinSearchBenchmark {
 
         List<BinRange> sparseRanges = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            long start = i * 100000L + 400000L; 
+            long start = i * 100000L + 400000L;
             sparseRanges.add(BinRange.of(start, start + 100, "Bank" + i, "Visa", "TR"));
         }
 
@@ -391,7 +391,7 @@ public class BinSearchBenchmark {
 
         List<BinRange> ranges = generateTestData(1000);
 
-        
+
         List<Long> sequentialQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             sequentialQueries.add(400000L + i * 100);
@@ -445,12 +445,12 @@ public class BinSearchBenchmark {
         for (int i = 0; i < count; i++) {
             long start;
             do {
-                start = 400000L + random.nextLong(500000); 
+                start = 400000L + random.nextLong(500000);
             } while (usedStarts.contains(start));
 
             usedStarts.add(start);
 
-            long end = start + random.nextLong(1, 1000); 
+            long end = start + random.nextLong(1, 1000);
             String bank = "Bank" + (i % 20);
             String cardType = (i % 2 == 0) ? "Visa" : "Mastercard";
             String country = (i % 10 == 0) ? "US" : "TR";
@@ -509,7 +509,7 @@ public class BinSearchBenchmark {
         runComprehensiveBenchmark();
 
         System.out.println("\n📋 Summary & Recommendations");
-        System.out.println("=" .repeat(60));
+        System.out.println("=".repeat(60));
         System.out.println("• TreeMap: Better for simple point queries, lower memory");
         System.out.println("• IntervalTree: Better for overlap queries, range searches");
         System.out.println("• For production BIN routing: Choose based on query patterns");

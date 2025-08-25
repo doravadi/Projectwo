@@ -15,9 +15,17 @@ public final class BinRangeConflict implements Serializable {
         this.resolution = Objects.requireNonNull(resolution);
     }
 
-    public BinRange getNewRange() { return newRange; }
-    public BinRange getExistingRange() { return existingRange; }
-    public String getResolution() { return resolution; }
+    public BinRange getNewRange() {
+        return newRange;
+    }
+
+    public BinRange getExistingRange() {
+        return existingRange;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
 
     @Override
     public String toString() {

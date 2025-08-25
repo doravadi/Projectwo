@@ -13,8 +13,13 @@ public final class ValidationError implements Serializable {
         this.errorMessage = Objects.requireNonNull(errorMessage);
     }
 
-    public BinRange getRange() { return range; }
-    public String getErrorMessage() { return errorMessage; }
+    public BinRange getRange() {
+        return range;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
 
     @Override
     public String toString() {

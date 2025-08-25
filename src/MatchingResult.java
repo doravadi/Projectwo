@@ -18,7 +18,7 @@ public final class MatchingResult implements Serializable {
     private final long executionTimeNanos;
     private final MatchingStatistics statistics;
 
-    
+
     private MatchingResult(Builder builder) {
         this.matches = Collections.unmodifiableList(new ArrayList<>(builder.matches));
         this.unmatchedAuths = Collections.unmodifiableList(new ArrayList<>(builder.unmatchedAuths));
@@ -35,7 +35,7 @@ public final class MatchingResult implements Serializable {
         return new Builder();
     }
 
-    
+
     public static MatchingResult empty() {
         return builder()
                 .matches(Collections.emptyList())
@@ -46,18 +46,44 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    
-    public List<AuthPresentmentMatch> getMatches() { return matches; }
-    public List<Auth> getUnmatchedAuths() { return unmatchedAuths; }
-    public List<Presentment> getUnmatchedPresentments() { return unmatchedPresentments; }
-    public double getTotalScore() { return totalScore; }
-    public double getAverageScore() { return averageScore; }
-    public String getAlgorithm() { return algorithm; }
-    public LocalDateTime getExecutionTime() { return executionTime; }
-    public long getExecutionTimeNanos() { return executionTimeNanos; }
-    public MatchingStatistics getStatistics() { return statistics; }
 
-    
+    public List<AuthPresentmentMatch> getMatches() {
+        return matches;
+    }
+
+    public List<Auth> getUnmatchedAuths() {
+        return unmatchedAuths;
+    }
+
+    public List<Presentment> getUnmatchedPresentments() {
+        return unmatchedPresentments;
+    }
+
+    public double getTotalScore() {
+        return totalScore;
+    }
+
+    public double getAverageScore() {
+        return averageScore;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public LocalDateTime getExecutionTime() {
+        return executionTime;
+    }
+
+    public long getExecutionTimeNanos() {
+        return executionTimeNanos;
+    }
+
+    public MatchingStatistics getStatistics() {
+        return statistics;
+    }
+
+
     public int getMatchCount() {
         return matches.size();
     }
@@ -100,41 +126,41 @@ public final class MatchingResult implements Serializable {
         return executionTimeNanos / 1_000_000.0;
     }
 
-    
+
     public Optional<AuthPresentmentMatch> findMatchForAuth(Auth auth) {
         return matches.stream()
                 .filter(match -> match.getAuth().equals(auth))
                 .findFirst();
     }
 
-    
+
     public Optional<AuthPresentmentMatch> findMatchForPresentment(Presentment presentment) {
         return matches.stream()
                 .filter(match -> match.getPresentment().equals(presentment))
                 .findFirst();
     }
 
-    
+
     public List<AuthPresentmentMatch> getMatchesSortedByScore() {
         return matches.stream()
                 .sorted((m1, m2) -> Double.compare(m2.getScore(), m1.getScore()))
                 .toList();
     }
 
-    
+
     public List<AuthPresentmentMatch> getLowQualityMatches(double threshold) {
         return matches.stream()
                 .filter(match -> match.getScore() < threshold)
                 .toList();
     }
 
-    
+
     public Money getTotalAmountMatched() {
         if (matches.isEmpty()) {
-            return Money.zero(Currency.USD); 
+            return Money.zero(Currency.USD);
         }
 
-        
+
         Currency currency = matches.get(0).getAuth().getAmount().getCurrency();
         Money total = Money.zero(currency);
 
@@ -145,7 +171,7 @@ public final class MatchingResult implements Serializable {
         return total;
     }
 
-    
+
     public Money getTotalUnmatchedAuthAmount() {
         if (unmatchedAuths.isEmpty()) {
             return Money.zero(Currency.USD);
@@ -161,7 +187,7 @@ public final class MatchingResult implements Serializable {
         return total;
     }
 
-    
+
     public MatchingResult withExecutionTime(long executionTimeNanos) {
         return builder()
                 .matches(this.matches)
@@ -174,7 +200,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    
+
     public MatchingComparison compareTo(MatchingResult other) {
         Objects.requireNonNull(other, "Other result cannot be null");
 
@@ -188,7 +214,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    
+
     public MatchingReport generateReport() {
         return MatchingReport.builder()
                 .result(this)
@@ -198,7 +224,7 @@ public final class MatchingResult implements Serializable {
                 .build();
     }
 
-    
+
     private MatchingStatistics calculateStatistics() {
         if (matches.isEmpty()) {
             return MatchingStatistics.empty();
@@ -215,7 +241,7 @@ public final class MatchingResult implements Serializable {
         double median = calculateMedian(scores);
         double stdDev = calculateStandardDeviation(scores, averageScore);
 
-        
+
         int excellent = 0, good = 0, fair = 0, poor = 0;
         for (double score : scores) {
             if (score >= 90) excellent++;
@@ -301,7 +327,7 @@ public final class MatchingResult implements Serializable {
         return recommendations;
     }
 
-    
+
     public static class Builder {
         private List<AuthPresentmentMatch> matches = new ArrayList<>();
         private List<Auth> unmatchedAuths = new ArrayList<>();

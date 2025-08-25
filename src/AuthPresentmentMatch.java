@@ -18,7 +18,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private final MatchValidation validation;
     private final MatchRisk risk;
 
-    
+
     private AuthPresentmentMatch(Auth auth, Presentment presentment, double score) {
         this.auth = Objects.requireNonNull(auth, "Auth cannot be null");
         this.presentment = Objects.requireNonNull(presentment, "Presentment cannot be null");
@@ -28,33 +28,53 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         this.validation = validateMatch(auth, presentment);
         this.risk = assessRisk(auth, presentment, score);
 
-        
+
         if (!validation.isValid()) {
             throw new IllegalArgumentException("Invalid match: " + validation.getErrorMessage());
         }
     }
 
-    
+
     public static AuthPresentmentMatch of(Auth auth, Presentment presentment) {
         double score = auth.calculateMatchingScore(presentment);
         return new AuthPresentmentMatch(auth, presentment, score);
     }
 
-    
+
     public static AuthPresentmentMatch withScore(Auth auth, Presentment presentment, double score) {
         return new AuthPresentmentMatch(auth, presentment, score);
     }
 
-    
-    public Auth getAuth() { return auth; }
-    public Presentment getPresentment() { return presentment; }
-    public double getScore() { return score; }
-    public LocalDateTime getMatchTimestamp() { return matchTimestamp; }
-    public MatchQuality getQuality() { return quality; }
-    public MatchValidation getValidation() { return validation; }
-    public MatchRisk getRisk() { return risk; }
 
-    
+    public Auth getAuth() {
+        return auth;
+    }
+
+    public Presentment getPresentment() {
+        return presentment;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public LocalDateTime getMatchTimestamp() {
+        return matchTimestamp;
+    }
+
+    public MatchQuality getQuality() {
+        return quality;
+    }
+
+    public MatchValidation getValidation() {
+        return validation;
+    }
+
+    public MatchRisk getRisk() {
+        return risk;
+    }
+
+
     public boolean isHighQuality() {
         return quality == MatchQuality.EXCELLENT || quality == MatchQuality.GOOD;
     }
@@ -75,32 +95,32 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         return isValid() && auth.canBeMatched() && presentment.canBeMatched();
     }
 
-    
+
     public Money getSettlementAmount() {
-        
-        
+
+
         Money authAmount = auth.getAmount();
         Money presentmentAmount = presentment.getAmount();
 
-        
+
         if (presentment.isRefund()) {
             return presentmentAmount;
         }
 
-        
+
         if (presentmentAmount.getAmount().compareTo(authAmount.getAmount()) <= 0) {
             return presentmentAmount;
         } else {
-            return authAmount; 
+            return authAmount;
         }
     }
 
-    
+
     public Money getAmountVariance() {
         return presentment.getAmount().subtract(auth.getAmount());
     }
 
-    
+
     public Money getAbsoluteAmountVariance() {
         Money variance = getAmountVariance();
         if (variance.isNegative()) {
@@ -109,27 +129,27 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         return variance;
     }
 
-    
+
     public Duration getTimeDifference() {
         return Duration.between(auth.getTimestamp(), presentment.getTimestamp());
     }
 
-    
+
     public long getTimeDifferenceHours() {
         return getTimeDifference().toHours();
     }
 
-    
+
     public boolean isSuspiciouslyFast() {
         return getTimeDifferenceHours() < 1 && score > 80;
     }
 
-    
+
     public boolean isSuspiciouslySlow() {
-        return getTimeDifferenceHours() > 168; 
+        return getTimeDifferenceHours() > 168;
     }
 
-    
+
     public MatchConfidence getConfidence() {
         if (score >= 95 && validation.isFullyValid()) {
             return MatchConfidence.VERY_HIGH;
@@ -144,12 +164,12 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
         }
     }
 
-    
+
     public MatchSummary generateSummary() {
         return MatchSummary.builder()
                 .authId(auth.getAuthId())
                 .presentmentId(presentment.getPresentmentId())
-                .cardId(CardId.fromCardNumber(auth.getCardNumber(), "12", "25")) 
+                .cardId(CardId.fromCardNumber(auth.getCardNumber(), "12", "25"))
                 .score(score)
                 .quality(quality)
                 .confidence(getConfidence())
@@ -161,7 +181,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
                 .build();
     }
 
-    
+
     private double validateScore(double score) {
         if (score < 0 || score > 100) {
             throw new IllegalArgumentException("Score must be between 0 and 100: " + score);
@@ -179,28 +199,28 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private MatchValidation validateMatch(Auth auth, Presentment presentment) {
         MatchValidation.Builder builder = MatchValidation.builder();
 
-        
+
         if (!auth.getCardNumber().equals(presentment.getCardNumber())) {
             builder.addError("Card number mismatch");
             return builder.build();
         }
 
-        
+
         if (!auth.getAmount().getCurrency().equals(presentment.getAmount().getCurrency())) {
             builder.addError("Currency mismatch");
         }
 
-        
+
         if (auth.isExpired()) {
             builder.addError("Authorization has expired");
         }
 
-        
+
         Money authAmount = auth.getAmount();
         Money presAmount = presentment.getAmount();
 
         if (presentment.isSale() && presAmount.getAmount().compareTo(authAmount.getAmount()) > 0) {
-            
+
             Money tipTolerance = authAmount.multiply(new java.math.BigDecimal("1.15"));
             if (presAmount.getAmount().compareTo(tipTolerance.getAmount()) > 0) {
                 builder.addWarning("Presentment amount significantly exceeds auth amount");
@@ -209,7 +229,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             }
         }
 
-        
+
         if (presentment.getTimestamp().isBefore(auth.getTimestamp())) {
             builder.addWarning("Presentment timestamp before auth timestamp");
         }
@@ -219,12 +239,12 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             builder.addWarning("Very long time gap between auth and presentment");
         }
 
-        
+
         if (!auth.getMerchantId().equals(presentment.getMerchantId())) {
             builder.addWarning("Merchant ID mismatch");
         }
 
-        
+
         if (!auth.getMccCode().equals(presentment.getMccCode())) {
             builder.addInfo("MCC code mismatch (may be normal)");
         }
@@ -235,14 +255,14 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
     private MatchRisk assessRisk(Auth auth, Presentment presentment, double score) {
         MatchRisk.Builder builder = MatchRisk.builder();
 
-        
+
         if (score < 50) {
             builder.addFactor("Very low matching score");
         } else if (score < 70) {
             builder.addFactor("Low matching score");
         }
 
-        
+
         Money variance = getAbsoluteAmountVariance();
         Money authAmount = auth.getAmount();
 
@@ -256,21 +276,19 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             }
         }
 
-        
+
         long hoursGap = getTimeDifferenceHours();
         if (hoursGap < 0) {
             builder.addFactor("Presentment before authorization");
-        } else if (hoursGap > 720) { 
+        } else if (hoursGap > 720) {
             builder.addFactor("Very delayed presentment");
         }
 
-        
-        
 
         return builder.build();
     }
 
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -289,13 +307,13 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
 
     @Override
     public int compareTo(AuthPresentmentMatch other) {
-        
+
         int scoreComparison = Double.compare(other.score, this.score);
         if (scoreComparison != 0) {
             return scoreComparison;
         }
 
-        
+
         return other.auth.getTimestamp().compareTo(this.auth.getTimestamp());
     }
 
@@ -305,7 +323,7 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
                 auth.getAuthId(), presentment.getPresentmentId(), score, quality);
     }
 
-    
+
     public enum MatchQuality {
         EXCELLENT("Excellent", 90, 100),
         GOOD("Good", 75, 89),
@@ -322,12 +340,22 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             this.maxScore = maxScore;
         }
 
-        public String getDisplayName() { return displayName; }
-        public double getMinScore() { return minScore; }
-        public double getMaxScore() { return maxScore; }
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public double getMinScore() {
+            return minScore;
+        }
+
+        public double getMaxScore() {
+            return maxScore;
+        }
 
         @Override
-        public String toString() { return displayName; }
+        public String toString() {
+            return displayName;
+        }
     }
 
     public enum MatchConfidence {
@@ -345,10 +373,17 @@ public final class AuthPresentmentMatch implements Comparable<AuthPresentmentMat
             this.threshold = threshold;
         }
 
-        public String getDisplayName() { return displayName; }
-        public double getThreshold() { return threshold; }
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public double getThreshold() {
+            return threshold;
+        }
 
         @Override
-        public String toString() { return displayName; }
+        public String toString() {
+            return displayName;
+        }
     }
 }

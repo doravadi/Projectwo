@@ -171,7 +171,7 @@ public class IntervalTree {
         if (node == null) {
             return;
         }
-        
+
         if (node.range.overlaps(queryRange)) {
             result.add(node.range);
         }
@@ -197,17 +197,17 @@ public class IntervalTree {
 
 
         if (balance > 1) {
-            
+
             if (node.left.getBalance() < 0) {
                 node.left = rotateLeft(node.left);
             }
-            
+
             return rotateRight(node);
         }
 
 
         if (balance < -1) {
-            
+
             if (node.right.getBalance() > 0) {
                 node.right = rotateRight(node.right);
             }
@@ -226,7 +226,7 @@ public class IntervalTree {
         x.right = y;
         y.left = T2;
 
-        
+
         y.updateHeight();
         y.updateMax();
         x.updateHeight();

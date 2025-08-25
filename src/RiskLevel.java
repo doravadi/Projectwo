@@ -17,9 +17,17 @@ public enum RiskLevel {
         this.description = description;
     }
 
-    public int getLevel() { return level; }
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
+    public int getLevel() {
+        return level;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     public boolean isHigherThan(RiskLevel other) {
         return this.level > other.level;

@@ -23,11 +23,22 @@ public final class MatchingReport implements Serializable {
         return new Builder();
     }
 
-    
-    public MatchingResult getResult() { return result; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public String getSummary() { return summary; }
-    public List<String> getRecommendations() { return recommendations; }
+
+    public MatchingResult getResult() {
+        return result;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public List<String> getRecommendations() {
+        return recommendations;
+    }
 
     public static class Builder {
         private MatchingResult result;
@@ -35,10 +46,25 @@ public final class MatchingReport implements Serializable {
         private String summary;
         private List<String> recommendations;
 
-        public Builder result(MatchingResult result) { this.result = result; return this; }
-        public Builder timestamp(LocalDateTime timestamp) { this.timestamp = timestamp; return this; }
-        public Builder summary(String summary) { this.summary = summary; return this; }
-        public Builder recommendations(List<String> recommendations) { this.recommendations = recommendations; return this; }
+        public Builder result(MatchingResult result) {
+            this.result = result;
+            return this;
+        }
+
+        public Builder timestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder summary(String summary) {
+            this.summary = summary;
+            return this;
+        }
+
+        public Builder recommendations(List<String> recommendations) {
+            this.recommendations = recommendations;
+            return this;
+        }
 
         public MatchingReport build() {
             return new MatchingReport(this);

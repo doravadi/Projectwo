@@ -31,7 +31,7 @@ public enum PresentmentStatus {
         return description;
     }
 
-    
+
     public boolean isFinalState() {
         return this == SETTLED ||
                 this == REJECTED ||
@@ -40,39 +40,39 @@ public enum PresentmentStatus {
                 this == FAILED;
     }
 
-    
+
     public boolean isSuccessfullyCompleted() {
         return this == SETTLED || this == PARTIAL_SETTLED;
     }
 
-    
+
     public boolean canBeMatched() {
         return this == PENDING || this == PROCESSING;
     }
 
-    
+
     public boolean canBeSettled() {
         return this == MATCHED || this == PARTIAL_SETTLED;
     }
 
-    
+
     public boolean canBeCancelled() {
         return this == PENDING ||
                 this == MATCHED ||
                 this == PROCESSING;
     }
 
-    
+
     public boolean canBeDisputed() {
         return this == SETTLED || this == PARTIAL_SETTLED;
     }
 
-    
+
     public boolean hasFailedOrBeenRejected() {
         return this == REJECTED || this == FAILED || this == RETURNED;
     }
 
-    
+
     public PresentmentStatus[] getNextPossibleStates() {
         return switch (this) {
             case PENDING -> new PresentmentStatus[]{
@@ -93,15 +93,15 @@ public enum PresentmentStatus {
             case DISPUTED -> new PresentmentStatus[]{
                     SETTLED, RETURNED, CANCELLED
             };
-            
+
             case REJECTED, CANCELLED, EXPIRED, FAILED, RETURNED -> new PresentmentStatus[]{};
         };
     }
 
-    
+
     public boolean canTransitionTo(PresentmentStatus newStatus) {
         if (this == newStatus) {
-            return true; 
+            return true;
         }
 
         PresentmentStatus[] possibleStates = getNextPossibleStates();
@@ -115,21 +115,21 @@ public enum PresentmentStatus {
         return false;
     }
 
-    
+
     public int getProcessingPriority() {
         return switch (this) {
-            case DISPUTED -> 10; 
-            case RETURNED -> 8;  
-            case FAILED -> 8;    
-            case PROCESSING -> 6; 
-            case MATCHED -> 5;   
-            case PENDING -> 3;   
-            case PARTIAL_SETTLED -> 2; 
-            default -> 1;        
+            case DISPUTED -> 10;
+            case RETURNED -> 8;
+            case FAILED -> 8;
+            case PROCESSING -> 6;
+            case MATCHED -> 5;
+            case PENDING -> 3;
+            case PARTIAL_SETTLED -> 2;
+            default -> 1;
         };
     }
 
-    
+
     public boolean isErrorStatus() {
         return this == REJECTED ||
                 this == FAILED ||
@@ -137,26 +137,26 @@ public enum PresentmentStatus {
                 this == EXPIRED;
     }
 
-    
+
     public boolean isActiveProcessing() {
         return this == PROCESSING ||
                 this == PENDING ||
                 this == MATCHED;
     }
 
-    
+
     public int getTypicalProcessingTimeHours() {
         return switch (this) {
-            case PENDING -> 2;        
-            case PROCESSING -> 1;     
-            case MATCHED -> 24;       
-            case PARTIAL_SETTLED -> 48; 
-            case DISPUTED -> 2160;    
-            default -> 0;             
+            case PENDING -> 2;
+            case PROCESSING -> 1;
+            case MATCHED -> 24;
+            case PARTIAL_SETTLED -> 48;
+            case DISPUTED -> 2160;
+            default -> 0;
         };
     }
 
-    
+
     public static PresentmentStatus fromString(String status) {
         if (status == null || status.trim().isEmpty()) {
             throw new IllegalArgumentException("Presentment status cannot be null or empty");
@@ -171,30 +171,30 @@ public enum PresentmentStatus {
         }
     }
 
-    
+
     public static PresentmentStatus[] getManualInterventionRequired() {
         return new PresentmentStatus[]{
                 DISPUTED, FAILED, RETURNED, REJECTED
         };
     }
 
-    
+
     public static PresentmentStatus[] getActiveStatuses() {
         return new PresentmentStatus[]{
                 PENDING, PROCESSING, MATCHED, PARTIAL_SETTLED
         };
     }
 
-    
+
     public double getSettlementImpact() {
         return switch (this) {
-            case SETTLED -> 1.0;           
-            case PARTIAL_SETTLED -> 0.5;   
-            case DISPUTED -> -0.5;         
-            case RETURNED -> -1.0;         
-            case REJECTED -> -0.2;         
-            case FAILED -> -0.1;           
-            default -> 0.0;                
+            case SETTLED -> 1.0;
+            case PARTIAL_SETTLED -> 0.5;
+            case DISPUTED -> -0.5;
+            case RETURNED -> -1.0;
+            case REJECTED -> -0.2;
+            case FAILED -> -0.1;
+            default -> 0.0;
         };
     }
 

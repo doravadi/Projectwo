@@ -14,7 +14,7 @@ public class StaleAuthorizationException extends DomainException {
     private final Duration expiredDuration;
     private final List<String> businessImpacts;
 
-    
+
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment) {
         super(buildErrorMessage(staleAuth, attemptedPresentment));
 
@@ -25,7 +25,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    
+
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment, String additionalContext) {
         super(buildErrorMessage(staleAuth, attemptedPresentment) + ". Additional context: " + additionalContext);
 
@@ -36,7 +36,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    
+
     public StaleAuthorizationException(Auth staleAuth, Presentment attemptedPresentment, Throwable cause) {
         super(buildErrorMessage(staleAuth, attemptedPresentment), cause);
 
@@ -47,7 +47,7 @@ public class StaleAuthorizationException extends DomainException {
         this.businessImpacts = calculateBusinessImpacts();
     }
 
-    
+
     public Auth getStaleAuth() {
         return staleAuth;
     }
@@ -68,17 +68,17 @@ public class StaleAuthorizationException extends DomainException {
         return new ArrayList<>(businessImpacts);
     }
 
-    
+
     public boolean isRecentlyExpired() {
-        return expiredDuration.toHours() <= 24; 
+        return expiredDuration.toHours() <= 24;
     }
 
     public boolean isLongExpired() {
-        return expiredDuration.toDays() > 7; 
+        return expiredDuration.toDays() > 7;
     }
 
     public boolean isCriticallyExpired() {
-        return expiredDuration.toDays() > 30; 
+        return expiredDuration.toDays() > 30;
     }
 
     public String getExpirationSeverity() {
@@ -93,7 +93,7 @@ public class StaleAuthorizationException extends DomainException {
         }
     }
 
-    
+
     public List<String> getRecommendedActions() {
         List<String> actions = new ArrayList<>();
 
@@ -115,18 +115,18 @@ public class StaleAuthorizationException extends DomainException {
         return actions;
     }
 
-    
+
     public Money getFinancialImpact() {
-        
+
         return attemptedPresentment.getAmount();
     }
 
-    
+
     public StaleAuthRisk getRiskAssessment() {
         RiskLevel riskLevel;
         List<String> riskFactors = new ArrayList<>();
 
-        
+
         if (isCriticallyExpired()) {
             riskLevel = RiskLevel.CRITICAL;
             riskFactors.add("Authorization expired over 30 days ago");
@@ -144,13 +144,13 @@ public class StaleAuthorizationException extends DomainException {
             riskFactors.add("Authorization just expired");
         }
 
-        
+
         Money amount = attemptedPresentment.getAmount();
         if (amount.getAmount().compareTo(new java.math.BigDecimal("10000")) > 0) {
             riskFactors.add("High-value transaction increases settlement risk");
         }
 
-        
+
         if (staleAuth.getStatus() != AuthStatus.APPROVED) {
             riskFactors.add("Authorization status is not approved: " + staleAuth.getStatus());
         }
@@ -158,14 +158,14 @@ public class StaleAuthorizationException extends DomainException {
         return new StaleAuthRisk(riskLevel, riskFactors, getFinancialImpact());
     }
 
-    
+
     public boolean requiresManualIntervention() {
         return isLongExpired() ||
                 isCriticallyExpired() ||
                 getFinancialImpact().getAmount().compareTo(new java.math.BigDecimal("1000")) > 0;
     }
 
-    
+
     public StaleAuthExceptionReport generateReport() {
         return StaleAuthExceptionReport.builder()
                 .authId(staleAuth.getAuthId())
@@ -183,7 +183,7 @@ public class StaleAuthorizationException extends DomainException {
                 .build();
     }
 
-    
+
     private static String buildErrorMessage(Auth staleAuth, Presentment attemptedPresentment) {
         Duration expiredDuration = Duration.between(staleAuth.getExpiryTime(), LocalDateTime.now());
 
@@ -237,7 +237,7 @@ public class StaleAuthorizationException extends DomainException {
         return impacts;
     }
 
-    
+
     public static class StaleAuthRisk {
         private final RiskLevel level;
         private final List<String> factors;
@@ -249,9 +249,17 @@ public class StaleAuthorizationException extends DomainException {
             this.financialExposure = financialExposure;
         }
 
-        public RiskLevel getLevel() { return level; }
-        public List<String> getFactors() { return new ArrayList<>(factors); }
-        public Money getFinancialExposure() { return financialExposure; }
+        public RiskLevel getLevel() {
+            return level;
+        }
+
+        public List<String> getFactors() {
+            return new ArrayList<>(factors);
+        }
+
+        public Money getFinancialExposure() {
+            return financialExposure;
+        }
 
         @Override
         public String toString() {
@@ -289,21 +297,58 @@ public class StaleAuthorizationException extends DomainException {
             this.exceptionTimestamp = builder.exceptionTimestamp;
         }
 
-        public static Builder builder() { return new Builder(); }
+        public static Builder builder() {
+            return new Builder();
+        }
 
-        
-        public String getAuthId() { return authId; }
-        public String getPresentmentId() { return presentmentId; }
-        public LocalDateTime getAuthExpiredAt() { return authExpiredAt; }
-        public LocalDateTime getPresentmentTimestamp() { return presentmentTimestamp; }
-        public Duration getExpiredDuration() { return expiredDuration; }
-        public String getSeverity() { return severity; }
-        public Money getFinancialImpact() { return financialImpact; }
-        public StaleAuthRisk getRiskAssessment() { return riskAssessment; }
-        public List<String> getBusinessImpacts() { return businessImpacts; }
-        public List<String> getRecommendedActions() { return recommendedActions; }
-        public boolean requiresManualIntervention() { return requiresManualIntervention; }
-        public LocalDateTime getExceptionTimestamp() { return exceptionTimestamp; }
+
+        public String getAuthId() {
+            return authId;
+        }
+
+        public String getPresentmentId() {
+            return presentmentId;
+        }
+
+        public LocalDateTime getAuthExpiredAt() {
+            return authExpiredAt;
+        }
+
+        public LocalDateTime getPresentmentTimestamp() {
+            return presentmentTimestamp;
+        }
+
+        public Duration getExpiredDuration() {
+            return expiredDuration;
+        }
+
+        public String getSeverity() {
+            return severity;
+        }
+
+        public Money getFinancialImpact() {
+            return financialImpact;
+        }
+
+        public StaleAuthRisk getRiskAssessment() {
+            return riskAssessment;
+        }
+
+        public List<String> getBusinessImpacts() {
+            return businessImpacts;
+        }
+
+        public List<String> getRecommendedActions() {
+            return recommendedActions;
+        }
+
+        public boolean requiresManualIntervention() {
+            return requiresManualIntervention;
+        }
+
+        public LocalDateTime getExceptionTimestamp() {
+            return exceptionTimestamp;
+        }
 
         public static class Builder {
             private String authId;
@@ -319,20 +364,69 @@ public class StaleAuthorizationException extends DomainException {
             private boolean requiresManualIntervention;
             private LocalDateTime exceptionTimestamp;
 
-            public Builder authId(String authId) { this.authId = authId; return this; }
-            public Builder presentmentId(String presentmentId) { this.presentmentId = presentmentId; return this; }
-            public Builder authExpiredAt(LocalDateTime authExpiredAt) { this.authExpiredAt = authExpiredAt; return this; }
-            public Builder presentmentTimestamp(LocalDateTime presentmentTimestamp) { this.presentmentTimestamp = presentmentTimestamp; return this; }
-            public Builder expiredDuration(Duration expiredDuration) { this.expiredDuration = expiredDuration; return this; }
-            public Builder severity(String severity) { this.severity = severity; return this; }
-            public Builder financialImpact(Money financialImpact) { this.financialImpact = financialImpact; return this; }
-            public Builder riskAssessment(StaleAuthRisk riskAssessment) { this.riskAssessment = riskAssessment; return this; }
-            public Builder businessImpacts(List<String> businessImpacts) { this.businessImpacts = businessImpacts; return this; }
-            public Builder recommendedActions(List<String> recommendedActions) { this.recommendedActions = recommendedActions; return this; }
-            public Builder requiresManualIntervention(boolean requiresManualIntervention) { this.requiresManualIntervention = requiresManualIntervention; return this; }
-            public Builder exceptionTimestamp(LocalDateTime exceptionTimestamp) { this.exceptionTimestamp = exceptionTimestamp; return this; }
+            public Builder authId(String authId) {
+                this.authId = authId;
+                return this;
+            }
 
-            public StaleAuthExceptionReport build() { return new StaleAuthExceptionReport(this); }
+            public Builder presentmentId(String presentmentId) {
+                this.presentmentId = presentmentId;
+                return this;
+            }
+
+            public Builder authExpiredAt(LocalDateTime authExpiredAt) {
+                this.authExpiredAt = authExpiredAt;
+                return this;
+            }
+
+            public Builder presentmentTimestamp(LocalDateTime presentmentTimestamp) {
+                this.presentmentTimestamp = presentmentTimestamp;
+                return this;
+            }
+
+            public Builder expiredDuration(Duration expiredDuration) {
+                this.expiredDuration = expiredDuration;
+                return this;
+            }
+
+            public Builder severity(String severity) {
+                this.severity = severity;
+                return this;
+            }
+
+            public Builder financialImpact(Money financialImpact) {
+                this.financialImpact = financialImpact;
+                return this;
+            }
+
+            public Builder riskAssessment(StaleAuthRisk riskAssessment) {
+                this.riskAssessment = riskAssessment;
+                return this;
+            }
+
+            public Builder businessImpacts(List<String> businessImpacts) {
+                this.businessImpacts = businessImpacts;
+                return this;
+            }
+
+            public Builder recommendedActions(List<String> recommendedActions) {
+                this.recommendedActions = recommendedActions;
+                return this;
+            }
+
+            public Builder requiresManualIntervention(boolean requiresManualIntervention) {
+                this.requiresManualIntervention = requiresManualIntervention;
+                return this;
+            }
+
+            public Builder exceptionTimestamp(LocalDateTime exceptionTimestamp) {
+                this.exceptionTimestamp = exceptionTimestamp;
+                return this;
+            }
+
+            public StaleAuthExceptionReport build() {
+                return new StaleAuthExceptionReport(this);
+            }
         }
     }
 }

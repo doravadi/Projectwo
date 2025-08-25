@@ -7,7 +7,7 @@ public class HungarianMatcher {
     private static final double EPSILON = 1e-10;
     private static final double NEGATIVE_INFINITY = -1e6;
 
-    
+
     public MatchingResult findOptimalMatching(List<Auth> auths, List<Presentment> presentments) {
         Objects.requireNonNull(auths, "Auths cannot be null");
         Objects.requireNonNull(presentments, "Presentments cannot be null");
@@ -19,13 +19,13 @@ public class HungarianMatcher {
         long startTime = System.nanoTime();
 
         try {
-            
+
             CostMatrix costMatrix = buildCostMatrix(auths, presentments);
 
-            
+
             int[] assignment = hungarianAlgorithm(costMatrix);
 
-            
+
             MatchingResult result = buildMatchingResult(auths, presentments, costMatrix, assignment);
 
             long elapsedTime = System.nanoTime() - startTime;
@@ -36,17 +36,17 @@ public class HungarianMatcher {
         }
     }
 
-    
+
     private CostMatrix buildCostMatrix(List<Auth> auths, List<Presentment> presentments) {
         int n = Math.max(auths.size(), presentments.size());
         double[][] matrix = new double[n][n];
 
-        
+
         for (int i = 0; i < n; i++) {
             Arrays.fill(matrix[i], NEGATIVE_INFINITY);
         }
 
-        
+
         for (int i = 0; i < auths.size(); i++) {
             Auth auth = auths.get(i);
 
@@ -55,10 +55,10 @@ public class HungarianMatcher {
 
                 double matchingScore = auth.calculateMatchingScore(presentment);
 
-                
+
                 double cost = 100.0 - matchingScore;
 
-                
+
                 if (matchingScore > 0 && canBeMatched(auth, presentment)) {
                     matrix[i][j] = cost;
                 }
@@ -68,36 +68,36 @@ public class HungarianMatcher {
         return new CostMatrix(matrix, auths.size(), presentments.size());
     }
 
-    
+
     private int[] hungarianAlgorithm(CostMatrix costMatrix) {
         double[][] matrix = copyMatrix(costMatrix.matrix);
         int n = matrix.length;
 
-        
+
         subtractRowMinimums(matrix);
 
-        
+
         subtractColumnMinimums(matrix);
 
-        
+
         while (true) {
-            
+
             LineCover lineCover = findMinimumLineCover(matrix);
 
             if (lineCover.lineCount >= n) {
-                
+
                 break;
             }
 
-            
+
             adjustMatrix(matrix, lineCover);
         }
 
-        
+
         return findAssignment(matrix, costMatrix.numAuths, costMatrix.numPresentments);
     }
 
-    
+
     private void subtractRowMinimums(double[][] matrix) {
         int n = matrix.length;
 
@@ -115,7 +115,7 @@ public class HungarianMatcher {
         }
     }
 
-    
+
     private void subtractColumnMinimums(double[][] matrix) {
         int n = matrix.length;
 
@@ -138,23 +138,23 @@ public class HungarianMatcher {
         }
     }
 
-    
+
     private LineCover findMinimumLineCover(double[][] matrix) {
         int n = matrix.length;
         boolean[] rowCovered = new boolean[n];
         boolean[] colCovered = new boolean[n];
 
-        
+
         List<List<Integer>> graph = buildZeroGraph(matrix);
 
-        
+
         int[] matching = findMaximumMatching(graph, n);
 
-        
+
         return convertMatchingToLineCover(graph, matching, n);
     }
 
-    
+
     private List<List<Integer>> buildZeroGraph(double[][] matrix) {
         int n = matrix.length;
         List<List<Integer>> graph = new ArrayList<>();
@@ -172,7 +172,7 @@ public class HungarianMatcher {
         return graph;
     }
 
-    
+
     private int[] findMaximumMatching(List<List<Integer>> graph, int n) {
         int[] matching = new int[n];
         Arrays.fill(matching, -1);
@@ -185,13 +185,13 @@ public class HungarianMatcher {
         return matching;
     }
 
-    
+
     private boolean findAugmentingPath(List<List<Integer>> graph, int u, int[] matching, boolean[] visited) {
         for (int v : graph.get(u)) {
             if (visited[v]) continue;
             visited[v] = true;
 
-            
+
             if (matching[v] == -1 || findAugmentingPath(graph, matching[v], matching, visited)) {
                 matching[v] = u;
                 return true;
@@ -201,12 +201,12 @@ public class HungarianMatcher {
         return false;
     }
 
-    
+
     private LineCover convertMatchingToLineCover(List<List<Integer>> graph, int[] matching, int n) {
         boolean[] rowCovered = new boolean[n];
         boolean[] colCovered = new boolean[n];
 
-        
+
         Set<Integer> unmatchedRows = new HashSet<>();
         for (int i = 0; i < n; i++) {
             boolean isMatched = false;
@@ -221,7 +221,7 @@ public class HungarianMatcher {
             }
         }
 
-        
+
         Set<Integer> reachableRows = new HashSet<>(unmatchedRows);
         Set<Integer> reachableCols = new HashSet<>();
 
@@ -229,7 +229,7 @@ public class HungarianMatcher {
         while (changed) {
             changed = false;
 
-            
+
             for (int row : new ArrayList<>(reachableRows)) {
                 for (int col : graph.get(row)) {
                     if (!reachableCols.contains(col)) {
@@ -239,7 +239,7 @@ public class HungarianMatcher {
                 }
             }
 
-            
+
             for (int col : new ArrayList<>(reachableCols)) {
                 if (matching[col] != -1 && !reachableRows.contains(matching[col])) {
                     reachableRows.add(matching[col]);
@@ -248,7 +248,7 @@ public class HungarianMatcher {
             }
         }
 
-        
+
         int lineCount = 0;
 
         for (int i = 0; i < n; i++) {
@@ -266,11 +266,11 @@ public class HungarianMatcher {
         return new LineCover(rowCovered, colCovered, lineCount);
     }
 
-    
+
     private void adjustMatrix(double[][] matrix, LineCover lineCover) {
         int n = matrix.length;
 
-        
+
         double min = Double.MAX_VALUE;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -282,27 +282,27 @@ public class HungarianMatcher {
         }
 
         if (min == Double.MAX_VALUE) {
-            return; 
+            return;
         }
 
-        
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (matrix[i][j] > NEGATIVE_INFINITY) {
                     if (!lineCover.rowCovered[i] && !lineCover.colCovered[j]) {
-                        
+
                         matrix[i][j] -= min;
                     } else if (lineCover.rowCovered[i] && lineCover.colCovered[j]) {
-                        
+
                         matrix[i][j] += min;
                     }
-                    
+
                 }
             }
         }
     }
 
-    
+
     private int[] findAssignment(double[][] matrix, int numAuths, int numPresentments) {
         int n = matrix.length;
         int[] assignment = new int[numAuths];
@@ -311,7 +311,7 @@ public class HungarianMatcher {
         boolean[] rowUsed = new boolean[n];
         boolean[] colUsed = new boolean[n];
 
-        
+
         for (int i = 0; i < numAuths; i++) {
             for (int j = 0; j < numPresentments; j++) {
                 if (!rowUsed[i] && !colUsed[j] &&
@@ -327,7 +327,7 @@ public class HungarianMatcher {
         return assignment;
     }
 
-    
+
     private MatchingResult buildMatchingResult(List<Auth> auths, List<Presentment> presentments,
                                                CostMatrix costMatrix, int[] assignment) {
         List<AuthPresentmentMatch> matches = new ArrayList<>();
@@ -336,7 +336,7 @@ public class HungarianMatcher {
 
         double totalScore = 0.0;
 
-        
+
         for (int i = 0; i < assignment.length; i++) {
             int j = assignment[i];
 
@@ -357,7 +357,7 @@ public class HungarianMatcher {
             }
         }
 
-        
+
         for (int i = assignment.length; i < auths.size(); i++) {
             unmatchedAuths.add(auths.get(i));
         }
@@ -371,7 +371,7 @@ public class HungarianMatcher {
                 .build();
     }
 
-    
+
     private boolean canBeMatched(Auth auth, Presentment presentment) {
         return auth.canBeMatched() &&
                 presentment.canBeMatched() &&
@@ -387,7 +387,7 @@ public class HungarianMatcher {
         return copy;
     }
 
-    
+
     private static class CostMatrix {
         final double[][] matrix;
         final int numAuths;

@@ -15,18 +15,45 @@ public final class BulkImportResult implements Serializable {
         this.errors = Collections.unmodifiableList(new ArrayList<>(errors));
     }
 
-    public List<BinRange> getSuccessful() { return successful; }
-    public List<BinRangeConflict> getConflicts() { return conflicts; }
-    public List<ValidationError> getErrors() { return errors; }
+    public List<BinRange> getSuccessful() {
+        return successful;
+    }
 
-    public int getSuccessCount() { return successful.size(); }
-    public int getConflictCount() { return conflicts.size(); }
-    public int getErrorCount() { return errors.size(); }
-    public int getTotalProcessed() { return getSuccessCount() + getConflictCount() + getErrorCount(); }
+    public List<BinRangeConflict> getConflicts() {
+        return conflicts;
+    }
 
-    public boolean hasErrors() { return !errors.isEmpty(); }
-    public boolean hasConflicts() { return !conflicts.isEmpty(); }
-    public boolean isFullySuccessful() { return !hasErrors() && !hasConflicts(); }
+    public List<ValidationError> getErrors() {
+        return errors;
+    }
+
+    public int getSuccessCount() {
+        return successful.size();
+    }
+
+    public int getConflictCount() {
+        return conflicts.size();
+    }
+
+    public int getErrorCount() {
+        return errors.size();
+    }
+
+    public int getTotalProcessed() {
+        return getSuccessCount() + getConflictCount() + getErrorCount();
+    }
+
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
+    public boolean hasConflicts() {
+        return !conflicts.isEmpty();
+    }
+
+    public boolean isFullySuccessful() {
+        return !hasErrors() && !hasConflicts();
+    }
 
     @Override
     public String toString() {

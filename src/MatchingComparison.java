@@ -25,13 +25,30 @@ public final class MatchingComparison implements Serializable {
         return new Builder();
     }
 
-    
-    public MatchingResult getResult1() { return result1; }
-    public MatchingResult getResult2() { return result2; }
-    public double getScoreDifference() { return scoreDifference; }
-    public int getMatchCountDifference() { return matchCountDifference; }
-    public long getExecutionTimeDifference() { return executionTimeDifference; }
-    public double getQualityImprovement() { return qualityImprovement; }
+
+    public MatchingResult getResult1() {
+        return result1;
+    }
+
+    public MatchingResult getResult2() {
+        return result2;
+    }
+
+    public double getScoreDifference() {
+        return scoreDifference;
+    }
+
+    public int getMatchCountDifference() {
+        return matchCountDifference;
+    }
+
+    public long getExecutionTimeDifference() {
+        return executionTimeDifference;
+    }
+
+    public double getQualityImprovement() {
+        return qualityImprovement;
+    }
 
     public boolean isResult1Better() {
         return scoreDifference > 0;
@@ -61,12 +78,35 @@ public final class MatchingComparison implements Serializable {
         private long executionTimeDifference;
         private double qualityImprovement;
 
-        public Builder result1(MatchingResult result1) { this.result1 = result1; return this; }
-        public Builder result2(MatchingResult result2) { this.result2 = result2; return this; }
-        public Builder scoreDifference(double scoreDifference) { this.scoreDifference = scoreDifference; return this; }
-        public Builder matchCountDifference(int matchCountDifference) { this.matchCountDifference = matchCountDifference; return this; }
-        public Builder executionTimeDifference(long executionTimeDifference) { this.executionTimeDifference = executionTimeDifference; return this; }
-        public Builder qualityImprovement(double qualityImprovement) { this.qualityImprovement = qualityImprovement; return this; }
+        public Builder result1(MatchingResult result1) {
+            this.result1 = result1;
+            return this;
+        }
+
+        public Builder result2(MatchingResult result2) {
+            this.result2 = result2;
+            return this;
+        }
+
+        public Builder scoreDifference(double scoreDifference) {
+            this.scoreDifference = scoreDifference;
+            return this;
+        }
+
+        public Builder matchCountDifference(int matchCountDifference) {
+            this.matchCountDifference = matchCountDifference;
+            return this;
+        }
+
+        public Builder executionTimeDifference(long executionTimeDifference) {
+            this.executionTimeDifference = executionTimeDifference;
+            return this;
+        }
+
+        public Builder qualityImprovement(double qualityImprovement) {
+            this.qualityImprovement = qualityImprovement;
+            return this;
+        }
 
         public MatchingComparison build() {
             return new MatchingComparison(this);

@@ -23,11 +23,25 @@ public final class PaymentRouting implements Serializable {
         return new Builder();
     }
 
-    public String getBankName() { return bankName; }
-    public String getCountry() { return country; }
-    public String getCardType() { return cardType; }
-    public boolean isDomesticTransaction() { return domesticTransaction; }
-    public RiskLevel getRiskLevel() { return riskLevel; }
+    public String getBankName() {
+        return bankName;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public String getCardType() {
+        return cardType;
+    }
+
+    public boolean isDomesticTransaction() {
+        return domesticTransaction;
+    }
+
+    public RiskLevel getRiskLevel() {
+        return riskLevel;
+    }
 
     public static class Builder {
         private String bankName;
@@ -36,13 +50,34 @@ public final class PaymentRouting implements Serializable {
         private boolean domesticTransaction;
         private RiskLevel riskLevel;
 
-        public Builder bankName(String bankName) { this.bankName = bankName; return this; }
-        public Builder country(String country) { this.country = country; return this; }
-        public Builder cardType(String cardType) { this.cardType = cardType; return this; }
-        public Builder domesticTransaction(boolean domestic) { this.domesticTransaction = domestic; return this; }
-        public Builder riskLevel(RiskLevel riskLevel) { this.riskLevel = riskLevel; return this; }
+        public Builder bankName(String bankName) {
+            this.bankName = bankName;
+            return this;
+        }
 
-        public PaymentRouting build() { return new PaymentRouting(this); }
+        public Builder country(String country) {
+            this.country = country;
+            return this;
+        }
+
+        public Builder cardType(String cardType) {
+            this.cardType = cardType;
+            return this;
+        }
+
+        public Builder domesticTransaction(boolean domestic) {
+            this.domesticTransaction = domestic;
+            return this;
+        }
+
+        public Builder riskLevel(RiskLevel riskLevel) {
+            this.riskLevel = riskLevel;
+            return this;
+        }
+
+        public PaymentRouting build() {
+            return new PaymentRouting(this);
+        }
     }
 
     @Override

@@ -11,7 +11,7 @@ public final class CurrencyGraph {
     private final Set<CurrencyPair> currencyPairs;
     private final int vertexCount;
 
-    
+
     private static final Currency[] SUPPORTED_CURRENCIES = {
             Currency.TRY, Currency.USD, Currency.EUR, Currency.GBP, Currency.JPY
     };
@@ -26,7 +26,7 @@ public final class CurrencyGraph {
         initializeGraph();
     }
 
-    
+
     public void addCurrencyPair(CurrencyPair pair) {
         Objects.requireNonNull(pair, "Currency pair cannot be null");
 
@@ -35,14 +35,14 @@ public final class CurrencyGraph {
 
         currencyPairs.add(pair);
 
-        
+
         int fromIndex = currencyToIndex.get(pair.getFromCurrency());
         int toIndex = currencyToIndex.get(pair.getToCurrency());
 
         Edge forwardEdge = new Edge(fromIndex, toIndex, pair.getLogWeight(), pair);
         adjacencyList.get(fromIndex).add(forwardEdge);
 
-        
+
         try {
             CurrencyPair reversePair = pair.reverse();
             currencyPairs.add(reversePair);
@@ -51,18 +51,18 @@ public final class CurrencyGraph {
             adjacencyList.get(toIndex).add(reverseEdge);
 
         } catch (IllegalStateException e) {
-            
+
             System.err.println("Warning: Cannot create reverse pair for " + pair.getPairId());
         }
     }
 
-    
+
     public void addCurrencyPairs(Collection<CurrencyPair> pairs) {
         Objects.requireNonNull(pairs, "Currency pairs cannot be null");
         pairs.forEach(this::addCurrencyPair);
     }
 
-    
+
     public boolean hasEdge(Currency from, Currency to) {
         if (!isCurrencySupported(from) || !isCurrencySupported(to)) {
             return false;
@@ -75,40 +75,40 @@ public final class CurrencyGraph {
                 .anyMatch(edge -> edge.getToIndex() == toIndex);
     }
 
-    
+
     public Optional<CurrencyPair> getBestRate(Currency from, Currency to) {
         return currencyPairs.stream()
                 .filter(pair -> pair.getFromCurrency().equals(from) &&
                         pair.getToCurrency().equals(to))
-                .min(Comparator.comparing(CurrencyPair::getLogWeight)); 
+                .min(Comparator.comparing(CurrencyPair::getLogWeight));
     }
 
-    
+
     public List<Edge> getAllEdges() {
         return adjacencyList.stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
     }
 
-    
+
     public List<Edge> getEdgesFrom(Currency currency) {
         validateCurrencySupport(currency);
         int index = currencyToIndex.get(currency);
         return new ArrayList<>(adjacencyList.get(index));
     }
 
-    
+
     public boolean isConnected() {
         if (currencyPairs.isEmpty()) return false;
 
-        
+
         Set<Integer> visited = new HashSet<>();
         dfsVisit(0, visited);
 
         return visited.size() == vertexCount;
     }
 
-    
+
     public GraphStatistics getStatistics() {
         int totalEdges = getAllEdges().size();
         int totalPairs = currencyPairs.size();
@@ -131,7 +131,7 @@ public final class CurrencyGraph {
                 isConnected(), averageSpread, staleRateCount);
     }
 
-    
+
     public void clear() {
         currencyPairs.clear();
         for (List<Edge> edges : adjacencyList) {
@@ -139,9 +139,9 @@ public final class CurrencyGraph {
         }
     }
 
-    
+
     private void initializeGraph() {
-        
+
         for (int i = 0; i < SUPPORTED_CURRENCIES.length; i++) {
             Currency currency = SUPPORTED_CURRENCIES[i];
             currencyToIndex.put(currency, i);
@@ -171,9 +171,14 @@ public final class CurrencyGraph {
         }
     }
 
-    
-    public int getVertexCount() { return vertexCount; }
-    public Set<CurrencyPair> getCurrencyPairs() { return new HashSet<>(currencyPairs); }
+
+    public int getVertexCount() {
+        return vertexCount;
+    }
+
+    public Set<CurrencyPair> getCurrencyPairs() {
+        return new HashSet<>(currencyPairs);
+    }
 
     public Currency getCurrencyByIndex(int index) {
         return indexToCurrency.get(index);
@@ -187,12 +192,11 @@ public final class CurrencyGraph {
         return SUPPORTED_CURRENCIES.clone();
     }
 
-    
-    
+
     public static final class Edge {
         private final int fromIndex;
         private final int toIndex;
-        private final double weight;        
+        private final double weight;
         private final CurrencyPair pair;
 
         public Edge(int fromIndex, int toIndex, double weight, CurrencyPair pair) {
@@ -202,10 +206,21 @@ public final class CurrencyGraph {
             this.pair = Objects.requireNonNull(pair, "Currency pair cannot be null");
         }
 
-        public int getFromIndex() { return fromIndex; }
-        public int getToIndex() { return toIndex; }
-        public double getWeight() { return weight; }
-        public CurrencyPair getPair() { return pair; }
+        public int getFromIndex() {
+            return fromIndex;
+        }
+
+        public int getToIndex() {
+            return toIndex;
+        }
+
+        public double getWeight() {
+            return weight;
+        }
+
+        public CurrencyPair getPair() {
+            return pair;
+        }
 
         @Override
         public String toString() {
@@ -214,7 +229,7 @@ public final class CurrencyGraph {
         }
     }
 
-    
+
     public static final class GraphStatistics {
         private final int totalEdges;
         private final int totalPairs;
@@ -233,12 +248,29 @@ public final class CurrencyGraph {
             this.staleRateCount = staleRateCount;
         }
 
-        public int getTotalEdges() { return totalEdges; }
-        public int getTotalPairs() { return totalPairs; }
-        public Map<Currency, Integer> getOutDegrees() { return new EnumMap<>(outDegrees); }
-        public boolean isConnected() { return connected; }
-        public double getAverageSpread() { return averageSpread; }
-        public long getStaleRateCount() { return staleRateCount; }
+        public int getTotalEdges() {
+            return totalEdges;
+        }
+
+        public int getTotalPairs() {
+            return totalPairs;
+        }
+
+        public Map<Currency, Integer> getOutDegrees() {
+            return new EnumMap<>(outDegrees);
+        }
+
+        public boolean isConnected() {
+            return connected;
+        }
+
+        public double getAverageSpread() {
+            return averageSpread;
+        }
+
+        public long getStaleRateCount() {
+            return staleRateCount;
+        }
 
         @Override
         public String toString() {

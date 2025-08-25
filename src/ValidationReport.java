@@ -17,15 +17,33 @@ public final class ValidationReport implements Serializable {
         this.errors = Collections.unmodifiableList(new ArrayList<>(builder.errors));
     }
 
-    public static Builder builder() { return new Builder(); }
+    public static Builder builder() {
+        return new Builder();
+    }
 
-    public int getTotalRanges() { return totalRanges; }
-    public List<Map.Entry<BinRange, BinRange>> getOverlappingRanges() { return overlappingRanges; }
-    public List<String> getWarnings() { return warnings; }
-    public List<String> getErrors() { return errors; }
+    public int getTotalRanges() {
+        return totalRanges;
+    }
 
-    public boolean isValid() { return errors.isEmpty() && overlappingRanges.isEmpty(); }
-    public boolean hasWarnings() { return !warnings.isEmpty(); }
+    public List<Map.Entry<BinRange, BinRange>> getOverlappingRanges() {
+        return overlappingRanges;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    public boolean isValid() {
+        return errors.isEmpty() && overlappingRanges.isEmpty();
+    }
+
+    public boolean hasWarnings() {
+        return !warnings.isEmpty();
+    }
 
     public static class Builder {
         private int totalRanges;
@@ -33,14 +51,29 @@ public final class ValidationReport implements Serializable {
         private List<String> warnings = new ArrayList<>();
         private List<String> errors = new ArrayList<>();
 
-        public Builder totalRanges(int totalRanges) { this.totalRanges = totalRanges; return this; }
-        public Builder overlappingRanges(List<Map.Entry<BinRange, BinRange>> overlaps) {
-            this.overlappingRanges = overlaps; return this;
+        public Builder totalRanges(int totalRanges) {
+            this.totalRanges = totalRanges;
+            return this;
         }
-        public Builder addWarning(String warning) { this.warnings.add(warning); return this; }
-        public Builder addError(String error) { this.errors.add(error); return this; }
 
-        public ValidationReport build() { return new ValidationReport(this); }
+        public Builder overlappingRanges(List<Map.Entry<BinRange, BinRange>> overlaps) {
+            this.overlappingRanges = overlaps;
+            return this;
+        }
+
+        public Builder addWarning(String warning) {
+            this.warnings.add(warning);
+            return this;
+        }
+
+        public Builder addError(String error) {
+            this.errors.add(error);
+            return this;
+        }
+
+        public ValidationReport build() {
+            return new ValidationReport(this);
+        }
     }
 
     @Override

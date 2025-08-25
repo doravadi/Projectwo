@@ -7,19 +7,19 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class FraudDetectionService {
 
-    
+
     private final BloomFilter transactionBloomFilter;
     private final LocationTracker locationTracker;
-    private final Map<String, RiskWindow> cardRiskWindows; 
+    private final Map<String, RiskWindow> cardRiskWindows;
 
-    
+
     private final Map<String, FraudAlert> alertHistory;
     private final AtomicLong alertCounter;
 
-    
+
     private final FraudDetectionConfig config;
 
-    
+
     private final AtomicLong totalTransactionsProcessed;
     private final AtomicLong totalAlertsGenerated;
     private final Map<FraudAlert.AlertSeverity, AtomicLong> alertCountsBySeverity;
@@ -27,16 +27,16 @@ public final class FraudDetectionService {
     public FraudDetectionService(FraudDetectionConfig config) {
         this.config = Objects.requireNonNull(config, "Config cannot be null");
 
-        
+
         this.transactionBloomFilter = BloomFilter.createForFraudDetection();
         this.locationTracker = LocationTracker.createDefault();
         this.cardRiskWindows = new ConcurrentHashMap<>();
 
-        
+
         this.alertHistory = new ConcurrentHashMap<>();
         this.alertCounter = new AtomicLong(1);
 
-        
+
         this.totalTransactionsProcessed = new AtomicLong(0);
         this.totalAlertsGenerated = new AtomicLong(0);
         this.alertCountsBySeverity = new ConcurrentHashMap<>();
@@ -54,7 +54,7 @@ public final class FraudDetectionService {
         return new FraudDetectionService(FraudDetectionConfig.createHighSecurity());
     }
 
-    
+
     public FraudAnalysisResult analyzeTransaction(String transactionId, String cardNumber,
                                                   BigDecimal amount, String merchantName,
                                                   String merchantCity, String merchantCountry,
@@ -69,53 +69,53 @@ public final class FraudDetectionService {
         totalTransactionsProcessed.incrementAndGet();
 
         try {
-            
+
             String transactionKey = createTransactionKey(cardNumber, merchantName, amount, transactionTime);
             boolean possibleDuplicate = transactionBloomFilter.mightContain(transactionKey);
 
-            
+
             String location = merchantCity + ", " + merchantCountry;
             LocationTracker.LocationAnalysis locationAnalysis = locationTracker.recordLocation(
                     transactionId, cardNumber, latitude, longitude, merchantCity,
                     merchantCountry, transactionTime);
 
-            
+
             RiskWindow cardWindow = getOrCreateRiskWindow(cardNumber);
             RiskWindow.WindowAnalysis windowAnalysis = cardWindow.addTransaction(
                     transactionId, cardNumber, amount, merchantName, location, transactionTime);
 
-            
+
             TransactionRisk transactionRisk = assessTransactionRisk(
                     transactionId, cardNumber, amount, merchantName, location,
                     transactionTime, transactionType, possibleDuplicate,
                     locationAnalysis, windowAnalysis);
 
-            
+
             FraudAlert fraudAlert = null;
             if (shouldGenerateAlert(transactionRisk, locationAnalysis, windowAnalysis, possibleDuplicate)) {
                 fraudAlert = generateFraudAlert(transactionRisk, locationAnalysis,
                         windowAnalysis, possibleDuplicate);
 
-                
+
                 alertHistory.put(fraudAlert.getAlertId(), fraudAlert);
                 totalAlertsGenerated.incrementAndGet();
                 alertCountsBySeverity.get(fraudAlert.getSeverity()).incrementAndGet();
             }
 
-            
+
             transactionBloomFilter.add(transactionKey);
 
             return new FraudAnalysisResult(transactionRisk, locationAnalysis, windowAnalysis,
                     fraudAlert, possibleDuplicate, getRecommendation(fraudAlert));
 
         } catch (Exception e) {
-            
+
             System.err.println("Error analyzing transaction " + transactionId + ": " + e.getMessage());
             return createErrorResult(transactionId, cardNumber, amount);
         }
     }
 
-    
+
     public List<FraudAnalysisResult> analyzeTransactionBatch(List<TransactionData> transactions) {
         Objects.requireNonNull(transactions, "Transactions cannot be null");
 
@@ -132,14 +132,14 @@ public final class FraudDetectionService {
             } catch (Exception e) {
                 System.err.println("Error in batch analysis for transaction " +
                         txn.getTransactionId() + ": " + e.getMessage());
-                
+
             }
         }
 
         return results;
     }
 
-    
+
     public List<FraudAlert> getRecentAlerts(int maxCount) {
         return alertHistory.values().stream()
                 .sorted(Comparator.comparing(FraudAlert::getAlertTime).reversed())
@@ -147,7 +147,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    
+
     public List<FraudAlert> getCardAlerts(String cardNumber, int maxCount) {
         Objects.requireNonNull(cardNumber, "Card number cannot be null");
 
@@ -158,7 +158,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    
+
     public List<FraudAlert> getHighSeverityAlerts() {
         return alertHistory.values().stream()
                 .filter(alert -> alert.getSeverity() == FraudAlert.AlertSeverity.HIGH ||
@@ -167,7 +167,7 @@ public final class FraudDetectionService {
                 .toList();
     }
 
-    
+
     public FraudDetectionStatistics getStatistics() {
         Map<FraudAlert.AlertSeverity, Long> alertCounts = new HashMap<>();
         for (Map.Entry<FraudAlert.AlertSeverity, AtomicLong> entry : alertCountsBySeverity.entrySet()) {
@@ -187,15 +187,15 @@ public final class FraudDetectionService {
         );
     }
 
-    
+
     public void updateConfig(FraudDetectionConfig newConfig) {
         Objects.requireNonNull(newConfig, "Config cannot be null");
-        
-        
+
+
         System.err.println("Warning: Config update requires service restart for thread safety");
     }
 
-    
+
     public void clearAllData() {
         transactionBloomFilter.clear();
         cardRiskWindows.clear();
@@ -208,11 +208,11 @@ public final class FraudDetectionService {
         }
     }
 
-    
+
     private String createTransactionKey(String cardNumber, String merchantName,
                                         BigDecimal amount, LocalDateTime timestamp) {
-        
-        String timeKey = timestamp.withSecond(0).withNano(0).toString(); 
+
+        String timeKey = timestamp.withSecond(0).withNano(0).toString();
         return String.format("%s_%s_%.2f_%s", cardNumber, merchantName, amount.doubleValue(), timeKey);
     }
 
@@ -227,15 +227,15 @@ public final class FraudDetectionService {
                                                   LocationTracker.LocationAnalysis locationAnalysis,
                                                   RiskWindow.WindowAnalysis windowAnalysis) {
 
-        
+
         EnumSet<TransactionRisk.RiskFactor> riskFactors = EnumSet.noneOf(TransactionRisk.RiskFactor.class);
 
-        
+
         if (possibleDuplicate) {
             riskFactors.add(TransactionRisk.RiskFactor.DUPLICATE_TRANSACTION);
         }
 
-        
+
         if (locationAnalysis.hasSuspiciousActivity()) {
             if (locationAnalysis.getAnomalies().contains(LocationTracker.LocationAnomaly.IMPOSSIBLE_SPEED)) {
                 riskFactors.add(TransactionRisk.RiskFactor.LOCATION_JUMP);
@@ -248,7 +248,7 @@ public final class FraudDetectionService {
             }
         }
 
-        
+
         if (windowAnalysis.hasRiskPatterns()) {
             if (windowAnalysis.getRiskPattern().hasPattern(RiskWindow.RiskPattern.PatternType.HIGH_VELOCITY)) {
                 riskFactors.add(TransactionRisk.RiskFactor.HIGH_FREQUENCY);
@@ -258,12 +258,12 @@ public final class FraudDetectionService {
             }
         }
 
-        
+
         if (amount.compareTo(config.getHighAmountThreshold()) > 0) {
             riskFactors.add(TransactionRisk.RiskFactor.AMOUNT_ANOMALY);
         }
 
-        
+
         if (transactionTime.getHour() < 6 || transactionTime.getHour() > 22) {
             riskFactors.add(TransactionRisk.RiskFactor.TIME_ANOMALY);
         }
@@ -272,7 +272,7 @@ public final class FraudDetectionService {
             riskFactors.add(TransactionRisk.RiskFactor.WEEKEND_ACTIVITY);
         }
 
-        
+
         String riskReason = buildRiskReason(riskFactors, locationAnalysis, windowAnalysis, possibleDuplicate);
 
         return TransactionRisk.suspicious(transactionId, cardNumber, amount, merchantName,
@@ -285,27 +285,27 @@ public final class FraudDetectionService {
                                         RiskWindow.WindowAnalysis windowAnalysis,
                                         boolean possibleDuplicate) {
 
-        
+
         if (transactionRisk.getRiskScore() >= config.getCriticalRiskThreshold()) {
             return true;
         }
 
-        
+
         if (locationAnalysis.isHighRisk()) {
             return true;
         }
 
-        
+
         if (windowAnalysis.isHighRisk()) {
             return true;
         }
 
-        
+
         if (possibleDuplicate && transactionRisk.getRiskScore() >= config.getDuplicateAlertThreshold()) {
             return true;
         }
 
-        
+
         if (transactionRisk.getRiskScore() >= config.getModerateRiskThreshold() &&
                 (locationAnalysis.hasSuspiciousActivity() || windowAnalysis.hasRiskPatterns())) {
             return true;
@@ -321,7 +321,7 @@ public final class FraudDetectionService {
 
         FraudAlert alert = FraudAlert.createFromRiskAnalysis(transactionRisk, locationAnalysis);
 
-        
+
         Map<String, Object> metadata = new HashMap<>(alert.getMetadata());
         metadata.put("windowTransactionCount", windowAnalysis.getTransactionCount());
         metadata.put("windowTotalAmount", windowAnalysis.getTotalAmount());
@@ -376,7 +376,7 @@ public final class FraudDetectionService {
     }
 
     private FraudAnalysisResult createErrorResult(String transactionId, String cardNumber, BigDecimal amount) {
-        
+
         TransactionRisk errorRisk = TransactionRisk.lowRisk(transactionId, cardNumber, amount,
                 "UNKNOWN", "UNKNOWN", "UNKNOWN",
                 LocalDateTime.now(), TransactionRisk.TransactionType.PURCHASE);
@@ -384,7 +384,7 @@ public final class FraudDetectionService {
         return new FraudAnalysisResult(errorRisk, null, null, null, false, ProcessingRecommendation.REVIEW);
     }
 
-    
+
     public enum ProcessingRecommendation {
         ALLOW, MONITOR, REVIEW, BLOCK
     }
@@ -417,17 +417,46 @@ public final class FraudDetectionService {
             this.transactionType = transactionType;
         }
 
-        
-        public String getTransactionId() { return transactionId; }
-        public String getCardNumber() { return cardNumber; }
-        public BigDecimal getAmount() { return amount; }
-        public String getMerchantName() { return merchantName; }
-        public String getMerchantCity() { return merchantCity; }
-        public String getMerchantCountry() { return merchantCountry; }
-        public double getLatitude() { return latitude; }
-        public double getLongitude() { return longitude; }
-        public LocalDateTime getTransactionTime() { return transactionTime; }
-        public TransactionRisk.TransactionType getTransactionType() { return transactionType; }
+
+        public String getTransactionId() {
+            return transactionId;
+        }
+
+        public String getCardNumber() {
+            return cardNumber;
+        }
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        public String getMerchantName() {
+            return merchantName;
+        }
+
+        public String getMerchantCity() {
+            return merchantCity;
+        }
+
+        public String getMerchantCountry() {
+            return merchantCountry;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public LocalDateTime getTransactionTime() {
+            return transactionTime;
+        }
+
+        public TransactionRisk.TransactionType getTransactionType() {
+            return transactionType;
+        }
     }
 
     public static final class FraudAnalysisResult {
@@ -451,17 +480,42 @@ public final class FraudDetectionService {
             this.recommendation = recommendation;
         }
 
-        
-        public TransactionRisk getTransactionRisk() { return transactionRisk; }
-        public LocationTracker.LocationAnalysis getLocationAnalysis() { return locationAnalysis; }
-        public RiskWindow.WindowAnalysis getWindowAnalysis() { return windowAnalysis; }
-        public FraudAlert getFraudAlert() { return fraudAlert; }
-        public boolean isPossibleDuplicate() { return possibleDuplicate; }
-        public ProcessingRecommendation getRecommendation() { return recommendation; }
 
-        public boolean hasAlert() { return fraudAlert != null; }
-        public boolean shouldBlock() { return recommendation == ProcessingRecommendation.BLOCK; }
-        public boolean shouldReview() { return recommendation == ProcessingRecommendation.REVIEW; }
+        public TransactionRisk getTransactionRisk() {
+            return transactionRisk;
+        }
+
+        public LocationTracker.LocationAnalysis getLocationAnalysis() {
+            return locationAnalysis;
+        }
+
+        public RiskWindow.WindowAnalysis getWindowAnalysis() {
+            return windowAnalysis;
+        }
+
+        public FraudAlert getFraudAlert() {
+            return fraudAlert;
+        }
+
+        public boolean isPossibleDuplicate() {
+            return possibleDuplicate;
+        }
+
+        public ProcessingRecommendation getRecommendation() {
+            return recommendation;
+        }
+
+        public boolean hasAlert() {
+            return fraudAlert != null;
+        }
+
+        public boolean shouldBlock() {
+            return recommendation == ProcessingRecommendation.BLOCK;
+        }
+
+        public boolean shouldReview() {
+            return recommendation == ProcessingRecommendation.REVIEW;
+        }
 
         @Override
         public String toString() {
@@ -492,13 +546,30 @@ public final class FraudDetectionService {
             this.locationStats = locationStats;
         }
 
-        
-        public long getTotalTransactionsProcessed() { return totalTransactionsProcessed; }
-        public long getTotalAlertsGenerated() { return totalAlertsGenerated; }
-        public Map<FraudAlert.AlertSeverity, Long> getAlertCounts() { return new HashMap<>(alertCounts); }
-        public int getActiveCardWindows() { return activeCardWindows; }
-        public BloomFilter.BloomFilterStatistics getBloomFilterStats() { return bloomFilterStats; }
-        public LocationTracker.TrackerStatistics getLocationStats() { return locationStats; }
+
+        public long getTotalTransactionsProcessed() {
+            return totalTransactionsProcessed;
+        }
+
+        public long getTotalAlertsGenerated() {
+            return totalAlertsGenerated;
+        }
+
+        public Map<FraudAlert.AlertSeverity, Long> getAlertCounts() {
+            return new HashMap<>(alertCounts);
+        }
+
+        public int getActiveCardWindows() {
+            return activeCardWindows;
+        }
+
+        public BloomFilter.BloomFilterStatistics getBloomFilterStats() {
+            return bloomFilterStats;
+        }
+
+        public LocationTracker.TrackerStatistics getLocationStats() {
+            return locationStats;
+        }
 
         public double getAlertRate() {
             return totalTransactionsProcessed > 0 ?

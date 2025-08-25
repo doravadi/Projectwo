@@ -26,37 +26,37 @@ public final class InterestCalculator {
         validateInterestRates();
     }
 
-    
+
     public static InterestCalculator createDefault() {
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> defaultRates =
                 new EnumMap<>(DailyBalance.BalanceBucket.class);
 
-        defaultRates.put(DailyBalance.BalanceBucket.PURCHASE, new BigDecimal("0.18"));      
-        defaultRates.put(DailyBalance.BalanceBucket.CASH_ADVANCE, new BigDecimal("0.24")); 
-        defaultRates.put(DailyBalance.BalanceBucket.INSTALLMENT, new BigDecimal("0.15"));  
-        defaultRates.put(DailyBalance.BalanceBucket.FEES_INTEREST, new BigDecimal("0.30")); 
+        defaultRates.put(DailyBalance.BalanceBucket.PURCHASE, new BigDecimal("0.18"));
+        defaultRates.put(DailyBalance.BalanceBucket.CASH_ADVANCE, new BigDecimal("0.24"));
+        defaultRates.put(DailyBalance.BalanceBucket.INSTALLMENT, new BigDecimal("0.15"));
+        defaultRates.put(DailyBalance.BalanceBucket.FEES_INTEREST, new BigDecimal("0.30"));
 
         return new InterestCalculator(defaultRates,
                 new MathContext(10, RoundingMode.HALF_UP),
                 RoundingMode.HALF_UP);
     }
 
-    
+
     public InterestCalculationResult calculateInterest(SweepLineCalculator sweepLine,
                                                        DateRange period) {
         Objects.requireNonNull(sweepLine, "SweepLineCalculator cannot be null");
         Objects.requireNonNull(period, "Period cannot be null");
 
-        
+
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> averageBalances =
                 sweepLine.calculateAverageBalances(period);
 
-        
+
         long periodDays = ChronoUnit.DAYS.between(period.getStartDate(),
                 period.getEndDate().plusDays(1));
         BigDecimal periodDaysDecimal = new BigDecimal(periodDays);
 
-        
+
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> bucketInterests =
                 new EnumMap<>(DailyBalance.BalanceBucket.class);
         BigDecimal totalInterest = BigDecimal.ZERO;
@@ -65,7 +65,7 @@ public final class InterestCalculator {
             BigDecimal averageBalance = averageBalances.get(bucket);
             BigDecimal annualRate = interestRates.get(bucket);
 
-            
+
             BigDecimal interest = averageBalance
                     .multiply(annualRate, mathContext)
                     .multiply(periodDaysDecimal, mathContext)
@@ -80,7 +80,7 @@ public final class InterestCalculator {
                 bucketInterests, totalInterest, periodDays);
     }
 
-    
+
     public List<DailyInterest> calculateDailyInterest(SweepLineCalculator sweepLine,
                                                       DateRange period) {
         List<DailyBalance> dailyBalances = sweepLine.calculateDailyBalances(period);
@@ -99,7 +99,7 @@ public final class InterestCalculator {
         return result;
     }
 
-    
+
     public static final class InterestCalculationResult {
         private final DateRange period;
         private final EnumMap<DailyBalance.BalanceBucket, BigDecimal> averageBalances;
@@ -119,15 +119,25 @@ public final class InterestCalculator {
             this.periodDays = periodDays;
         }
 
-        public DateRange getPeriod() { return period; }
+        public DateRange getPeriod() {
+            return period;
+        }
+
         public EnumMap<DailyBalance.BalanceBucket, BigDecimal> getAverageBalances() {
             return new EnumMap<>(averageBalances);
         }
+
         public EnumMap<DailyBalance.BalanceBucket, BigDecimal> getBucketInterests() {
             return new EnumMap<>(bucketInterests);
         }
-        public BigDecimal getTotalInterest() { return totalInterest; }
-        public long getPeriodDays() { return periodDays; }
+
+        public BigDecimal getTotalInterest() {
+            return totalInterest;
+        }
+
+        public long getPeriodDays() {
+            return periodDays;
+        }
 
         @Override
         public String toString() {
@@ -149,11 +159,17 @@ public final class InterestCalculator {
             this.totalInterest = totalInterest;
         }
 
-        public LocalDate getDate() { return date; }
+        public LocalDate getDate() {
+            return date;
+        }
+
         public EnumMap<DailyBalance.BalanceBucket, BigDecimal> getBucketInterests() {
             return new EnumMap<>(bucketInterests);
         }
-        public BigDecimal getTotalInterest() { return totalInterest; }
+
+        public BigDecimal getTotalInterest() {
+            return totalInterest;
+        }
 
         @Override
         public String toString() {
@@ -161,14 +177,14 @@ public final class InterestCalculator {
         }
     }
 
-    
+
     public BigDecimal calculateCompoundInterest(BigDecimal principal,
                                                 DailyBalance.BalanceBucket bucket,
                                                 int months) {
         BigDecimal annualRate = interestRates.get(bucket);
         BigDecimal monthlyRate = annualRate.divide(new BigDecimal("12"), mathContext);
 
-        
+
         BigDecimal onePlusRate = BigDecimal.ONE.add(monthlyRate);
         BigDecimal compound = principal.multiply(
                 onePlusRate.pow(months, mathContext), mathContext);
@@ -176,7 +192,7 @@ public final class InterestCalculator {
         return compound.setScale(2, roundingMode);
     }
 
-    
+
     public InterestCalculator withRate(DailyBalance.BalanceBucket bucket, BigDecimal newRate) {
         EnumMap<DailyBalance.BalanceBucket, BigDecimal> newRates =
                 new EnumMap<>(interestRates);
@@ -185,7 +201,7 @@ public final class InterestCalculator {
         return new InterestCalculator(newRates, mathContext, roundingMode);
     }
 
-    
+
     private EnumMap<DailyBalance.BalanceBucket, BigDecimal> calculateDailyInterestForBalance(
             DailyBalance balance) {
 
@@ -195,7 +211,7 @@ public final class InterestCalculator {
         for (DailyBalance.BalanceBucket bucket : DailyBalance.BalanceBucket.values()) {
             BigDecimal bucketBalance = balance.getBalance(bucket);
 
-            
+
             if (bucketBalance.compareTo(BigDecimal.ZERO) <= 0) {
                 interests.put(bucket, BigDecimal.ZERO);
                 continue;
@@ -203,7 +219,7 @@ public final class InterestCalculator {
 
             BigDecimal annualRate = interestRates.get(bucket);
 
-            
+
             BigDecimal dailyRate = annualRate.divide(daysInYear, mathContext);
             BigDecimal dailyInterest = bucketBalance
                     .multiply(dailyRate, mathContext)
@@ -222,14 +238,14 @@ public final class InterestCalculator {
                 throw new IllegalArgumentException("Interest rate cannot be negative: " +
                         entry.getKey() + " = " + rate);
             }
-            if (rate.compareTo(new BigDecimal("2.0")) > 0) { 
+            if (rate.compareTo(new BigDecimal("2.0")) > 0) {
                 System.err.println("Warning: Very high interest rate for " +
                         entry.getKey() + ": " + rate);
             }
         }
     }
 
-    
+
     public BigDecimal getRate(DailyBalance.BalanceBucket bucket) {
         return interestRates.get(bucket);
     }
@@ -241,7 +257,6 @@ public final class InterestCalculator {
     public RoundingMode getRoundingMode() {
         return roundingMode;
     }
-
 
 
     @Override

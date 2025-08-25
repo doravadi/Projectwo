@@ -9,11 +9,11 @@ public final class BloomFilter {
     private final int hashFunctionCount;
     private int elementCount;
 
-    
+
     private static final int[] HASH_SEEDS = {0x7ed55d16, 0xc761c23c, 0x165667b1};
 
-    
-    private static final int DEFAULT_BIT_SIZE = 1000000;  
+
+    private static final int DEFAULT_BIT_SIZE = 1000000;
     private static final int DEFAULT_HASH_COUNT = 3;
 
     public BloomFilter(int expectedElements, double falsePositiveRate) {
@@ -24,11 +24,11 @@ public final class BloomFilter {
             throw new IllegalArgumentException("False positive rate must be between 0 and 1");
         }
 
-        
+
         this.bitArraySize = (int) Math.ceil(-expectedElements * Math.log(falsePositiveRate) /
                 (Math.log(2) * Math.log(2)));
 
-        
+
         this.hashFunctionCount = Math.max(1, (int) Math.round(
                 (double) bitArraySize / expectedElements * Math.log(2)));
 
@@ -50,18 +50,18 @@ public final class BloomFilter {
         this.elementCount = 0;
     }
 
-    
+
     public static BloomFilter createForFraudDetection() {
-        
+
         return new BloomFilter(100000, 0.001);
     }
 
-    
+
     public static BloomFilter createCompact() {
         return new BloomFilter(DEFAULT_BIT_SIZE, DEFAULT_HASH_COUNT);
     }
 
-    
+
     public void add(String element) {
         Objects.requireNonNull(element, "Element cannot be null");
 
@@ -74,7 +74,7 @@ public final class BloomFilter {
         elementCount++;
     }
 
-    
+
     public boolean mightContain(String element) {
         Objects.requireNonNull(element, "Element cannot be null");
 
@@ -82,14 +82,14 @@ public final class BloomFilter {
         for (int hash : hashes) {
             int index = Math.abs(hash) % bitArraySize;
             if (!bitSet.get(index)) {
-                return false; 
+                return false;
             }
         }
 
-        return true; 
+        return true;
     }
 
-    
+
     public void addAll(Iterable<String> elements) {
         Objects.requireNonNull(elements, "Elements cannot be null");
         for (String element : elements) {
@@ -97,7 +97,7 @@ public final class BloomFilter {
         }
     }
 
-    
+
     public boolean containsAny(Iterable<String> elements) {
         Objects.requireNonNull(elements, "Elements cannot be null");
         for (String element : elements) {
@@ -108,29 +108,28 @@ public final class BloomFilter {
         return false;
     }
 
-    
+
     public double getEstimatedFalsePositiveRate() {
         if (elementCount == 0) return 0.0;
 
-        
-        
+
         double exponent = -(double) hashFunctionCount * elementCount / bitArraySize;
         double base = 1.0 - Math.exp(exponent);
         return Math.pow(base, hashFunctionCount);
     }
 
-    
+
     public double getMemoryUtilization() {
         return (double) bitSet.cardinality() / bitArraySize * 100.0;
     }
 
-    
+
     public void clear() {
         bitSet.clear();
         elementCount = 0;
     }
 
-    
+
     public BloomFilter union(BloomFilter other) {
         if (this.bitArraySize != other.bitArraySize ||
                 this.hashFunctionCount != other.hashFunctionCount) {
@@ -140,12 +139,12 @@ public final class BloomFilter {
         BloomFilter result = new BloomFilter(bitArraySize, hashFunctionCount);
         result.bitSet.or(this.bitSet);
         result.bitSet.or(other.bitSet);
-        result.elementCount = this.elementCount + other.elementCount; 
+        result.elementCount = this.elementCount + other.elementCount;
 
         return result;
     }
 
-    
+
     private int[] getHashValues(String element) {
         int[] hashes = new int[Math.min(hashFunctionCount, HASH_SEEDS.length)];
 
@@ -156,7 +155,7 @@ public final class BloomFilter {
         return hashes;
     }
 
-    
+
     private int murmurHash3(String input, int seed) {
         byte[] data = input.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return murmurHash3(data, seed);
@@ -172,7 +171,7 @@ public final class BloomFilter {
 
         int hash = seed;
 
-        
+
         int length = data.length;
         int numChunks = length / 4;
 
@@ -191,7 +190,7 @@ public final class BloomFilter {
             hash = hash * m + n;
         }
 
-        
+
         int remaining = length % 4;
         if (remaining > 0) {
             int chunk = 0;
@@ -205,7 +204,7 @@ public final class BloomFilter {
             hash ^= chunk;
         }
 
-        
+
         hash ^= length;
         hash ^= (hash >>> 16);
         hash *= 0x85ebca6b;
@@ -216,7 +215,7 @@ public final class BloomFilter {
         return hash;
     }
 
-    
+
     public BloomFilterStatistics getStatistics() {
         return new BloomFilterStatistics(
                 bitArraySize,
@@ -228,13 +227,24 @@ public final class BloomFilter {
         );
     }
 
-    
-    public int getBitArraySize() { return bitArraySize; }
-    public int getHashFunctionCount() { return hashFunctionCount; }
-    public int getElementCount() { return elementCount; }
-    public int getBitsSet() { return bitSet.cardinality(); }
 
-    
+    public int getBitArraySize() {
+        return bitArraySize;
+    }
+
+    public int getHashFunctionCount() {
+        return hashFunctionCount;
+    }
+
+    public int getElementCount() {
+        return elementCount;
+    }
+
+    public int getBitsSet() {
+        return bitSet.cardinality();
+    }
+
+
     public static final class BloomFilterStatistics {
         private final int bitArraySize;
         private final int hashFunctionCount;
@@ -253,15 +263,32 @@ public final class BloomFilter {
             this.estimatedFPR = estimatedFPR;
         }
 
-        public int getBitArraySize() { return bitArraySize; }
-        public int getHashFunctionCount() { return hashFunctionCount; }
-        public int getElementCount() { return elementCount; }
-        public int getBitsSet() { return bitsSet; }
-        public double getMemoryUtilization() { return memoryUtilization; }
-        public double getEstimatedFPR() { return estimatedFPR; }
+        public int getBitArraySize() {
+            return bitArraySize;
+        }
+
+        public int getHashFunctionCount() {
+            return hashFunctionCount;
+        }
+
+        public int getElementCount() {
+            return elementCount;
+        }
+
+        public int getBitsSet() {
+            return bitsSet;
+        }
+
+        public double getMemoryUtilization() {
+            return memoryUtilization;
+        }
+
+        public double getEstimatedFPR() {
+            return estimatedFPR;
+        }
 
         public boolean isOptimal() {
-            
+
             return memoryUtilization >= 45.0 && memoryUtilization <= 75.0 && estimatedFPR <= 0.05;
         }
 

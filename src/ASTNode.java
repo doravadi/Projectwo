@@ -7,46 +7,46 @@ import java.util.*;
 
 public abstract class ASTNode {
 
-    
+
     public abstract Object evaluate(TransactionContext context) throws RuleEvaluationException;
 
-    
+
     public abstract int getConditionCount();
 
-    
+
     public abstract NodeType getNodeType();
 
-    
+
     public abstract String toExpressionString();
 
-    
+
     public enum NodeType {
-        
+
         AND, OR, NOT,
 
-        
+
         EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_EQUAL, LESS_EQUAL,
 
-        
+
         IN, NOT_IN, BETWEEN,
 
-        
+
         PLUS, MINUS, MULTIPLY, DIVIDE,
 
-        
+
         NUMBER, STRING, BOOLEAN, DATE, TIME,
 
-        
+
         FIELD,
 
-        
+
         LIST, SET,
 
-        
+
         ASSIGNMENT, ACTION_BLOCK
     }
 
-    
+
     public static abstract class BinaryOperatorNode extends ASTNode {
         protected final ASTNode left;
         protected final ASTNode right;
@@ -61,11 +61,16 @@ public abstract class ASTNode {
             return left.getConditionCount() + right.getConditionCount() + 1;
         }
 
-        public ASTNode getLeft() { return left; }
-        public ASTNode getRight() { return right; }
+        public ASTNode getLeft() {
+            return left;
+        }
+
+        public ASTNode getRight() {
+            return right;
+        }
     }
 
-    
+
     public static abstract class UnaryOperatorNode extends ASTNode {
         protected final ASTNode operand;
 
@@ -78,10 +83,12 @@ public abstract class ASTNode {
             return operand.getConditionCount() + 1;
         }
 
-        public ASTNode getOperand() { return operand; }
+        public ASTNode getOperand() {
+            return operand;
+        }
     }
 
-    
+
     public static final class AndNode extends BinaryOperatorNode {
         public AndNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -91,7 +98,7 @@ public abstract class ASTNode {
         public Object evaluate(TransactionContext context) throws RuleEvaluationException {
             Object leftResult = left.evaluate(context);
             if (!isTrue(leftResult)) {
-                return false; 
+                return false;
             }
 
             Object rightResult = right.evaluate(context);
@@ -109,7 +116,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class OrNode extends BinaryOperatorNode {
         public OrNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -119,7 +126,7 @@ public abstract class ASTNode {
         public Object evaluate(TransactionContext context) throws RuleEvaluationException {
             Object leftResult = left.evaluate(context);
             if (isTrue(leftResult)) {
-                return true; 
+                return true;
             }
 
             Object rightResult = right.evaluate(context);
@@ -137,7 +144,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class NotNode extends UnaryOperatorNode {
         public NotNode(ASTNode operand) {
             super(operand);
@@ -160,7 +167,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class EqualsNode extends BinaryOperatorNode {
         public EqualsNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -185,7 +192,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class GreaterThanNode extends BinaryOperatorNode {
         public GreaterThanNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -220,7 +227,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class FieldNode extends ASTNode {
         private final String fieldName;
 
@@ -265,7 +272,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; 
+            return 0;
         }
 
         @Override
@@ -283,7 +290,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class NumberNode extends ASTNode {
         private final BigDecimal value;
 
@@ -310,7 +317,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; 
+            return 0;
         }
 
         @Override
@@ -328,7 +335,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class StringNode extends ASTNode {
         private final String value;
 
@@ -361,7 +368,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class EnumNode extends ASTNode {
         private final String enumName;
         private final Object enumValue;
@@ -372,25 +379,25 @@ public abstract class ASTNode {
         }
 
         private Object parseEnumValue(String name) {
-            
+
             try {
                 return TransactionContext.MccCategory.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                
+
             }
 
-            
+
             try {
                 return DayOfWeek.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                
+
             }
 
-            
+
             try {
                 return TransactionContext.TransactionType.valueOf(name.toUpperCase());
             } catch (IllegalArgumentException e) {
-                
+
                 return name;
             }
         }
@@ -407,7 +414,7 @@ public abstract class ASTNode {
 
         @Override
         public NodeType getNodeType() {
-            return NodeType.STRING; 
+            return NodeType.STRING;
         }
 
         @Override
@@ -424,7 +431,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class InNode extends BinaryOperatorNode {
         public InNode(ASTNode left, ASTNode right) {
             super(left, right);
@@ -457,7 +464,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     public static final class ListNode extends ASTNode {
         private final List<ASTNode> elements;
 
@@ -476,7 +483,7 @@ public abstract class ASTNode {
 
         @Override
         public int getConditionCount() {
-            return 0; 
+            return 0;
         }
 
         @Override
@@ -497,7 +504,7 @@ public abstract class ASTNode {
         }
     }
 
-    
+
     protected static boolean isTrue(Object value) {
         if (value == null) {
             return false;
@@ -511,6 +518,6 @@ public abstract class ASTNode {
         if (value instanceof String) {
             return !((String) value).isEmpty();
         }
-        return true; 
+        return true;
     }
 }

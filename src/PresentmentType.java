@@ -16,7 +16,7 @@ public enum PresentmentType {
 
     private final String displayName;
     private final String description;
-    private final boolean increasesBalance; 
+    private final boolean increasesBalance;
 
     PresentmentType(String displayName, String description, boolean increasesBalance) {
         this.displayName = displayName;
@@ -40,16 +40,16 @@ public enum PresentmentType {
         return !increasesBalance;
     }
 
-    
+
     public boolean requiresAuthorization() {
         return switch (this) {
             case SALE, PARTIAL_CAPTURE, CASH_ADVANCE, QUASI_CASH -> true;
-            case REFUND, ADJUSTMENT, REVERSAL -> false; 
+            case REFUND, ADJUSTMENT, REVERSAL -> false;
             case CHARGEBACK, CHARGEBACK_REVERSAL, REPRESENTMENT -> true;
         };
     }
 
-    
+
     public boolean canBeMatched() {
         return switch (this) {
             case SALE, PARTIAL_CAPTURE, CASH_ADVANCE, QUASI_CASH, REPRESENTMENT -> true;
@@ -57,32 +57,32 @@ public enum PresentmentType {
         };
     }
 
-    
+
     public AmountRelationship getExpectedAmountRelationship() {
         return switch (this) {
-            case SALE, CASH_ADVANCE, QUASI_CASH -> AmountRelationship.EQUAL_OR_SLIGHTLY_MORE; 
+            case SALE, CASH_ADVANCE, QUASI_CASH -> AmountRelationship.EQUAL_OR_SLIGHTLY_MORE;
             case PARTIAL_CAPTURE -> AmountRelationship.LESS_THAN_OR_EQUAL;
             case REFUND, REVERSAL -> AmountRelationship.NEGATIVE;
-            case ADJUSTMENT -> AmountRelationship.ANY; 
+            case ADJUSTMENT -> AmountRelationship.ANY;
             case CHARGEBACK -> AmountRelationship.NEGATIVE;
             case CHARGEBACK_REVERSAL, REPRESENTMENT -> AmountRelationship.POSITIVE;
         };
     }
 
-    
+
     public int getTypicalSettlementHours() {
         return switch (this) {
-            case SALE, PARTIAL_CAPTURE -> 24; 
-            case CASH_ADVANCE, QUASI_CASH -> 2; 
-            case REFUND -> 72; 
-            case ADJUSTMENT -> 168; 
-            case REVERSAL -> 1; 
-            case CHARGEBACK -> 8760; 
-            case CHARGEBACK_REVERSAL, REPRESENTMENT -> 720; 
+            case SALE, PARTIAL_CAPTURE -> 24;
+            case CASH_ADVANCE, QUASI_CASH -> 2;
+            case REFUND -> 72;
+            case ADJUSTMENT -> 168;
+            case REVERSAL -> 1;
+            case CHARGEBACK -> 8760;
+            case CHARGEBACK_REVERSAL, REPRESENTMENT -> 720;
         };
     }
 
-    
+
     public boolean isDisputeRelated() {
         return switch (this) {
             case CHARGEBACK, CHARGEBACK_REVERSAL, REPRESENTMENT -> true;
@@ -90,27 +90,27 @@ public enum PresentmentType {
         };
     }
 
-    
+
     public boolean affectsRiskScore() {
         return switch (this) {
-            case CHARGEBACK -> true; 
-            case CHARGEBACK_REVERSAL, REPRESENTMENT -> true; 
-            case REFUND -> true; 
+            case CHARGEBACK -> true;
+            case CHARGEBACK_REVERSAL, REPRESENTMENT -> true;
+            case REFUND -> true;
             default -> false;
         };
     }
 
-    
+
     public int getRiskImpact() {
         return switch (this) {
-            case CHARGEBACK -> 1; 
-            case CHARGEBACK_REVERSAL, REPRESENTMENT -> -1; 
-            case REFUND -> 1; 
-            default -> 0; 
+            case CHARGEBACK -> 1;
+            case CHARGEBACK_REVERSAL, REPRESENTMENT -> -1;
+            case REFUND -> 1;
+            default -> 0;
         };
     }
 
-    
+
     public static PresentmentType fromString(String type) {
         if (type == null || type.trim().isEmpty()) {
             throw new IllegalArgumentException("Presentment type cannot be null or empty");
@@ -125,7 +125,7 @@ public enum PresentmentType {
         }
     }
 
-    
+
     public static PresentmentType[] getBalanceIncreasingTypes() {
         return new PresentmentType[]{
                 SALE, PARTIAL_CAPTURE, ADJUSTMENT, CHARGEBACK_REVERSAL,
@@ -133,7 +133,7 @@ public enum PresentmentType {
         };
     }
 
-    
+
     public static PresentmentType[] getBalanceDecreasingTypes() {
         return new PresentmentType[]{
                 REFUND, REVERSAL, CHARGEBACK
@@ -145,7 +145,7 @@ public enum PresentmentType {
         return displayName;
     }
 
-    
+
     public enum AmountRelationship {
         EQUAL_OR_SLIGHTLY_MORE("Equal or slightly more than auth"),
         LESS_THAN_OR_EQUAL("Less than or equal to auth"),

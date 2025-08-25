@@ -12,15 +12,15 @@ public abstract class AllocationStrategy {
         this.description = Objects.requireNonNull(description, "Description cannot be null");
     }
 
-    
+
     public abstract PaymentAllocation allocate(List<DebtBucket> debtBuckets,
                                                BigDecimal paymentAmount,
                                                String allocationId);
 
-    
+
     public abstract boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount);
 
-    
+
     public void validateInputs(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
         Objects.requireNonNull(debtBuckets, "Debt buckets cannot be null");
         Objects.requireNonNull(paymentAmount, "Payment amount cannot be null");
@@ -33,7 +33,7 @@ public abstract class AllocationStrategy {
             throw new IllegalArgumentException("Debt buckets cannot be empty");
         }
 
-        
+
         for (DebtBucket bucket : debtBuckets) {
             if (bucket == null) {
                 throw new IllegalArgumentException("Debt bucket cannot be null");
@@ -41,20 +41,21 @@ public abstract class AllocationStrategy {
         }
     }
 
-    
-    public String getStrategyName() { return strategyName; }
-    public String getDescription() { return description; }
+
+    public String getStrategyName() {
+        return strategyName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 
     @Override
     public String toString() {
         return String.format("%s: %s", strategyName, description);
     }
 
-    
-    
-    
 
-    
     public static final class BankRuleStrategy extends AllocationStrategy {
 
         private final List<DebtBucket.BucketType> priorityOrder;
@@ -78,7 +79,7 @@ public abstract class AllocationStrategy {
             Map<String, BigDecimal> allocations = new HashMap<>();
             BigDecimal remainingPayment = paymentAmount;
 
-            
+
             for (DebtBucket.BucketType type : priorityOrder) {
                 if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) break;
 
@@ -90,11 +91,11 @@ public abstract class AllocationStrategy {
                 for (DebtBucket bucket : bucketsOfType) {
                     if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) break;
 
-                    
+
                     BigDecimal minPayment = bucket.getMinimumPayment();
                     BigDecimal allocation = minPayment.min(remainingPayment);
 
-                    
+
                     BigDecimal remaining = remainingPayment.subtract(allocation);
                     BigDecimal maxAdditional = bucket.getCurrentBalance().subtract(minPayment);
                     BigDecimal additional = maxAdditional.min(remaining);
@@ -112,11 +113,11 @@ public abstract class AllocationStrategy {
 
         @Override
         public boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
-            return true; 
+            return true;
         }
     }
 
-    
+
     public static final class OptimalStrategy extends AllocationStrategy {
 
         private final PaymentOptimizer optimizer;
@@ -139,17 +140,17 @@ public abstract class AllocationStrategy {
 
         @Override
         public boolean isApplicable(List<DebtBucket> debtBuckets, BigDecimal paymentAmount) {
-            
+
             int activeBucketCount = (int) debtBuckets.stream()
                     .filter(DebtBucket::hasDebt)
                     .count();
 
             return activeBucketCount >= 2 &&
-                    paymentAmount.compareTo(new BigDecimal("10")) > 0; 
+                    paymentAmount.compareTo(new BigDecimal("10")) > 0;
         }
     }
 
-    
+
     public static final class GreedyStrategy extends AllocationStrategy {
 
         private final PaymentOptimizer optimizer;
@@ -176,7 +177,7 @@ public abstract class AllocationStrategy {
         }
     }
 
-    
+
     public static final class ManualStrategy extends AllocationStrategy {
 
         private final Map<String, BigDecimal> predefinedAllocations;
@@ -193,7 +194,7 @@ public abstract class AllocationStrategy {
                                           BigDecimal paymentAmount, String allocationId) {
             validateInputs(debtBuckets, paymentAmount);
 
-            
+
             BigDecimal totalPredefined = predefinedAllocations.values().stream()
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -201,7 +202,7 @@ public abstract class AllocationStrategy {
                 throw new IllegalArgumentException("Total predefined allocations exceed payment amount");
             }
 
-            
+
             Set<String> existingBucketIds = debtBuckets.stream()
                     .map(DebtBucket::getBucketId)
                     .collect(java.util.stream.Collectors.toSet());
@@ -229,11 +230,7 @@ public abstract class AllocationStrategy {
         }
     }
 
-    
-    
-    
 
-    
     public static AllocationStrategy createStrategy(PaymentAllocation.AllocationStrategy strategyType,
                                                     Object... parameters) {
         return switch (strategyType) {

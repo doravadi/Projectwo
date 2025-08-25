@@ -27,22 +27,45 @@ final class ParsedRule {
         this.creationTime = LocalDateTime.now();
     }
 
-    
-    public String getRuleId() { return ruleId; }
-    public String getDslExpression() { return dslExpression; }
-    public ASTNode getAst() { return ast; }
-    public Rule.RuleType getRuleType() { return ruleType; }
-    public int getPriority() { return priority; }
-    public String getDescription() { return description; }
-    public boolean isActive() { return active; }
-    public LocalDateTime getCreationTime() { return creationTime; }
 
-    
+    public String getRuleId() {
+        return ruleId;
+    }
+
+    public String getDslExpression() {
+        return dslExpression;
+    }
+
+    public ASTNode getAst() {
+        return ast;
+    }
+
+    public Rule.RuleType getRuleType() {
+        return ruleType;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
+
+
     public void setActive(boolean active) {
         this.active = active;
     }
 
-    
+
     public int getConditionCount() {
         return ast.getConditionCount();
     }
@@ -83,35 +106,35 @@ final class ParsedRule {
 
 final class RuleEngineStatistics {
 
-    
+
     private final AtomicLong rulesAdded = new AtomicLong(0);
     private final AtomicLong rulesRemoved = new AtomicLong(0);
     private volatile int totalRules = 0;
     private volatile int activeRules = 0;
 
-    
+
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong successfulEvaluations = new AtomicLong(0);
     private final AtomicLong failedEvaluations = new AtomicLong(0);
 
-    
+
     private volatile long averageParsingTime = 0;
     private volatile long averageEvaluationTime = 0;
     private volatile long maxEvaluationTime = 0;
     private volatile long minEvaluationTime = Long.MAX_VALUE;
 
-    
+
     private final AtomicLong cacheHits = new AtomicLong(0);
     private final AtomicLong cacheMisses = new AtomicLong(0);
 
-    
+
     private final AtomicLong parseErrors = new AtomicLong(0);
     private final AtomicLong evaluationErrors = new AtomicLong(0);
 
-    
+
     private final LocalDateTime startTime = LocalDateTime.now();
 
-    
+
     public void incrementRulesAdded() {
         rulesAdded.incrementAndGet();
     }
@@ -144,9 +167,9 @@ final class RuleEngineStatistics {
         evaluationErrors.incrementAndGet();
     }
 
-    
+
     public void recordEvaluationTime(long nanoTime) {
-        
+
         long current;
         do {
             current = minEvaluationTime;
@@ -158,7 +181,7 @@ final class RuleEngineStatistics {
     }
 
     private boolean compareAndSetMinEvaluationTime(long expected, long update) {
-        
+
         if (minEvaluationTime == expected) {
             minEvaluationTime = update;
             return true;
@@ -174,7 +197,7 @@ final class RuleEngineStatistics {
         return false;
     }
 
-    
+
     public void setTotalRules(int totalRules) {
         this.totalRules = totalRules;
     }
@@ -195,30 +218,72 @@ final class RuleEngineStatistics {
         this.averageEvaluationTime = averageEvaluationTime;
     }
 
-    
-    public long getRulesAdded() { return rulesAdded.get(); }
-    public long getRulesRemoved() { return rulesRemoved.get(); }
-    public int getTotalRules() { return totalRules; }
-    public int getActiveRules() { return activeRules; }
 
-    public long getTotalEvaluations() { return totalEvaluations.get(); }
-    public long getSuccessfulEvaluations() { return successfulEvaluations.get(); }
-    public long getFailedEvaluations() { return failedEvaluations.get(); }
+    public long getRulesAdded() {
+        return rulesAdded.get();
+    }
 
-    public long getAverageParsingTime() { return averageParsingTime; }
-    public long getAverageEvaluationTime() { return averageEvaluationTime; }
-    public long getMaxEvaluationTime() { return maxEvaluationTime; }
-    public long getMinEvaluationTime() { return minEvaluationTime == Long.MAX_VALUE ? 0 : minEvaluationTime; }
+    public long getRulesRemoved() {
+        return rulesRemoved.get();
+    }
 
-    public long getCacheHits() { return cacheHits.get(); }
-    public long getCacheMisses() { return cacheMisses.get(); }
+    public int getTotalRules() {
+        return totalRules;
+    }
 
-    public long getParseErrors() { return parseErrors.get(); }
-    public long getEvaluationErrors() { return evaluationErrors.get(); }
+    public int getActiveRules() {
+        return activeRules;
+    }
 
-    public LocalDateTime getStartTime() { return startTime; }
+    public long getTotalEvaluations() {
+        return totalEvaluations.get();
+    }
 
-    
+    public long getSuccessfulEvaluations() {
+        return successfulEvaluations.get();
+    }
+
+    public long getFailedEvaluations() {
+        return failedEvaluations.get();
+    }
+
+    public long getAverageParsingTime() {
+        return averageParsingTime;
+    }
+
+    public long getAverageEvaluationTime() {
+        return averageEvaluationTime;
+    }
+
+    public long getMaxEvaluationTime() {
+        return maxEvaluationTime;
+    }
+
+    public long getMinEvaluationTime() {
+        return minEvaluationTime == Long.MAX_VALUE ? 0 : minEvaluationTime;
+    }
+
+    public long getCacheHits() {
+        return cacheHits.get();
+    }
+
+    public long getCacheMisses() {
+        return cacheMisses.get();
+    }
+
+    public long getParseErrors() {
+        return parseErrors.get();
+    }
+
+    public long getEvaluationErrors() {
+        return evaluationErrors.get();
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+
     public double getSuccessRate() {
         long total = getTotalEvaluations();
         return total == 0 ? 0.0 : (double) getSuccessfulEvaluations() / total * 100.0;
@@ -249,7 +314,7 @@ final class RuleEngineStatistics {
         return java.time.Duration.between(startTime, LocalDateTime.now()).toMinutes();
     }
 
-    
+
     public void reset() {
         rulesAdded.set(0);
         rulesRemoved.set(0);
@@ -272,7 +337,7 @@ final class RuleEngineStatistics {
         evaluationErrors.set(0);
     }
 
-    
+
     public String generateSummaryReport() {
         StringBuilder sb = new StringBuilder();
         sb.append("=== DSL Rule Engine Statistics ===\n");

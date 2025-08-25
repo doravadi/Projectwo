@@ -6,11 +6,11 @@ import java.util.*;
 
 public final class ArbitrageDetector {
 
-    private static final double EPSILON = 1e-8;  
-    private static final int MAX_ITERATIONS = 1000; 
+    private static final double EPSILON = 1e-8;
+    private static final int MAX_ITERATIONS = 1000;
     private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP);
 
-    
+
     public List<ArbitrageOpportunity> detectArbitrage(CurrencyGraph graph) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
 
@@ -22,7 +22,7 @@ public final class ArbitrageDetector {
         List<ArbitrageOpportunity> opportunities = new ArrayList<>();
         Currency[] currencies = graph.getSupportedCurrencies();
 
-        
+
         for (Currency sourceCurrency : currencies) {
             BellmanFordResult result = runBellmanFord(graph, sourceCurrency);
 
@@ -36,13 +36,13 @@ public final class ArbitrageDetector {
             }
         }
 
-        
+
         opportunities.sort(Comparator.comparing(ArbitrageOpportunity::getProfitPercentage).reversed());
 
         return opportunities;
     }
 
-    
+
     public Optional<ArbitrageOpportunity> detectArbitrageFrom(CurrencyGraph graph, Currency startCurrency) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
         Objects.requireNonNull(startCurrency, "Start currency cannot be null");
@@ -63,7 +63,7 @@ public final class ArbitrageDetector {
         return Optional.empty();
     }
 
-    
+
     private BellmanFordResult runBellmanFord(CurrencyGraph graph, Currency source) {
         int vertexCount = graph.getVertexCount();
         Integer sourceIndex = graph.getCurrencyIndex(source);
@@ -72,7 +72,7 @@ public final class ArbitrageDetector {
             throw new IllegalArgumentException("Source currency not found in graph: " + source);
         }
 
-        
+
         double[] distances = new double[vertexCount];
         int[] predecessors = new int[vertexCount];
         Arrays.fill(distances, Double.POSITIVE_INFINITY);
@@ -81,7 +81,7 @@ public final class ArbitrageDetector {
 
         List<CurrencyGraph.Edge> edges = graph.getAllEdges();
 
-        
+
         for (int iteration = 0; iteration < vertexCount - 1; iteration++) {
             boolean hasUpdate = false;
 
@@ -100,11 +100,11 @@ public final class ArbitrageDetector {
             }
 
             if (!hasUpdate) {
-                break; 
+                break;
             }
         }
 
-        
+
         List<Integer> negativeCycleNodes = new ArrayList<>();
         for (CurrencyGraph.Edge edge : edges) {
             int from = edge.getFromIndex();
@@ -121,7 +121,7 @@ public final class ArbitrageDetector {
         return new BellmanFordResult(distances, predecessors, negativeCycleNodes);
     }
 
-    
+
     private ArbitrageOpportunity reconstructArbitrageOpportunity(CurrencyGraph graph,
                                                                  BellmanFordResult result,
                                                                  Currency source) {
@@ -129,7 +129,7 @@ public final class ArbitrageDetector {
             return null;
         }
 
-        
+
         int startNode = result.getNegativeCycleNodes().get(0);
         List<Integer> cycle = findNegativeCycle(result.getPredecessors(), startNode);
 
@@ -137,7 +137,7 @@ public final class ArbitrageDetector {
             return null;
         }
 
-        
+
         List<Currency> currencyPath = new ArrayList<>();
         List<CurrencyPair> pairPath = new ArrayList<>();
         BigDecimal totalRate = BigDecimal.ONE;
@@ -151,7 +151,7 @@ public final class ArbitrageDetector {
 
             currencyPath.add(fromCurrency);
 
-            
+
             Optional<CurrencyPair> pairOpt = graph.getBestRate(fromCurrency, toCurrency);
             if (pairOpt.isPresent()) {
                 CurrencyPair pair = pairOpt.get();
@@ -160,7 +160,7 @@ public final class ArbitrageDetector {
             }
         }
 
-        
+
         BigDecimal profitRatio = totalRate.subtract(BigDecimal.ONE);
         BigDecimal profitPercentage = profitRatio.multiply(new BigDecimal("100"), MATH_CONTEXT);
 
@@ -168,14 +168,14 @@ public final class ArbitrageDetector {
                 profitPercentage, source);
     }
 
-    
+
     private List<Integer> findNegativeCycle(int[] predecessors, int startNode) {
         Set<Integer> visited = new HashSet<>();
         List<Integer> path = new ArrayList<>();
 
         int current = startNode;
 
-        
+
         while (!visited.contains(current) && current != -1) {
             visited.add(current);
             path.add(current);
@@ -183,27 +183,27 @@ public final class ArbitrageDetector {
         }
 
         if (current == -1) {
-            return new ArrayList<>(); 
+            return new ArrayList<>();
         }
 
-        
+
         int cycleStart = path.indexOf(current);
         if (cycleStart == -1) {
             return new ArrayList<>();
         }
 
-        
+
         return path.subList(cycleStart, path.size());
     }
 
-    
+
     private boolean isDuplicate(List<ArbitrageOpportunity> opportunities,
                                 ArbitrageOpportunity newOpportunity) {
         return opportunities.stream()
                 .anyMatch(existing -> existing.hasSamePath(newOpportunity));
     }
 
-    
+
     private static final class BellmanFordResult {
         private final double[] distances;
         private final int[] predecessors;
@@ -220,12 +220,20 @@ public final class ArbitrageDetector {
             return !negativeCycleNodes.isEmpty();
         }
 
-        public double[] getDistances() { return distances.clone(); }
-        public int[] getPredecessors() { return predecessors.clone(); }
-        public List<Integer> getNegativeCycleNodes() { return new ArrayList<>(negativeCycleNodes); }
+        public double[] getDistances() {
+            return distances.clone();
+        }
+
+        public int[] getPredecessors() {
+            return predecessors.clone();
+        }
+
+        public List<Integer> getNegativeCycleNodes() {
+            return new ArrayList<>(negativeCycleNodes);
+        }
     }
 
-    
+
     public DetectionStatistics getDetectionStatistics(CurrencyGraph graph) throws DisconnectedCurrencyGraph {
         Objects.requireNonNull(graph, "Currency graph cannot be null");
 
@@ -254,7 +262,7 @@ public final class ArbitrageDetector {
                 detectionTime, pathLengthDistribution);
     }
 
-    
+
     public static final class DetectionStatistics {
         private final int totalOpportunities;
         private final double maxProfit;
@@ -271,10 +279,22 @@ public final class ArbitrageDetector {
             this.pathLengthDistribution = new HashMap<>(pathLengthDistribution);
         }
 
-        public int getTotalOpportunities() { return totalOpportunities; }
-        public double getMaxProfit() { return maxProfit; }
-        public double getAvgProfit() { return avgProfit; }
-        public long getDetectionTimeMs() { return detectionTimeMs; }
+        public int getTotalOpportunities() {
+            return totalOpportunities;
+        }
+
+        public double getMaxProfit() {
+            return maxProfit;
+        }
+
+        public double getAvgProfit() {
+            return avgProfit;
+        }
+
+        public long getDetectionTimeMs() {
+            return detectionTimeMs;
+        }
+
         public Map<Integer, Integer> getPathLengthDistribution() {
             return new HashMap<>(pathLengthDistribution);
         }
